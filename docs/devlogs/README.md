@@ -12,3 +12,5 @@
 
 1. [2026-04-07-repo-init.md](./2026-04-07-repo-init.md)
    - 第一個 commit 的 repo 初始化、文件分層與排除項記錄
+2. [2026-04-07-offline-hero-globe-shell.md](./2026-04-07-offline-hero-globe-shell.md)
+   - 第二個 commit 的 runtime shell、hero globe 場景與驗證記錄

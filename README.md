@@ -4,10 +4,23 @@
 
 ## 目前狀態
 
-目前只完成 `repo init` baseline。這個階段刻意只建立交付骨架與正式文件入口，尚未加入：
+目前已完成兩個早期 baseline：
 
-- 可執行 app shell
-- globe runtime / renderer
+1. `init estnet-globe-viewer repo skeleton`
+2. `add offline hero globe shell baseline`
+
+目前已可在沒有外部 producer 的情況下看到：
+
+- 最小 app shell
+- 最小 `HeroGlobeScene`
+- 最小 camera / orbit / zoom
+- 兩個遠距 placeholder endpoint anchors
+
+目前仍尚未加入：
+
+- canonical truth interfaces
+- service corridor / active vs unavailable baseline
+- satellites / candidate context
 - mock truth provider
 - `estnet-bootstrap-kit` 整合
 
@@ -19,19 +32,25 @@
 
 ## 第一個 commit 的邊界
 
-這個 baseline commit 只做 repo skeleton，包含：
+前兩個 baseline commit 目前分工如下：
 
-- `main` 分支上的新 repo 初始化
-- `.gitignore` 與交付 hygiene baseline
-- README 與 `docs/` 入口
-- repo-local architecture / SDD / phase / devlog 文件
-- `archive/` 規則入口
+1. `init estnet-globe-viewer repo skeleton`
+   - `.gitignore` 與交付 hygiene baseline
+   - README 與 `docs/` 入口
+   - repo-local architecture / SDD / phase / devlog 文件
+   - `archive/` 規則入口
 
-這個 baseline commit 刻意不做：
+2. `add offline hero globe shell baseline`
+   - Vite + React + TypeScript app shell
+   - minimal hero globe
+   - minimal camera / orbit / zoom
+   - placeholder endpoint anchors
 
-- app shell、相機控制、endpoint anchors
-- runtime / engine 選型與套件安裝
+目前仍刻意不做：
+
 - replay adapter、mock dataset、producer integration
+- canonical truth interfaces
+- service corridor baseline
 - `focus lens`、hero site、premium world content
 - KPI dashboard 或任何超出 truth 邊界的 claims
 
@@ -41,7 +60,32 @@
 2. [docs/architecture.md](./docs/architecture.md)
 3. [docs/sdd/service-driven-hero-globe-sdd-v1.md](./docs/sdd/service-driven-hero-globe-sdd-v1.md)
 4. [docs/phases/phase-00-repo-init.md](./docs/phases/phase-00-repo-init.md)
-5. [docs/devlogs/2026-04-07-repo-init.md](./docs/devlogs/2026-04-07-repo-init.md)
+5. [docs/phases/phase-01-offline-hero-globe-shell.md](./docs/phases/phase-01-offline-hero-globe-shell.md)
+6. [docs/devlogs/2026-04-07-offline-hero-globe-shell.md](./docs/devlogs/2026-04-07-offline-hero-globe-shell.md)
+
+## 快速開始
+
+### 環境需求
+
+- Node.js `>= 18`
+- npm `>= 9`
+
+### 安裝
+
+```bash
+npm install
+```
+
+### 開發與建置
+
+```bash
+npm run dev
+npm run build
+npm run lint
+npm run preview
+```
+
+目前畫面只使用 repo 內的 placeholder endpoint data，不依賴任何外部 replay producer。
 
 ## 目錄
 
@@ -52,7 +96,10 @@ estnet-globe-viewer/
 │   ├── devlogs/
 │   ├── phases/
 │   └── sdd/
+├── src/
 ├── .gitignore
+├── index.html
+├── package.json
 └── README.md
 ```
 
@@ -60,6 +107,6 @@ estnet-globe-viewer/
 
 下一個建議 commit 是：
 
-- `add offline hero globe shell baseline`
+- `add canonical truth interfaces and mock truth path`
 
-它應該只證明 globe-first 主舞台能獨立站起來，仍不接外部 producer。
+它應該先把 canonical truth vocabulary 與 mock truth path 建起來，仍不接外部 producer。

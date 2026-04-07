@@ -59,11 +59,26 @@ repo 內的正式文件分為四層：
 
 這個結構的目的不是增加文件量，而是避免 authority、工作紀錄與過時草稿混在一起。
 
+## 目前 runtime baseline
+
+目前 repo 已有最小可執行 runtime baseline：
+
+- Vite + React + TypeScript shell
+- Three.js / React Three Fiber globe scene
+- orbit / zoom camera baseline
+- placeholder endpoint anchors
+
+這個 baseline 的用途是先證明 `HeroGlobeScene` 能獨立站起來，而不是提前宣稱 service truth 已完整存在。
+
 ## 目前刻意未做
 
 目前 baseline 不包含：
 
-- hero globe runtime
+- canonical truth interfaces
+- service corridor baseline
+- selective satellite visibility
+- derived event cue
+- provider skeletons
 - focus lens
 - premium world content
 - hero site module

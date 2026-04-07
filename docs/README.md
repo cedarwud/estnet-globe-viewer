@@ -9,8 +9,9 @@
 3. [sdd/service-driven-hero-globe-sdd-v1.md](./sdd/service-driven-hero-globe-sdd-v1.md)
 4. [phases/README.md](./phases/README.md)
 5. [phases/phase-00-repo-init.md](./phases/phase-00-repo-init.md)
-6. [devlogs/README.md](./devlogs/README.md)
-7. [devlogs/2026-04-07-repo-init.md](./devlogs/2026-04-07-repo-init.md)
+6. [phases/phase-01-offline-hero-globe-shell.md](./phases/phase-01-offline-hero-globe-shell.md)
+7. [devlogs/README.md](./devlogs/README.md)
+8. [devlogs/2026-04-07-offline-hero-globe-shell.md](./devlogs/2026-04-07-offline-hero-globe-shell.md)
 
 ## 文件分類
 
@@ -22,8 +23,12 @@
   - phase 記錄入口與當前開發節點
 - [phases/phase-00-repo-init.md](./phases/phase-00-repo-init.md)
   - 第一個 commit 的範圍、輸出、排除項與驗證
+- [phases/phase-01-offline-hero-globe-shell.md](./phases/phase-01-offline-hero-globe-shell.md)
+  - 第二個 commit 的 app shell、hero globe baseline 與排除項
 - [devlogs/README.md](./devlogs/README.md)
   - 開發日誌索引
+- [devlogs/2026-04-07-offline-hero-globe-shell.md](./devlogs/2026-04-07-offline-hero-globe-shell.md)
+  - 第二個 commit 的 runtime 選型、場景組成與驗證記錄
 - [../archive/README.md](../archive/README.md)
   - 過時或被替換文件的安置規則
 
