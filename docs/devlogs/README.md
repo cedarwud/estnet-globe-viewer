@@ -14,3 +14,5 @@
    - 第一個 commit 的 repo 初始化、文件分層與排除項記錄
 2. [2026-04-07-offline-hero-globe-shell.md](./2026-04-07-offline-hero-globe-shell.md)
    - 第二個 commit 的 runtime shell、hero globe 場景與驗證記錄
+3. [2026-04-07-canonical-truth-mock-path.md](./2026-04-07-canonical-truth-mock-path.md)
+   - 第三個 commit 的 truth contracts、mock provider seam 與 single snapshot data flow

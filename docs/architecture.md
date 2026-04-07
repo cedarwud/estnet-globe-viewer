@@ -61,26 +61,35 @@ repo 內的正式文件分為四層：
 
 ## 目前 runtime baseline
 
-目前 repo 已有最小可執行 runtime baseline：
+目前 repo 已有最小可執行 runtime baseline，且畫面已改由 mock truth path 驅動：
 
 - Vite + React + TypeScript shell
 - Three.js / React Three Fiber globe scene
 - orbit / zoom camera baseline
-- placeholder endpoint anchors
+- canonical truth vocabulary
+- minimal `TruthProvider`
+- mock truth seed + adapter + provider
+- endpoint anchors sourced from `WorldGeometryTruth`
 
-這個 baseline 的用途是先證明 `HeroGlobeScene` 能獨立站起來，而不是提前宣稱 service truth 已完整存在。
+這個 baseline 的用途是先證明 `HeroGlobeScene` 能獨立站起來，且 scene / UI 已能透過同一份 canonical snapshot 讀值，而不是提前宣稱 service truth 已完整存在。
 
 ## 目前刻意未做
 
 目前 baseline 不包含：
 
-- canonical truth interfaces
 - service corridor baseline
 - selective satellite visibility
 - derived event cue
-- provider skeletons
 - focus lens
 - premium world content
 - hero site module
 - KPI dashboard
 - producer-backed replay integration
+
+目前對 truth 的保守邊界是：
+
+- `WorldGeometryTruth` 已提供 endpoint global positions
+- `ServiceAvailabilityTruth` 仍明確標記為 `unsupported`
+- `ServiceSelectionTruth` 仍明確標記為 `unsupported`
+- `EventTruth` 仍只保留 `derived` 型別，且目前是空集合
+- `estnet-bootstrap-kit` 尚未接入，之後只作 reference producer

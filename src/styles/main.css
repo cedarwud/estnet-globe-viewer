@@ -189,6 +189,31 @@ canvas {
   gap: 10px;
 }
 
+.status-facts {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.status-facts__row {
+  display: grid;
+  gap: 4px;
+}
+
+.status-facts__row dt {
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-line);
+}
+
+.status-facts__row dd {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
 .status-list {
   display: grid;
   gap: 10px;
@@ -203,6 +228,42 @@ canvas {
 
 .status-list--muted {
   color: var(--text-muted);
+}
+
+.capability-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.capability-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+}
+
+.capability-pill span {
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.capability-pill strong {
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.capability-pill--supported strong {
+  color: var(--accent-cool);
+}
+
+.capability-pill--unsupported strong {
+  color: var(--accent-warm);
 }
 
 .endpoint-cards {

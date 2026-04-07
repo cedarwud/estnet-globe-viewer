@@ -1,10 +1,10 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Stars } from '@react-three/drei';
-import type { PlaceholderEndpoint } from '../../data/placeholderEndpoints';
+import type { EndpointGeometryTruth } from '../../truth/contracts';
 import { HeroGlobe } from './HeroGlobe';
 
 interface HeroGlobeSceneProps {
-  endpoints: PlaceholderEndpoint[];
+  endpoints: EndpointGeometryTruth[];
 }
 
 export function HeroGlobeScene({ endpoints }: HeroGlobeSceneProps) {

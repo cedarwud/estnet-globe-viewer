@@ -3,18 +3,23 @@ import { useFrame } from '@react-three/fiber';
 import { useRef } from 'react';
 import type { Group, Mesh } from 'three';
 import { Color } from 'three';
-import type { PlaceholderEndpoint } from '../../data/placeholderEndpoints';
 import { latLonToSpherePosition } from '../../lib/geo';
+import type { EndpointGeometryTruth } from '../../truth/contracts';
 
 interface EndpointAnchorProps {
-  endpoint: PlaceholderEndpoint;
+  endpoint: EndpointGeometryTruth;
   globeRadius: number;
 }
 
 export function EndpointAnchor({ endpoint, globeRadius }: EndpointAnchorProps) {
   const pulseGroupRef = useRef<Group>(null);
   const pulseMeshRef = useRef<Mesh>(null);
-  const markerPosition = latLonToSpherePosition(endpoint.latitudeDeg, endpoint.longitudeDeg, globeRadius, 0.045);
+  const markerPosition = latLonToSpherePosition(
+    endpoint.position.latitudeDeg,
+    endpoint.position.longitudeDeg,
+    globeRadius,
+    0.045
+  );
   const phaseOffset = endpoint.id === 'endpoint-alpha' ? 0 : 0.4;
 
   useFrame(({ clock }) => {
@@ -36,8 +41,8 @@ export function EndpointAnchor({ endpoint, globeRadius }: EndpointAnchorProps) {
       <mesh position={markerPosition}>
         <sphereGeometry args={[0.038, 24, 24]} />
         <meshStandardMaterial
-          color={endpoint.color}
-          emissive={new Color(endpoint.color).multiplyScalar(0.42)}
+          color={endpoint.accentColor}
+          emissive={new Color(endpoint.accentColor).multiplyScalar(0.42)}
           emissiveIntensity={1}
           roughness={0.28}
         />
@@ -47,7 +52,7 @@ export function EndpointAnchor({ endpoint, globeRadius }: EndpointAnchorProps) {
         <mesh>
           <ringGeometry args={[0.07, 0.095, 48]} />
           <meshBasicMaterial
-            color={endpoint.color}
+            color={endpoint.accentColor}
             transparent
             opacity={0.48}
             depthWrite={false}
@@ -58,7 +63,7 @@ export function EndpointAnchor({ endpoint, globeRadius }: EndpointAnchorProps) {
           <mesh ref={pulseMeshRef}>
             <ringGeometry args={[0.11, 0.132, 48]} />
             <meshBasicMaterial
-              color={endpoint.color}
+              color={endpoint.accentColor}
               transparent
               opacity={0.24}
               depthWrite={false}

@@ -1,10 +1,10 @@
 import { BackSide, Color } from 'three';
-import type { PlaceholderEndpoint } from '../../data/placeholderEndpoints';
+import type { EndpointGeometryTruth } from '../../truth/contracts';
 import { EndpointAnchor } from './EndpointAnchor';
 import { GlobeGraticule } from './GlobeGraticule';
 
 interface HeroGlobeProps {
-  endpoints: PlaceholderEndpoint[];
+  endpoints: EndpointGeometryTruth[];
 }
 
 const GLOBE_RADIUS = 1.8;

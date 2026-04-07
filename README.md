@@ -8,20 +8,22 @@
 
 1. `init estnet-globe-viewer repo skeleton`
 2. `add offline hero globe shell baseline`
+3. `add canonical truth interfaces and mock truth path`
 
-目前已可在沒有外部 producer 的情況下看到：
+目前已可在沒有外部 producer 的情況下看到並驗證：
 
 - 最小 app shell
 - 最小 `HeroGlobeScene`
 - 最小 camera / orbit / zoom
-- 兩個遠距 placeholder endpoint anchors
+- 兩個遠距 endpoint anchors
+- canonical truth vocabulary
+- 最小同步 `TruthProvider`
+- scene 與 UI 共用的 mock truth snapshot
 
 目前仍尚未加入：
 
-- canonical truth interfaces
 - service corridor / active vs unavailable baseline
 - satellites / candidate context
-- mock truth provider
 - `estnet-bootstrap-kit` 整合
 
 ## 凍結方向
@@ -46,10 +48,19 @@
    - minimal camera / orbit / zoom
    - placeholder endpoint anchors
 
+3. `add canonical truth interfaces and mock truth path`
+   - `WorldGeometryTruth`
+   - `ServiceAvailabilityTruth`
+   - `ServiceSelectionTruth`
+   - `EventTruth`
+   - `DatasetCapabilityProfile`
+   - 最小同步 `TruthProvider`
+   - mock truth seed + adapter + provider
+   - hero globe 與 UI 共用的 single canonical snapshot
+
 目前仍刻意不做：
 
-- replay adapter、mock dataset、producer integration
-- canonical truth interfaces
+- replay adapter、reference dataset smoke、producer integration
 - service corridor baseline
 - `focus lens`、hero site、premium world content
 - KPI dashboard 或任何超出 truth 邊界的 claims
@@ -61,7 +72,8 @@
 3. [docs/sdd/service-driven-hero-globe-sdd-v1.md](./docs/sdd/service-driven-hero-globe-sdd-v1.md)
 4. [docs/phases/phase-00-repo-init.md](./docs/phases/phase-00-repo-init.md)
 5. [docs/phases/phase-01-offline-hero-globe-shell.md](./docs/phases/phase-01-offline-hero-globe-shell.md)
-6. [docs/devlogs/2026-04-07-offline-hero-globe-shell.md](./docs/devlogs/2026-04-07-offline-hero-globe-shell.md)
+6. [docs/phases/phase-02-canonical-truth-mock-path.md](./docs/phases/phase-02-canonical-truth-mock-path.md)
+7. [docs/devlogs/2026-04-07-canonical-truth-mock-path.md](./docs/devlogs/2026-04-07-canonical-truth-mock-path.md)
 
 ## 快速開始
 
@@ -85,7 +97,7 @@ npm run lint
 npm run preview
 ```
 
-目前畫面只使用 repo 內的 placeholder endpoint data，不依賴任何外部 replay producer。
+目前畫面由 repo 內的 mock truth provider 驅動，不依賴任何外部 replay producer。
 
 ## 目錄
 
@@ -107,6 +119,6 @@ estnet-globe-viewer/
 
 下一個建議 commit 是：
 
-- `add canonical truth interfaces and mock truth path`
+- `add selective service corridor baseline`
 
-它應該先把 canonical truth vocabulary 與 mock truth path 建起來，仍不接外部 producer。
+它應該開始補 selective satellite visibility、service corridor、active / unavailable baseline，以及最小 derived event cue，但仍先不接 `estnet-bootstrap-kit`。
