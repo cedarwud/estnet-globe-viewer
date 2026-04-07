@@ -1,18 +1,19 @@
 import type { CSSProperties } from 'react';
+import { useState } from 'react';
 import { HeroGlobeScene } from './components/globe/HeroGlobeScene';
 import { mockTruthProvider } from './mock/mockTruthProvider';
 import type { DatasetCapabilityProfile } from './truth/contracts';
 import { useTruthSnapshot } from './truth/useTruthSnapshot';
 
 const completedScope = [
-  'Canonical truth vocabulary and dataset capability profile',
-  'Minimal synchronous TruthProvider seam',
-  'In-memory mock truth path with service corridor baseline',
-  'Hero globe scene and status UI reading the same truth snapshot',
+  'Full-stage globe-first shell with corridor-focused framing',
+  'Natural zoom range from whole-globe read to closer corridor inspection',
+  'Compact HUD plus on-demand drawer instead of a permanent dashboard rail',
+  'Mock truth scene and overlays still reading the same canonical snapshot',
 ];
 
 const deferredScope = [
-  'Reference replay smoke via estnet-bootstrap-kit',
+  'estnet-bootstrap-kit reference replay smoke',
   'Focus lens follow-on interface',
   'Premium world context and site assets',
   'Producer-backed event truth and handover cause',
@@ -46,6 +47,7 @@ function formatCorridorLabel(
 }
 
 export function App() {
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const truthSnapshot = useTruthSnapshot(mockTruthProvider);
   const capabilityRows = capabilityEntries(truthSnapshot.capabilityProfile);
   const endpointLabels = new Map(truthSnapshot.worldGeometry.endpoints.map((endpoint) => [endpoint.id, endpoint.label]));
@@ -65,6 +67,12 @@ export function App() {
     truthSnapshot.serviceAvailability.kind === 'supported'
       ? truthSnapshot.serviceAvailability.currentAvailability
       : 'unsupported';
+  const availabilityTone =
+    availabilityLabel === 'available'
+      ? 'available'
+      : availabilityLabel === 'unavailable'
+        ? 'unavailable'
+        : 'unsupported';
   const conservativeBoundaries = [
     'The activePath wording remains limited to current service corridor / current active relay path / current visible relay path.',
     'The unavailable candidate corridor is still mock availability truth, not KPI, SLA, or coverage-field truth.',
@@ -86,196 +94,203 @@ export function App() {
       : [];
 
   return (
-    <div className="shell">
-      <header className="hero-copy">
-        <p className="hero-copy__eyebrow">Commit 04 Baseline</p>
-        <h1 className="hero-copy__title">Selective Service Corridor</h1>
-        <p className="hero-copy__body">
-          This stage keeps the globe offline-first while adding one current service corridor, one unavailable
-          candidate corridor, and a strictly limited set of service-relevant satellites on top of the canonical
-          truth path.
-        </p>
+    <div className="viewer-shell">
+      <div className="viewer-stage">
+        <HeroGlobeScene
+          worldGeometry={truthSnapshot.worldGeometry}
+          serviceAvailability={truthSnapshot.serviceAvailability}
+          serviceSelection={truthSnapshot.serviceSelection}
+        />
+      </div>
 
-        <div className="hero-copy__chips">
-          <span className="hero-chip">One active corridor</span>
-          <span className="hero-chip">One unavailable candidate</span>
-          <span className="hero-chip">Main branch baseline</span>
-        </div>
-      </header>
+      <div className="viewer-overlay">
+        <header className="floating-card hero-overlay">
+          <p className="floating-card__eyebrow">Commit 05 Presentation Pass</p>
+          <h1 className="hero-overlay__title">Full-Stage Service-Driven Globe</h1>
+          <p className="hero-overlay__body">
+            The globe is back to being the main stage. Persistent information is reduced to a compact HUD so
+            the two endpoints and their current service corridor dominate the read.
+          </p>
+        </header>
 
-      <main className="shell__layout">
-        <section className="stage-card">
-          <div className="stage-card__header">
-            <div>
-              <p className="stage-card__eyebrow">Hero Stage</p>
-              <h2 className="stage-card__title">Single globe primary scene</h2>
+        <div className="top-hud">
+          <div className="floating-card scene-status">
+            <p className="floating-card__eyebrow">Current State</p>
+            <div className="scene-status__row">
+              <span className={`availability-pill availability-pill--${availabilityTone}`}>
+                {availabilityLabel}
+              </span>
+              <span className="scene-status__dataset">{truthSnapshot.datasetLabel}</span>
             </div>
-            <p className="stage-card__meta">
-              {truthSnapshot.datasetLabel}
-              <br />
-              Current availability: {availabilityLabel}
-            </p>
+            <p className="scene-status__path">{currentCorridorLabel}</p>
           </div>
 
-          <div className="stage-card__viewport">
-            <HeroGlobeScene
-              worldGeometry={truthSnapshot.worldGeometry}
-              serviceAvailability={truthSnapshot.serviceAvailability}
-              serviceSelection={truthSnapshot.serviceSelection}
-            />
-            <div className="stage-card__legend">
-              <span className="scene-legend scene-legend--active">Current service corridor</span>
-              <span className="scene-legend scene-legend--unavailable">Unavailable candidate</span>
-            </div>
+          <button
+            type="button"
+            className="details-toggle"
+            onClick={() => setDetailsOpen((current) => !current)}
+            aria-expanded={detailsOpen}
+            aria-controls="truth-drawer"
+          >
+            {detailsOpen ? 'Hide Details' : 'Open Details'}
+          </button>
+        </div>
+
+        <section className="floating-card service-ribbon">
+          <p className="floating-card__eyebrow">Current Visible Relay Path</p>
+          <p className="service-ribbon__path">{currentCorridorLabel}</p>
+          <p className="service-ribbon__hint">
+            Drag to rotate. Scroll to zoom from whole-globe framing toward the corridor.
+          </p>
+        </section>
+
+        <section className="floating-card legend-overlay">
+          <p className="floating-card__eyebrow">Legend</p>
+          <div className="legend-overlay__items">
+            <span className="scene-legend scene-legend--active">Current service corridor</span>
+            <span className="scene-legend scene-legend--unavailable">Unavailable candidate</span>
           </div>
         </section>
 
-        <aside className="status-card">
-          <section className="status-card__section">
-            <p className="status-card__eyebrow">Truth Snapshot</p>
-            <dl className="status-facts">
-              <div className="status-facts__row">
-                <dt>Provider</dt>
-                <dd>{mockTruthProvider.providerId}</dd>
+        <aside
+          id="truth-drawer"
+          className={`truth-drawer ${detailsOpen ? 'truth-drawer--open' : ''}`}
+        >
+          <div className="truth-drawer__surface">
+            <div className="truth-drawer__header">
+              <div>
+                <p className="floating-card__eyebrow">On-Demand Overlay</p>
+                <h2 className="truth-drawer__title">Truth and Corridor Details</h2>
               </div>
-              <div className="status-facts__row">
-                <dt>Kind</dt>
-                <dd>{mockTruthProvider.providerKind}</dd>
-              </div>
-              <div className="status-facts__row">
-                <dt>Dataset</dt>
-                <dd>{truthSnapshot.datasetId}</dd>
-              </div>
-              <div className="status-facts__row">
-                <dt>Summary</dt>
-                <dd>{truthSnapshot.summary}</dd>
-              </div>
-              <div className="status-facts__row">
-                <dt>Service-relevant satellites</dt>
-                <dd>{truthSnapshot.worldGeometry.satellites.length}</dd>
-              </div>
-            </dl>
-          </section>
+              <button
+                type="button"
+                className="truth-drawer__close"
+                onClick={() => setDetailsOpen(false)}
+              >
+                Close
+              </button>
+            </div>
 
-          <section className="status-card__section">
-            <p className="status-card__eyebrow">Included Now</p>
-            <ul className="status-list">
-              {completedScope.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </section>
-
-          <section className="status-card__section">
-            <p className="status-card__eyebrow">Intentionally Deferred</p>
-            <ul className="status-list status-list--muted">
-              {deferredScope.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </section>
-
-          <section className="status-card__section">
-            <p className="status-card__eyebrow">Capability Profile</p>
-            <div className="capability-grid">
-              {capabilityRows.map(([label, supported]) => (
-                <div
-                  key={label}
-                  className={`capability-pill ${supported ? 'capability-pill--supported' : 'capability-pill--unsupported'}`}
-                >
-                  <span>{label}</span>
-                  <strong>{supported ? 'supported' : 'unsupported'}</strong>
+            <section className="drawer-section">
+              <p className="floating-card__eyebrow">Truth Snapshot</p>
+              <dl className="status-facts">
+                <div className="status-facts__row">
+                  <dt>Provider</dt>
+                  <dd>{mockTruthProvider.providerId}</dd>
                 </div>
-              ))}
-            </div>
-          </section>
+                <div className="status-facts__row">
+                  <dt>Kind</dt>
+                  <dd>{mockTruthProvider.providerKind}</dd>
+                </div>
+                <div className="status-facts__row">
+                  <dt>Dataset</dt>
+                  <dd>{truthSnapshot.datasetId}</dd>
+                </div>
+                <div className="status-facts__row">
+                  <dt>Service-relevant satellites</dt>
+                  <dd>{truthSnapshot.worldGeometry.satellites.length}</dd>
+                </div>
+              </dl>
+            </section>
 
-          <section className="status-card__section">
-            <p className="status-card__eyebrow">Current Service State</p>
-            <dl className="status-facts">
-              <div className="status-facts__row">
-                <dt>Availability</dt>
-                <dd>{availabilityLabel}</dd>
+            <section className="drawer-section">
+              <p className="floating-card__eyebrow">Included Now</p>
+              <ul className="status-list">
+                {completedScope.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </section>
+
+            <section className="drawer-section">
+              <p className="floating-card__eyebrow">Intentionally Deferred</p>
+              <ul className="status-list status-list--muted">
+                {deferredScope.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </section>
+
+            <section className="drawer-section">
+              <p className="floating-card__eyebrow">Capability Profile</p>
+              <div className="capability-grid">
+                {capabilityRows.map(([label, supported]) => (
+                  <div
+                    key={label}
+                    className={`capability-pill ${supported ? 'capability-pill--supported' : 'capability-pill--unsupported'}`}
+                  >
+                    <span>{label}</span>
+                    <strong>{supported ? 'supported' : 'unsupported'}</strong>
+                  </div>
+                ))}
               </div>
-              <div className="status-facts__row">
-                <dt>Current visible relay path</dt>
-                <dd>{currentCorridorLabel}</dd>
+            </section>
+
+            <section className="drawer-section">
+              <p className="floating-card__eyebrow">Candidate Corridor Availability</p>
+              <div className="candidate-cards">
+                {candidatePaths.map((candidate) => (
+                  <article
+                    key={candidate.id}
+                    className={`candidate-card candidate-card--${candidate.state}`}
+                  >
+                    <p className="candidate-card__state">{candidate.state}</p>
+                    <p className="candidate-card__label">{candidate.label}</p>
+                  </article>
+                ))}
               </div>
-              <div className="status-facts__row">
-                <dt>Selected relay</dt>
-                <dd>
-                  {truthSnapshot.serviceSelection.kind === 'supported' && truthSnapshot.serviceSelection.selectedRelayId
-                    ? satelliteLabels.get(truthSnapshot.serviceSelection.selectedRelayId) ?? truthSnapshot.serviceSelection.selectedRelayId
-                    : 'Not provided'}
-                </dd>
+            </section>
+
+            <section className="drawer-section">
+              <p className="floating-card__eyebrow">Conservative Boundaries</p>
+              <ul className="status-list status-list--muted">
+                {conservativeBoundaries.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </section>
+
+            <section className="drawer-section">
+              <p className="floating-card__eyebrow">WorldGeometryTruth Endpoints</p>
+              <div className="endpoint-cards">
+                {truthSnapshot.worldGeometry.endpoints.map((endpoint) => (
+                  <article
+                    key={endpoint.id}
+                    className="endpoint-card"
+                    style={{ '--endpoint-accent': endpoint.accentColor } as CSSProperties}
+                  >
+                    <p className="endpoint-card__label">{endpoint.label}</p>
+                    <p className="endpoint-card__region">{endpoint.regionLabel}</p>
+                    <p className="endpoint-card__coords">
+                      {endpoint.position.latitudeDeg.toFixed(1)}°, {endpoint.position.longitudeDeg.toFixed(1)}°
+                    </p>
+                  </article>
+                ))}
               </div>
-            </dl>
-          </section>
+            </section>
 
-          <section className="status-card__section">
-            <p className="status-card__eyebrow">Candidate Corridor Availability</p>
-            <div className="candidate-cards">
-              {candidatePaths.map((candidate) => (
-                <article
-                  key={candidate.id}
-                  className={`candidate-card candidate-card--${candidate.state}`}
-                >
-                  <p className="candidate-card__state">{candidate.state}</p>
-                  <p className="candidate-card__label">{candidate.label}</p>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <section className="status-card__section">
-            <p className="status-card__eyebrow">Conservative Boundaries</p>
-            <ul className="status-list status-list--muted">
-              {conservativeBoundaries.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </section>
-
-          <section className="status-card__section">
-            <p className="status-card__eyebrow">WorldGeometryTruth Endpoints</p>
-            <div className="endpoint-cards">
-              {truthSnapshot.worldGeometry.endpoints.map((endpoint) => (
-                <article
-                  key={endpoint.id}
-                  className="endpoint-card"
-                  style={{ '--endpoint-accent': endpoint.accentColor } as CSSProperties}
-                >
-                  <p className="endpoint-card__label">{endpoint.label}</p>
-                  <p className="endpoint-card__region">{endpoint.regionLabel}</p>
-                  <p className="endpoint-card__coords">
-                    {endpoint.position.latitudeDeg.toFixed(1)}°, {endpoint.position.longitudeDeg.toFixed(1)}°
-                  </p>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <section className="status-card__section">
-            <p className="status-card__eyebrow">WorldGeometryTruth Satellites</p>
-            <div className="endpoint-cards">
-              {truthSnapshot.worldGeometry.satellites.map((satellite) => (
-                <article
-                  key={satellite.id}
-                  className="endpoint-card"
-                >
-                  <p className="endpoint-card__label">{satellite.label}</p>
-                  <p className="endpoint-card__region">Service-relevant satellite</p>
-                  <p className="endpoint-card__coords">
-                    {satellite.position.latitudeDeg.toFixed(1)}°, {satellite.position.longitudeDeg.toFixed(1)}°
-                    {' | '}
-                    {satellite.position.altitudeKm?.toFixed(0) ?? '0'} km
-                  </p>
-                </article>
-              ))}
-            </div>
-          </section>
+            <section className="drawer-section">
+              <p className="floating-card__eyebrow">WorldGeometryTruth Satellites</p>
+              <div className="endpoint-cards">
+                {truthSnapshot.worldGeometry.satellites.map((satellite) => (
+                  <article
+                    key={satellite.id}
+                    className="endpoint-card"
+                  >
+                    <p className="endpoint-card__label">{satellite.label}</p>
+                    <p className="endpoint-card__region">Service-relevant satellite</p>
+                    <p className="endpoint-card__coords">
+                      {satellite.position.latitudeDeg.toFixed(1)}°, {satellite.position.longitudeDeg.toFixed(1)}°
+                      {' | '}
+                      {satellite.position.altitudeKm?.toFixed(0) ?? '0'} km
+                    </p>
+                  </article>
+                ))}
+              </div>
+            </section>
+          </div>
         </aside>
-      </main>
+      </div>
     </div>
   );
 }

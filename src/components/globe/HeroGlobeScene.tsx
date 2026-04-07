@@ -20,6 +20,7 @@ export function HeroGlobeScene({
 }: HeroGlobeSceneProps) {
   return (
     <Canvas
+      className="hero-globe-canvas"
       dpr={[1, 1.8]}
       gl={{
         antialias: true,
@@ -32,18 +33,22 @@ export function HeroGlobeScene({
 
       <PerspectiveCamera
         makeDefault
-        position={[5.4, 2.8, 5.4]}
-        fov={24}
+        position={[0.85, 1.45, 10.8]}
+        fov={32}
         near={0.1}
-        far={80}
+        far={120}
       />
 
       <OrbitControls
         enableDamping
         dampingFactor={0.08}
         enablePan={false}
-        minDistance={4.8}
-        maxDistance={8.8}
+        // Keep the whole globe readable at initial load while still allowing a closer
+        // corridor inspection pass without letting the camera fly off into empty space.
+        minDistance={3}
+        maxDistance={20}
+        zoomSpeed={0.85}
+        rotateSpeed={0.72}
         minPolarAngle={0.45}
         maxPolarAngle={Math.PI - 0.45}
       />

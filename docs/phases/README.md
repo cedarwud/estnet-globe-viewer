@@ -15,8 +15,10 @@
 3. [phase-02-canonical-truth-mock-path.md](./phase-02-canonical-truth-mock-path.md)
    - canonical truth vocabulary、mock truth provider、single snapshot data flow
 4. [phase-03-selective-service-corridor.md](./phase-03-selective-service-corridor.md)
-   - active corridor、unavailable candidate、service-relevant satellites、保守 visual difference
+  - active corridor、unavailable candidate、service-relevant satellites、保守 visual difference
+5. [phase-04-full-stage-globe-presentation.md](./phase-04-full-stage-globe-presentation.md)
+   - full-stage globe shell、較自然的 zoom/framing、compact HUD + on-demand drawer
 
 ## 下一階段
 
-下一個預期階段是 `reference replay smoke via estnet-bootstrap-kit`，但在它真的落地之前，不先建立空文件冒充完成。
+下一個候選階段仍可能是 `reference replay smoke via estnet-bootstrap-kit`，但前提是這一版 presentation shell 已經被接受，否則不提早進資料整合。

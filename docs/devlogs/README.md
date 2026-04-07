@@ -18,3 +18,5 @@
    - 第三個 commit 的 truth contracts、mock provider seam 與 single snapshot data flow
 4. [2026-04-07-selective-service-corridor.md](./2026-04-07-selective-service-corridor.md)
    - 第四個 commit 的 corridor overlay、service-relevant satellites 與 capability 更新
+5. [2026-04-07-full-stage-globe-presentation.md](./2026-04-07-full-stage-globe-presentation.md)
+   - 第五個 commit 的 presentation stabilization、overlay 收斂與 camera framing 調整

@@ -35,7 +35,7 @@ export function HeroGlobe({
         <meshStandardMaterial
           color="#0f223a"
           emissive={new Color('#1f466d')}
-          emissiveIntensity={0.34}
+          emissiveIntensity={0.42}
           roughness={0.84}
           metalness={0.08}
         />
@@ -46,7 +46,7 @@ export function HeroGlobe({
         <meshBasicMaterial
           color="#3eb0ff"
           transparent
-          opacity={0.08}
+          opacity={0.11}
           side={BackSide}
           depthWrite={false}
         />

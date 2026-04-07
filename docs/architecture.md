@@ -10,6 +10,15 @@
 2. 讓兩個遠距 endpoints 與目前的 service corridor 成為第一主角。
 3. 在沒有 dashboard 幫忙解說的前提下，讓 active / unavailable 差異一眼可懂。
 
+## Presentation Shell Boundary
+
+目前的 presentation model 明確要求：
+
+1. globe 必須是 full-stage / full-browser primary scene。
+2. overlay 只能是輔助資訊層，不是新的 dashboard rail。
+3. 長時間常駐資訊必須收斂成 compact HUD；詳細內容進入可展開 drawer。
+4. camera / controls 必須同時支援完整地球 framing 與較近的 corridor inspection。
+
 ## 產品 claim
 
 在大約 10 秒內，reviewer 應能理解：
@@ -65,7 +74,8 @@ repo 內的正式文件分為四層：
 
 - Vite + React + TypeScript shell
 - Three.js / React Three Fiber globe scene
-- orbit / zoom camera baseline
+- full-stage globe shell
+- orbit / zoom camera baseline with wider usable framing range
 - canonical truth vocabulary
 - minimal `TruthProvider`
 - mock truth seed + adapter + provider
@@ -73,6 +83,7 @@ repo 內的正式文件分為四層：
 - service-relevant satellites sourced from `WorldGeometryTruth`
 - one current service corridor plus one unavailable candidate corridor
 - active / unavailable 的第一版保守差異
+- compact HUD plus on-demand details drawer instead of a permanent dashboard side rail
 
 這個 baseline 的用途是先證明 `HeroGlobeScene` 能獨立站起來，且 scene / UI 已能透過同一份 canonical snapshot 讀值，而不是提前宣稱 service truth 已完整存在。
 
@@ -86,6 +97,12 @@ repo 內的正式文件分為四層：
 - hero site module
 - KPI dashboard
 - producer-backed replay integration
+
+而且目前刻意延後：
+
+- `estnet-bootstrap-kit` reference replay smoke
+
+原因是 viewer shell 還需要先維持 globe-first presentation 的穩定性，避免被過早的 producer surface 綁死。
 
 目前對 truth 的保守邊界是：
 
