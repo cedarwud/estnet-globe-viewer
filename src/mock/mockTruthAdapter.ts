@@ -11,8 +11,8 @@ import type { MockTruthSeed } from './mockTruthSeed';
 function buildCapabilityProfile(): DatasetCapabilityProfile {
   return {
     supportsGlobalPositions: true,
-    supportsPathAvailability: false,
-    supportsActivePath: false,
+    supportsPathAvailability: true,
+    supportsActivePath: true,
     supportsDerivedEvents: false,
     supportsProducerEvents: false,
     supportsContext3DTilesHints: false,
@@ -34,25 +34,41 @@ function buildWorldGeometryTruth(seed: MockTruthSeed): WorldGeometryTruth {
         altitudeKm: null,
       },
     })),
-    satellites: [],
+    satellites: seed.worldSatellites.map((satellite) => ({
+      id: satellite.id,
+      label: satellite.label,
+      position: {
+        latitudeDeg: satellite.latDeg,
+        longitudeDeg: satellite.lonDeg,
+        altitudeKm: satellite.altitudeKm,
+      },
+    })),
   };
 }
 
-function buildUnsupportedAvailabilityTruth(): ServiceAvailabilityTruth {
+function buildServiceAvailabilityTruth(seed: MockTruthSeed): ServiceAvailabilityTruth {
   return {
-    kind: 'unsupported',
-    reason: 'Mock truth baseline does not claim path availability or availability envelope inputs yet.',
-    currentAvailability: null,
-    candidatePaths: [],
+    kind: 'supported',
+    currentAvailability: seed.currentAvailability,
+    candidatePaths: seed.candidatePaths.map((path) => ({
+      id: path.id,
+      endpointIds: path.endpointIds,
+      relaySatelliteIds: path.relaySatelliteIds,
+      state: path.state,
+    })),
   };
 }
 
-function buildUnsupportedSelectionTruth(): ServiceSelectionTruth {
+function buildServiceSelectionTruth(seed: MockTruthSeed): ServiceSelectionTruth {
   return {
-    kind: 'unsupported',
-    reason: 'Mock truth baseline does not claim an active path or selected relay yet.',
-    activePath: null,
-    selectedRelayId: null,
+    kind: 'supported',
+    activePath: seed.activePath
+      ? {
+          endpointIds: seed.activePath.endpointIds,
+          relaySatelliteIds: seed.activePath.relaySatelliteIds,
+        }
+      : null,
+    selectedRelayId: seed.activePath?.selectedRelayId ?? null,
   };
 }
 
@@ -70,10 +86,10 @@ export function adaptMockTruthSeed(seed: MockTruthSeed): CanonicalTruthSnapshot 
     datasetLabel: seed.datasetLabel,
     summary: seed.summary,
     worldGeometry: buildWorldGeometryTruth(seed),
-    // Availability and selection stay explicitly unsupported here so the UI cannot imply
-    // corridor or routing truth before the next milestone actually implements it.
-    serviceAvailability: buildUnsupportedAvailabilityTruth(),
-    serviceSelection: buildUnsupportedSelectionTruth(),
+    // This baseline only exposes the minimum selection and availability truth needed to draw
+    // one current corridor plus one unavailable candidate without implying broader routing truth.
+    serviceAvailability: buildServiceAvailabilityTruth(seed),
+    serviceSelection: buildServiceSelectionTruth(seed),
     eventTruth: buildEmptyDerivedEventTruth(),
     capabilityProfile: buildCapabilityProfile(),
   };

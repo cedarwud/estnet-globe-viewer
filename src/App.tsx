@@ -7,15 +7,15 @@ import { useTruthSnapshot } from './truth/useTruthSnapshot';
 const completedScope = [
   'Canonical truth vocabulary and dataset capability profile',
   'Minimal synchronous TruthProvider seam',
-  'In-memory mock truth path with placeholder adapter',
+  'In-memory mock truth path with service corridor baseline',
   'Hero globe scene and status UI reading the same truth snapshot',
 ];
 
 const deferredScope = [
-  'Selective service corridor baseline',
-  'Active versus unavailable visual grammar',
-  'Selective satellite context',
   'Reference replay smoke via estnet-bootstrap-kit',
+  'Focus lens follow-on interface',
+  'Premium world context and site assets',
+  'Producer-backed event truth and handover cause',
 ];
 
 function capabilityEntries(capabilities: DatasetCapabilityProfile) {
@@ -30,34 +30,75 @@ function capabilityEntries(capabilities: DatasetCapabilityProfile) {
   ] as const;
 }
 
+function formatCorridorLabel(
+  endpointIds: [string, string],
+  relaySatelliteIds: string[],
+  labels: {
+    endpoint: Map<string, string>;
+    satellite: Map<string, string>;
+  }
+) {
+  return [
+    labels.endpoint.get(endpointIds[0]) ?? endpointIds[0],
+    ...relaySatelliteIds.map((relayId) => labels.satellite.get(relayId) ?? relayId),
+    labels.endpoint.get(endpointIds[1]) ?? endpointIds[1],
+  ].join(' -> ');
+}
+
 export function App() {
   const truthSnapshot = useTruthSnapshot(mockTruthProvider);
   const capabilityRows = capabilityEntries(truthSnapshot.capabilityProfile);
-  const truthGaps = [
-    truthSnapshot.serviceAvailability.kind === 'unsupported'
-      ? `ServiceAvailabilityTruth: ${truthSnapshot.serviceAvailability.reason}`
-      : `ServiceAvailabilityTruth: ${truthSnapshot.serviceAvailability.currentAvailability}`,
-    truthSnapshot.serviceSelection.kind === 'unsupported'
-      ? `ServiceSelectionTruth: ${truthSnapshot.serviceSelection.reason}`
-      : `ServiceSelectionTruth: active path ${truthSnapshot.serviceSelection.activePath ? 'present' : 'empty'}`,
+  const endpointLabels = new Map(truthSnapshot.worldGeometry.endpoints.map((endpoint) => [endpoint.id, endpoint.label]));
+  const satelliteLabels = new Map(truthSnapshot.worldGeometry.satellites.map((satellite) => [satellite.id, satellite.label]));
+  const currentCorridorLabel =
+    truthSnapshot.serviceSelection.kind === 'supported' && truthSnapshot.serviceSelection.activePath
+      ? formatCorridorLabel(
+          truthSnapshot.serviceSelection.activePath.endpointIds,
+          truthSnapshot.serviceSelection.activePath.relaySatelliteIds,
+          {
+            endpoint: endpointLabels,
+            satellite: satelliteLabels,
+          }
+        )
+      : 'No current visible relay path';
+  const availabilityLabel =
+    truthSnapshot.serviceAvailability.kind === 'supported'
+      ? truthSnapshot.serviceAvailability.currentAvailability
+      : 'unsupported';
+  const conservativeBoundaries = [
+    'The activePath wording remains limited to current service corridor / current active relay path / current visible relay path.',
+    'The unavailable candidate corridor is still mock availability truth, not KPI, SLA, or coverage-field truth.',
     truthSnapshot.eventTruth.events.length === 0
-      ? 'EventTruth: derived-only surface is present, but this baseline intentionally keeps the event set empty.'
-      : `EventTruth: ${truthSnapshot.eventTruth.events.length} derived events`,
+      ? 'EventTruth remains a derived-only surface with an intentionally empty event set in this static baseline.'
+      : `EventTruth contains ${truthSnapshot.eventTruth.events.length} derived cues.`,
+    'estnet-bootstrap-kit is still not connected. It remains a later reference producer integration step.',
   ];
+  const candidatePaths =
+    truthSnapshot.serviceAvailability.kind === 'supported'
+      ? truthSnapshot.serviceAvailability.candidatePaths.map((candidate) => ({
+          id: candidate.id,
+          state: candidate.state,
+          label: formatCorridorLabel(candidate.endpointIds, candidate.relaySatelliteIds, {
+            endpoint: endpointLabels,
+            satellite: satelliteLabels,
+          }),
+        }))
+      : [];
 
   return (
     <div className="shell">
       <header className="hero-copy">
-        <p className="hero-copy__eyebrow">Commit 03 Baseline</p>
-        <h1 className="hero-copy__title">Canonical Truth Mock Path</h1>
+        <p className="hero-copy__eyebrow">Commit 04 Baseline</p>
+        <h1 className="hero-copy__title">Selective Service Corridor</h1>
         <p className="hero-copy__body">
-          This stage keeps the viewer offline-first while moving the hero globe onto a real canonical truth
-          vocabulary, so future provider swaps replace the truth path instead of rewriting the scene or UI.
+          This stage keeps the globe offline-first while adding one current service corridor, one unavailable
+          candidate corridor, and a strictly limited set of service-relevant satellites on top of the canonical
+          truth path.
         </p>
 
         <div className="hero-copy__chips">
-          <span className="hero-chip">Mock TruthProvider seam</span>
-          <span className="hero-chip">Single canonical snapshot</span>
+          <span className="hero-chip">One active corridor</span>
+          <span className="hero-chip">One unavailable candidate</span>
           <span className="hero-chip">Main branch baseline</span>
         </div>
       </header>
@@ -72,12 +113,20 @@ export function App() {
             <p className="stage-card__meta">
               {truthSnapshot.datasetLabel}
               <br />
-              Orbit drag to inspect. Scroll to zoom.
+              Current availability: {availabilityLabel}
             </p>
           </div>
 
           <div className="stage-card__viewport">
-            <HeroGlobeScene endpoints={truthSnapshot.worldGeometry.endpoints} />
+            <HeroGlobeScene
+              worldGeometry={truthSnapshot.worldGeometry}
+              serviceAvailability={truthSnapshot.serviceAvailability}
+              serviceSelection={truthSnapshot.serviceSelection}
+            />
+            <div className="stage-card__legend">
+              <span className="scene-legend scene-legend--active">Current service corridor</span>
+              <span className="scene-legend scene-legend--unavailable">Unavailable candidate</span>
+            </div>
           </div>
         </section>
 
@@ -100,6 +149,10 @@ export function App() {
               <div className="status-facts__row">
                 <dt>Summary</dt>
                 <dd>{truthSnapshot.summary}</dd>
+              </div>
+              <div className="status-facts__row">
+                <dt>Service-relevant satellites</dt>
+                <dd>{truthSnapshot.worldGeometry.satellites.length}</dd>
               </div>
             </dl>
           </section>
@@ -138,9 +191,46 @@ export function App() {
           </section>
 
           <section className="status-card__section">
-            <p className="status-card__eyebrow">Current Truth Gaps</p>
+            <p className="status-card__eyebrow">Current Service State</p>
+            <dl className="status-facts">
+              <div className="status-facts__row">
+                <dt>Availability</dt>
+                <dd>{availabilityLabel}</dd>
+              </div>
+              <div className="status-facts__row">
+                <dt>Current visible relay path</dt>
+                <dd>{currentCorridorLabel}</dd>
+              </div>
+              <div className="status-facts__row">
+                <dt>Selected relay</dt>
+                <dd>
+                  {truthSnapshot.serviceSelection.kind === 'supported' && truthSnapshot.serviceSelection.selectedRelayId
+                    ? satelliteLabels.get(truthSnapshot.serviceSelection.selectedRelayId) ?? truthSnapshot.serviceSelection.selectedRelayId
+                    : 'Not provided'}
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          <section className="status-card__section">
+            <p className="status-card__eyebrow">Candidate Corridor Availability</p>
+            <div className="candidate-cards">
+              {candidatePaths.map((candidate) => (
+                <article
+                  key={candidate.id}
+                  className={`candidate-card candidate-card--${candidate.state}`}
+                >
+                  <p className="candidate-card__state">{candidate.state}</p>
+                  <p className="candidate-card__label">{candidate.label}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="status-card__section">
+            <p className="status-card__eyebrow">Conservative Boundaries</p>
             <ul className="status-list status-list--muted">
-              {truthGaps.map((item) => (
+              {conservativeBoundaries.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
@@ -159,6 +249,26 @@ export function App() {
                   <p className="endpoint-card__region">{endpoint.regionLabel}</p>
                   <p className="endpoint-card__coords">
                     {endpoint.position.latitudeDeg.toFixed(1)}°, {endpoint.position.longitudeDeg.toFixed(1)}°
+                  </p>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="status-card__section">
+            <p className="status-card__eyebrow">WorldGeometryTruth Satellites</p>
+            <div className="endpoint-cards">
+              {truthSnapshot.worldGeometry.satellites.map((satellite) => (
+                <article
+                  key={satellite.id}
+                  className="endpoint-card"
+                >
+                  <p className="endpoint-card__label">{satellite.label}</p>
+                  <p className="endpoint-card__region">Service-relevant satellite</p>
+                  <p className="endpoint-card__coords">
+                    {satellite.position.latitudeDeg.toFixed(1)}°, {satellite.position.longitudeDeg.toFixed(1)}°
+                    {' | '}
+                    {satellite.position.altitudeKm?.toFixed(0) ?? '0'} km
                   </p>
                 </article>
               ))}

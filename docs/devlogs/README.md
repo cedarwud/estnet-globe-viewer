@@ -16,3 +16,5 @@
    - 第二個 commit 的 runtime shell、hero globe 場景與驗證記錄
 3. [2026-04-07-canonical-truth-mock-path.md](./2026-04-07-canonical-truth-mock-path.md)
    - 第三個 commit 的 truth contracts、mock provider seam 與 single snapshot data flow
+4. [2026-04-07-selective-service-corridor.md](./2026-04-07-selective-service-corridor.md)
+   - 第四個 commit 的 corridor overlay、service-relevant satellites 與 capability 更新

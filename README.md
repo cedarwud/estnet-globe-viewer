@@ -4,11 +4,12 @@
 
 ## 目前狀態
 
-目前已完成兩個早期 baseline：
+目前已完成四個早期 baseline：
 
 1. `init estnet-globe-viewer repo skeleton`
 2. `add offline hero globe shell baseline`
 3. `add canonical truth interfaces and mock truth path`
+4. `add selective service corridor baseline`
 
 目前已可在沒有外部 producer 的情況下看到並驗證：
 
@@ -19,12 +20,17 @@
 - canonical truth vocabulary
 - 最小同步 `TruthProvider`
 - scene 與 UI 共用的 mock truth snapshot
+- 一條 current service corridor
+- 一條 unavailable candidate corridor
+- 極少量 service-relevant satellites
+- active / unavailable 的第一版可視差異
 
 目前仍尚未加入：
 
-- service corridor / active vs unavailable baseline
-- satellites / candidate context
 - `estnet-bootstrap-kit` 整合
+- focus lens
+- producer-backed events
+- premium world content / site assets
 
 ## 凍結方向
 
@@ -32,9 +38,9 @@
 - Post-V1 expansion model: `Service-Driven Hero Globe + Single Focus Lens`
 - First implementation slice: `offline-hero-globe-canonical-replay-baseline`
 
-## 第一個 commit 的邊界
+## Commit 邊界
 
-前兩個 baseline commit 目前分工如下：
+前四個 baseline commit 目前分工如下：
 
 1. `init estnet-globe-viewer repo skeleton`
    - `.gitignore` 與交付 hygiene baseline
@@ -58,10 +64,18 @@
    - mock truth seed + adapter + provider
    - hero globe 與 UI 共用的 single canonical snapshot
 
+4. `add selective service corridor baseline`
+   - 最小 satellite geometry
+   - 第一版 `ServiceAvailabilityTruth`
+   - 第一版 `ServiceSelectionTruth`
+   - 1 條 current service corridor
+   - 1 條 unavailable candidate corridor
+   - active / unavailable 的第一版差異
+   - scene 與 UI 仍共用同一份 canonical snapshot
+
 目前仍刻意不做：
 
 - replay adapter、reference dataset smoke、producer integration
-- service corridor baseline
 - `focus lens`、hero site、premium world content
 - KPI dashboard 或任何超出 truth 邊界的 claims
 
@@ -73,7 +87,8 @@
 4. [docs/phases/phase-00-repo-init.md](./docs/phases/phase-00-repo-init.md)
 5. [docs/phases/phase-01-offline-hero-globe-shell.md](./docs/phases/phase-01-offline-hero-globe-shell.md)
 6. [docs/phases/phase-02-canonical-truth-mock-path.md](./docs/phases/phase-02-canonical-truth-mock-path.md)
-7. [docs/devlogs/2026-04-07-canonical-truth-mock-path.md](./docs/devlogs/2026-04-07-canonical-truth-mock-path.md)
+7. [docs/phases/phase-03-selective-service-corridor.md](./docs/phases/phase-03-selective-service-corridor.md)
+8. [docs/devlogs/2026-04-07-selective-service-corridor.md](./docs/devlogs/2026-04-07-selective-service-corridor.md)
 
 ## 快速開始
 
@@ -98,6 +113,7 @@ npm run preview
 ```
 
 目前畫面由 repo 內的 mock truth provider 驅動，不依賴任何外部 replay producer。
+`activePath` 只被描述為 current service corridor / current active relay path / current visible relay path，不宣稱 routing truth。
 
 ## 目錄
 
@@ -119,6 +135,6 @@ estnet-globe-viewer/
 
 下一個建議 commit 是：
 
-- `add selective service corridor baseline`
+- `add reference replay smoke via estnet-bootstrap-kit`
 
-它應該開始補 selective satellite visibility、service corridor、active / unavailable baseline，以及最小 derived event cue，但仍先不接 `estnet-bootstrap-kit`。
+它才開始接 canonical replay adapter 與第一批 reference dataset smoke；在那之前，viewer core 仍保持對外部 producer 低耦合。

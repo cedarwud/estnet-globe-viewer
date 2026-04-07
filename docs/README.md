@@ -11,8 +11,9 @@
 5. [phases/phase-00-repo-init.md](./phases/phase-00-repo-init.md)
 6. [phases/phase-01-offline-hero-globe-shell.md](./phases/phase-01-offline-hero-globe-shell.md)
 7. [phases/phase-02-canonical-truth-mock-path.md](./phases/phase-02-canonical-truth-mock-path.md)
-8. [devlogs/README.md](./devlogs/README.md)
-9. [devlogs/2026-04-07-canonical-truth-mock-path.md](./devlogs/2026-04-07-canonical-truth-mock-path.md)
+8. [phases/phase-03-selective-service-corridor.md](./phases/phase-03-selective-service-corridor.md)
+9. [devlogs/README.md](./devlogs/README.md)
+10. [devlogs/2026-04-07-selective-service-corridor.md](./devlogs/2026-04-07-selective-service-corridor.md)
 
 ## 文件分類
 
@@ -28,12 +29,16 @@
   - 第二個 commit 的 app shell、hero globe baseline 與排除項
 - [phases/phase-02-canonical-truth-mock-path.md](./phases/phase-02-canonical-truth-mock-path.md)
   - 第三個 commit 的 canonical truth model、mock provider seam 與排除項
+- [phases/phase-03-selective-service-corridor.md](./phases/phase-03-selective-service-corridor.md)
+  - 第四個 commit 的 service corridor baseline、active / unavailable 對比與 no-spaghetti 邊界
 - [devlogs/README.md](./devlogs/README.md)
   - 開發日誌索引
 - [devlogs/2026-04-07-offline-hero-globe-shell.md](./devlogs/2026-04-07-offline-hero-globe-shell.md)
   - 第二個 commit 的 runtime 選型、場景組成與驗證記錄
 - [devlogs/2026-04-07-canonical-truth-mock-path.md](./devlogs/2026-04-07-canonical-truth-mock-path.md)
   - 第三個 commit 的 truth contracts、mock adapter、provider seam 與驗證記錄
+- [devlogs/2026-04-07-selective-service-corridor.md](./devlogs/2026-04-07-selective-service-corridor.md)
+  - 第四個 commit 的 corridor rendering、satellite selection 與 capability 升級記錄
 - [../archive/README.md](../archive/README.md)
   - 過時或被替換文件的安置規則
 

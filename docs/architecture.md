@@ -70,6 +70,9 @@ repo 內的正式文件分為四層：
 - minimal `TruthProvider`
 - mock truth seed + adapter + provider
 - endpoint anchors sourced from `WorldGeometryTruth`
+- service-relevant satellites sourced from `WorldGeometryTruth`
+- one current service corridor plus one unavailable candidate corridor
+- active / unavailable 的第一版保守差異
 
 這個 baseline 的用途是先證明 `HeroGlobeScene` 能獨立站起來，且 scene / UI 已能透過同一份 canonical snapshot 讀值，而不是提前宣稱 service truth 已完整存在。
 
@@ -77,8 +80,6 @@ repo 內的正式文件分為四層：
 
 目前 baseline 不包含：
 
-- service corridor baseline
-- selective satellite visibility
 - derived event cue
 - focus lens
 - premium world content
@@ -89,7 +90,8 @@ repo 內的正式文件分為四層：
 目前對 truth 的保守邊界是：
 
 - `WorldGeometryTruth` 已提供 endpoint global positions
-- `ServiceAvailabilityTruth` 仍明確標記為 `unsupported`
-- `ServiceSelectionTruth` 仍明確標記為 `unsupported`
+- `WorldGeometryTruth` 目前只保留極少量 service-relevant satellites，不做 full constellation
+- `ServiceAvailabilityTruth` 已提供當前 availability 與極少量 candidate path availability
+- `ServiceSelectionTruth` 已提供 `activePath`，但只用 `current service corridor` / `current active relay path` / `current visible relay path` 語言
 - `EventTruth` 仍只保留 `derived` 型別，且目前是空集合
 - `estnet-bootstrap-kit` 尚未接入，之後只作 reference producer

@@ -1,13 +1,23 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Stars } from '@react-three/drei';
-import type { EndpointGeometryTruth } from '../../truth/contracts';
+import type {
+  ServiceAvailabilityTruth,
+  ServiceSelectionTruth,
+  WorldGeometryTruth,
+} from '../../truth/contracts';
 import { HeroGlobe } from './HeroGlobe';
 
 interface HeroGlobeSceneProps {
-  endpoints: EndpointGeometryTruth[];
+  worldGeometry: WorldGeometryTruth;
+  serviceAvailability: ServiceAvailabilityTruth;
+  serviceSelection: ServiceSelectionTruth;
 }
 
-export function HeroGlobeScene({ endpoints }: HeroGlobeSceneProps) {
+export function HeroGlobeScene({
+  worldGeometry,
+  serviceAvailability,
+  serviceSelection,
+}: HeroGlobeSceneProps) {
   return (
     <Canvas
       dpr={[1, 1.8]}
@@ -65,7 +75,11 @@ export function HeroGlobeScene({ endpoints }: HeroGlobeSceneProps) {
         speed={0.55}
       />
 
-      <HeroGlobe endpoints={endpoints} />
+      <HeroGlobe
+        worldGeometry={worldGeometry}
+        serviceAvailability={serviceAvailability}
+        serviceSelection={serviceSelection}
+      />
     </Canvas>
   );
 }
