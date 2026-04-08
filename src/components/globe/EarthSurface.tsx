@@ -1,7 +1,15 @@
 import { useMemo } from 'react';
 import { useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
-import { Color, SRGBColorSpace, Texture, Vector3, type Vector3Tuple } from 'three';
+import {
+  AdditiveBlending,
+  BackSide,
+  Color,
+  SRGBColorSpace,
+  Texture,
+  Vector3,
+  type Vector3Tuple,
+} from 'three';
 
 interface EarthSurfaceBaseProps {
   radius: number;
@@ -14,6 +22,10 @@ interface EarthDaySurfaceProps extends EarthSurfaceBaseProps {
 interface EarthDayNightSurfaceProps extends EarthSurfaceBaseProps {
   dayTextureUrl: string;
   nightTextureUrl: string;
+  sunDirection: Vector3Tuple;
+}
+
+interface EarthAtmosphereShellProps extends EarthSurfaceBaseProps {
   sunDirection: Vector3Tuple;
 }
 
@@ -65,6 +77,45 @@ void main() {
   color += vec3(0.02, 0.04, 0.08) * twilight * 0.35;
 
   gl_FragColor = vec4(color, 1.0);
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+}
+`;
+
+const atmosphereVertexShader = `
+varying vec3 vWorldNormal;
+varying vec3 vWorldPosition;
+
+void main() {
+  vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+  vWorldPosition = worldPosition.xyz;
+  vWorldNormal = normalize(mat3(modelMatrix) * normal);
+  gl_Position = projectionMatrix * viewMatrix * worldPosition;
+}
+`;
+
+const atmosphereFragmentShader = `
+uniform vec3 sunDirection;
+uniform vec3 dayColor;
+uniform vec3 twilightColor;
+uniform float rimPower;
+uniform float intensity;
+
+varying vec3 vWorldNormal;
+varying vec3 vWorldPosition;
+
+void main() {
+  vec3 normal = normalize(vWorldNormal);
+  vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
+  float rim = pow(clamp(1.0 - max(dot(viewDirection, normal), 0.0), 0.0, 1.0), rimPower);
+  float sunDot = dot(normal, normalize(sunDirection));
+  float dayScatter = smoothstep(-0.2, 0.65, sunDot);
+  float twilight = 1.0 - smoothstep(0.05, 0.45, abs(sunDot));
+
+  vec3 color = mix(dayColor, twilightColor, twilight * 0.58);
+  float opacity = rim * intensity * (0.28 + dayScatter * 0.55 + twilight * 0.24);
+
+  gl_FragColor = vec4(color, opacity);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }
@@ -152,6 +203,44 @@ export function EarthDayNightSurface({
         uniforms={uniforms}
         vertexShader={earthShaderVertex}
         fragmentShader={earthShaderFragment}
+      />
+    </mesh>
+  );
+}
+
+export function EarthAtmosphereShell({ radius, sunDirection }: EarthAtmosphereShellProps) {
+  const normalizedSunDirection = useMemo(
+    () => new Vector3(...sunDirection).normalize(),
+    [sunDirection]
+  );
+  const uniforms = useMemo(
+    () => ({
+      // Step 4 keeps atmosphere procedural and restrained. This adds depth and
+      // a planetary rim without introducing another approved runtime asset.
+      sunDirection: { value: normalizedSunDirection },
+      dayColor: { value: new Color('#7fb6ff') },
+      twilightColor: { value: new Color('#b8d8ff') },
+      rimPower: { value: 3.6 },
+      intensity: { value: 0.38 },
+    }),
+    [normalizedSunDirection]
+  );
+
+  return (
+    <mesh
+      name="earth-atmosphere-shell"
+      scale={1.032}
+      renderOrder={1}
+    >
+      <sphereGeometry args={[radius, 96, 96]} />
+      <shaderMaterial
+        uniforms={uniforms}
+        vertexShader={atmosphereVertexShader}
+        fragmentShader={atmosphereFragmentShader}
+        side={BackSide}
+        transparent
+        depthWrite={false}
+        blending={AdditiveBlending}
       />
     </mesh>
   );

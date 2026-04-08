@@ -92,10 +92,8 @@ export function EndpointAnchor({ endpoint, globeRadius }: EndpointAnchorProps) {
           ]}
         >
           <Html
-            transform
-            sprite
+            center
             occlude={false}
-            distanceFactor={7.5}
           >
             <div
               className="endpoint-scene-label"

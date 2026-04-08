@@ -107,6 +107,7 @@ repo 內的正式文件分為五層：
 - active / unavailable 的第一版保守差異
 - compact HUD plus on-demand details drawer instead of a permanent dashboard side rail
 - formal day-night Earth shader v1 with explicit `sunDirection` control
+- restrained procedural atmosphere shell that does not depend on a new runtime texture asset
 - corridor-aware first screen with explicit `Home` / `Fit Corridor` actions
 - globe-centered framing helpers instead of generic free pan
 - minimal in-scene endpoint labels plus clearer endpoint / relay / corridor hierarchy
@@ -119,7 +120,7 @@ repo 內的正式文件分為五層：
 
 目前 baseline 不包含：
 
-- cloud shell / atmosphere
+- cloud shell
 - bloom
 - derived event cue
 - focus lens
@@ -130,10 +131,10 @@ repo 內的正式文件分為五層：
 
 而且目前刻意延後：
 
-- Step 4 visual follow-ons after the Step 3 framing polish
+- Step 5 visual follow-ons after the Step 4 atmosphere / overlay pass
 - `estnet-bootstrap-kit` reference replay smoke
 
-原因是 Step 3 只解決 first-screen comprehension、corridor inspection framing、與 scene semantic polish，不處理 clouds、atmosphere、bloom、focus lens、或更大的 control overhaul。
+原因是 Step 4 只補 restrained atmosphere 與 overlay reduction，不處理 cloud asset intake、bloom、focus lens、或更大的 control overhaul。
 
 目前對 truth 的保守邊界是：
 

@@ -11,15 +11,17 @@ import { useTruthSnapshot } from './truth/useTruthSnapshot';
 const completedScope = [
   'Approved NASA day and night runtime derivatives through the existing imagery seam',
   'Day-night Earth shader v1 with a controlled terminator and restrained twilight band',
+  'Restrained procedural atmosphere shell that adds depth without introducing a new runtime asset',
   'Corridor-aware first screen with explicit Home and Fit Corridor framing actions',
   'Natural zoom range from whole-globe read to closer corridor inspection',
   'In-scene endpoint labels and clearer endpoint / relay / corridor hierarchy',
-  'Compact HUD plus on-demand drawer instead of a permanent dashboard rail',
+  'Reduced persistent overlay with more detail pushed down into the drawer',
   'Mock truth scene and overlays still reading the same canonical snapshot',
 ];
 
 const deferredScope = [
-  'Cloud shell, atmosphere shader, and bloom follow-ons',
+  'Cloud shell pending approved runtime asset intake and governance record',
+  'Bloom follow-on',
   'estnet-bootstrap-kit reference replay smoke',
   'Focus lens follow-on interface',
   'Premium world context and site assets',
@@ -89,8 +91,8 @@ export function App() {
     'The activePath wording remains limited to current service corridor / current active relay path / current visible relay path.',
     'The unavailable candidate corridor is still mock availability truth, not KPI, SLA, or coverage-field truth.',
     'Dark-side readability now comes from a controlled day/night shader and approved Black Marble night lights, not from washing the whole globe with ambient fill.',
-    'Step 3 adds Home and Fit Corridor, but it still does not permit generic free pan or free-fly camera drift.',
-    'Step 3 still does not claim clouds, atmosphere, bloom, or a full planet-rendering stack.',
+    'Step 4 keeps Home and Fit Corridor, but it still does not permit generic free pan or free-fly camera drift.',
+    'Step 4 adds a restrained atmosphere shell, not bloom, not a cloud pack, and not a full planet-rendering stack.',
     truthSnapshot.eventTruth.events.length === 0
       ? 'EventTruth remains a derived-only surface with an intentionally empty event set in this static baseline.'
       : `EventTruth contains ${truthSnapshot.eventTruth.events.length} derived cues.`,
@@ -115,7 +117,7 @@ export function App() {
       : 'none-approved';
   const earthSurfaceMode =
     earthImageryAvailability === 'approved-runtime'
-      ? 'Day-night Earth shader v1'
+      ? 'Day-night Earth shader v1 + restrained atmosphere'
       : earthTextures?.dayTextureUrl
         ? 'Step 1 day-only fallback surface'
         : 'Placeholder globe fallback';
@@ -143,22 +145,19 @@ export function App() {
 
       <div className="viewer-overlay">
         <header className="floating-card hero-overlay">
-          <p className="floating-card__eyebrow">Current Service View</p>
-          <h1 className="hero-overlay__title">Service-Driven Hero Globe</h1>
-          <p className="hero-overlay__body">
-            The first frame now opens already centered on the current endpoint pair and active relay
-            corridor. Use Fit Corridor for a tighter inspection or Home to reset the whole-globe hero view.
+          <p className="floating-card__eyebrow">Service-Driven Hero Globe</p>
+          <p className="hero-overlay__summary">
+            Two distant endpoints framed by one current relay corridor.
           </p>
         </header>
 
         <div className="top-hud">
           <div className="floating-card scene-status">
-            <p className="floating-card__eyebrow">Current State</p>
+            <p className="floating-card__eyebrow">Current Service</p>
             <div className="scene-status__row">
               <span className={`availability-pill availability-pill--${availabilityTone}`}>
                 {availabilityLabel}
               </span>
-              <span className="scene-status__dataset">{truthSnapshot.datasetLabel}</span>
             </div>
             <p className="scene-status__path">{currentCorridorLabel}</p>
           </div>
@@ -190,20 +189,9 @@ export function App() {
           </div>
         </div>
 
-        <section className="floating-card service-ribbon">
-          <p className="floating-card__eyebrow">Current Visible Relay Path</p>
-          <p className="service-ribbon__path">{currentCorridorLabel}</p>
-          <p className="service-ribbon__hint">
-            Drag to rotate. Scroll to zoom. Use Home to reset the hero framing or Fit Corridor for a closer corridor read.
-          </p>
-        </section>
-
-        <section className="floating-card legend-overlay">
-          <p className="floating-card__eyebrow">Legend</p>
-          <div className="legend-overlay__items">
-            <span className="scene-legend scene-legend--active">Current service corridor</span>
-            <span className="scene-legend scene-legend--unavailable">Unavailable candidate</span>
-          </div>
+        <section className="legend-overlay" aria-label="Scene legend">
+          <span className="scene-legend scene-legend--active">Current corridor</span>
+          <span className="scene-legend scene-legend--unavailable">Unavailable candidate</span>
         </section>
 
         <aside

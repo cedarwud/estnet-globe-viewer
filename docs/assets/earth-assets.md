@@ -4,16 +4,18 @@ This document is the repo-local governance record for Earth imagery intake.
 
 It defines what may become an approved runtime Earth asset inside `estnet-globe-viewer`, and it records the approved Step 1 day derivative plus the approved Step 2 night derivative.
 
-## Current Step 2 Status
+## Current Step 4 Status
 
 - Step 0 established the governance boundary and minimal imagery seam.
 - Step 1 promoted one approved NASA Blue Marble day derivative into the runtime baseline.
 - Step 2 keeps that day baseline, adds an approved NASA Black Marble night derivative, and promotes a formal day-night Earth shader v1.
+- Step 4 adds a restrained procedural atmosphere shell without introducing another runtime asset.
 - Approved runtime filenames:
   - `public/assets/earth/earth-day-nasa-blue-marble-ng-4096x2048.webp`
   - `public/assets/earth/earth-night-nasa-black-marble-2016-4096x2048.webp`
-- The scene now uses a controlled day-night Earth surface on the main path.
+- The scene now uses a controlled day-night Earth surface plus a restrained atmosphere shell on the main path.
 - Step 1 day-only fallback and placeholder fallback still exist, but they are explicit guards instead of the intended success path.
+- No cloud runtime asset is currently approved. Cloud shell remains intentionally deferred until a formal intake record exists.
 
 ## Storage Boundary
 
@@ -65,7 +67,8 @@ Any Earth asset that becomes a committed runtime asset must satisfy all of these
 
 ### Deferred Follow-ons
 
-- Clouds, atmosphere, bloom, and any additional support textures remain Step 3-or-later surfaces, not part of this intake.
+- Cloud shell and bloom remain follow-on surfaces, not part of the current approved runtime asset intake.
+- Step 4 atmosphere is procedural and therefore does not add a new governed runtime texture file.
 - Natural Earth may still be considered later only for helper masks or support textures, not as the final main day albedo.
 
 ## Preprocessing Record
@@ -124,3 +127,9 @@ Step 2 now means:
 - the globe uses a formal day-night shader v1 with explicit `sunDirection` control
 - twilight handling and dark-side readability are solved by controlled texture mixing, not by global fill light
 - clouds, atmosphere, and bloom remain intentionally deferred beyond this step
+
+Step 4 now means:
+
+- the globe keeps the approved Step 1/2 day-night runtime asset set
+- atmosphere is added as a restrained procedural shell, not as a new runtime texture claim
+- no cloud shell is introduced unless a formal, approved cloud runtime asset intake is recorded first

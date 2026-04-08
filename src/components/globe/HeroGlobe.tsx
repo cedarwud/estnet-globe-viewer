@@ -1,4 +1,3 @@
-import { BackSide } from 'three';
 import type {
   ServiceAvailabilityTruth,
   ServiceSelectionTruth,
@@ -6,6 +5,7 @@ import type {
 } from '../../truth/contracts';
 import type { EarthTextureSet } from '../../imagery/provider';
 import {
+  EarthAtmosphereShell,
   EarthDayNightSurface,
   EarthDaySurface,
   PlaceholderEarthSurface,
@@ -60,16 +60,10 @@ export function HeroGlobe({
         <EarthDaySurface radius={GLOBE_RADIUS} dayTextureUrl={earthTextures.dayTextureUrl} />
       )}
 
-      <mesh scale={1.018}>
-        <sphereGeometry args={[GLOBE_RADIUS, 96, 96]} />
-        <meshBasicMaterial
-          color="#8fc9ef"
-          transparent
-          opacity={0.045}
-          side={BackSide}
-          depthWrite={false}
-        />
-      </mesh>
+      <EarthAtmosphereShell
+        radius={GLOBE_RADIUS}
+        sunDirection={sunDirection}
+      />
 
       <GlobeGraticule radius={GLOBE_RADIUS + 0.004} />
 
