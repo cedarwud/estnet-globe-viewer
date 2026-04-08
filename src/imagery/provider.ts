@@ -1,4 +1,7 @@
-export type EarthAppearanceProfileId = 'offline-balanced-v1' | 'offline-balanced-v2';
+export type EarthAppearanceProfileId =
+  | 'offline-balanced-v1'
+  | 'offline-balanced-v2'
+  | 'offline-balanced-v3';
 export type EarthTextureQuality = 'runtime-4k-webp';
 
 export interface EarthTextureSet {

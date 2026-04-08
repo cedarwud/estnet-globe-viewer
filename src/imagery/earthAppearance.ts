@@ -11,6 +11,25 @@ export interface EarthDayNightAppearanceConfig {
   twilightBoost: number;
 }
 
+export interface EarthSurfaceGradingAppearanceConfig {
+  dayContrast: number;
+  daySaturation: number;
+  dayLift: number;
+  landWarmth: number;
+  oceanTintStrength: number;
+  nightSaturation: number;
+  twilightBlueMix: number;
+}
+
+export interface EarthOceanAppearanceConfig {
+  maskThreshold: number;
+  maskSoftness: number;
+  specularStrength: number;
+  specularSharpness: number;
+  fresnelStrength: number;
+  cloudOcclusionStrength: number;
+}
+
 export interface EarthAtmosphereAppearanceConfig {
   shellScale: number;
   rimPower: number;
@@ -37,6 +56,8 @@ export interface EarthAppearanceProfile {
   surfaceSegments: number;
   textureAnisotropyCap: number;
   dayNight: EarthDayNightAppearanceConfig;
+  surfaceGrading: EarthSurfaceGradingAppearanceConfig;
+  ocean: EarthOceanAppearanceConfig;
   clouds: EarthCloudAppearanceConfig;
   atmosphere: EarthAtmosphereAppearanceConfig;
 }
@@ -55,6 +76,23 @@ export const offlineBalancedEarthAppearanceProfile: EarthAppearanceProfile = {
     nightFloor: 0.028,
     nightIntensity: 0.92,
     twilightBoost: 0.18,
+  },
+  surfaceGrading: {
+    dayContrast: 1,
+    daySaturation: 1,
+    dayLift: 0,
+    landWarmth: 0,
+    oceanTintStrength: 0,
+    nightSaturation: 1,
+    twilightBlueMix: 0.35,
+  },
+  ocean: {
+    maskThreshold: 0.04,
+    maskSoftness: 0.09,
+    specularStrength: 0,
+    specularSharpness: 92,
+    fresnelStrength: 0,
+    cloudOcclusionStrength: 0,
   },
   clouds: {
     shellScale: 1.01,
@@ -91,9 +129,39 @@ export const offlineBalancedEarthAppearanceProfileV2: EarthAppearanceProfile = {
   },
 };
 
+export const offlineBalancedEarthAppearanceProfileV3: EarthAppearanceProfile = {
+  ...offlineBalancedEarthAppearanceProfileV2,
+  id: 'offline-balanced-v3',
+  label: 'Offline Balanced Earth v3',
+  surfaceGrading: {
+    dayContrast: 1.06,
+    daySaturation: 1.05,
+    dayLift: 0.018,
+    landWarmth: 0.085,
+    oceanTintStrength: 0.28,
+    nightSaturation: 0.82,
+    twilightBlueMix: 0.42,
+  },
+  ocean: {
+    maskThreshold: 0.036,
+    maskSoftness: 0.11,
+    specularStrength: 0.18,
+    specularSharpness: 70,
+    fresnelStrength: 0.09,
+    cloudOcclusionStrength: 0.56,
+  },
+  clouds: {
+    ...offlineBalancedEarthAppearanceProfileV2.clouds,
+    opacity: 0.43,
+    dayBoost: 0.84,
+    nightFloor: 0.028,
+  },
+};
+
 const EARTH_APPEARANCE_PROFILES: Record<EarthAppearanceProfileId, EarthAppearanceProfile> = {
   'offline-balanced-v1': offlineBalancedEarthAppearanceProfile,
   'offline-balanced-v2': offlineBalancedEarthAppearanceProfileV2,
+  'offline-balanced-v3': offlineBalancedEarthAppearanceProfileV3,
 };
 
 export function resolveEarthAppearanceProfile(

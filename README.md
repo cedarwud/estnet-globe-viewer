@@ -50,6 +50,7 @@
 - 更貼近 relay altitude 的 corridor arc geometry
 - restrained atmosphere shell，補行星感但不搶 corridor 主角
 - approved NASA GSFC cloud runtime derivative and restrained cloud shell baseline
+- restrained ocean/specular treatment and Earth grading pass using the same approved day/night/cloud assets
 - 更收斂的 persistent overlay
 - named Earth appearance profile 與 texture runtime policy
 - capped anisotropy 與較保守的 Earth surface detail budget
@@ -155,6 +156,12 @@
    - 雲層維持克制，只補行星深度，不蓋掉 current corridor story
    - 不引入 bloom、weather animation、ocean specular、grading、或新的 provider decision
 
+13. `add ocean specular and earth color grading pass`
+   - 只使用既有 approved day / night / cloud baseline 推進 Earth appearance
+   - 補上一層 restrained ocean/specular treatment，讓海面層次更清楚
+   - 以小幅 grading 提升 day-side tonal clarity、land-ocean separation、與整體 planet depth
+   - 不新增 runtime asset intake，也不把這一輪擴成 provider-seam 或 lighting-system rewrite
+
 目前仍刻意不做：
 
 - KTX2、bloom
@@ -199,7 +206,7 @@ npm run preview
 
 目前畫面由 repo 內的 mock truth provider 驅動，不依賴任何外部 replay producer。
 `activePath` 只被描述為 current service corridor / current active relay path / current visible relay path，不宣稱 routing truth。
-Earth imagery seam 已進入承載 day / night / cloud runtime asset 的 `approved-runtime` 狀態；scene 主路徑已改為 formal day-night Earth shader v1，加上 restrained cloud shell 與 atmosphere，並掛上 Step 5 的 appearance profile / texture runtime policy。Step 1 day-only fallback 與 placeholder fallback 仍存在，但只作 guard。
+Earth imagery seam 已進入承載 day / night / cloud runtime asset 的 `approved-runtime` 狀態；scene 主路徑已改為 formal day-night Earth shader v1，加上 restrained cloud shell、ocean/specular、Earth grading、與 atmosphere，並掛上 Step 5 之後延續下來的 appearance profile / texture runtime policy。Step 1 day-only fallback 與 placeholder fallback 仍存在，但只作 guard。
 首屏 framing 現在會先對準 endpoint pair 與 current service corridor，並提供 `Home` / `Fit Corridor` 作為最小直接的 framing controls。
 `estnet-bootstrap-kit` integration 會等到 presentation shell 穩定後再重新開啟。
 
@@ -227,7 +234,7 @@ estnet-globe-viewer/
 
 ## 目前 Earth 狀態
 
-這一輪接在 offline Earth reset track 的 `Step 5` 之後，完成 visual-first Commit 2 的 approved cloud shell baseline，不是 replay/provider integration。
+這一輪接在 offline Earth reset track 的 `Step 5` 之後，完成 visual-first Commit 3 的 ocean/specular + Earth grading polish，不是 replay/provider integration。
 
 目前 repo 已經有：
 
@@ -239,6 +246,8 @@ estnet-globe-viewer/
 - formal day-night Earth shader v1
 - approved NASA GSFC cloud runtime derivative
 - restrained cloud shell baseline
+- restrained ocean/specular treatment
+- controlled Earth grading pass
 - restrained atmosphere shell
 - corridor-aware first-screen framing
 - `Home` / `Fit Corridor` controls
@@ -252,6 +261,6 @@ estnet-globe-viewer/
 - bloom
 
 KTX2 也先不做，因為現在只有三個 repo-safe WebP derivatives；若要轉 KTX2，必須一併處理 Basis preprocessing、runtime transcoder、與 clear fallback chain，這在目前這個 mainline baseline 不值得為了三張已可控 asset 強行擴管線。
-目前 approved runtime Earth asset set 已擴充到 day / night / cloud 三張 WebP derivatives；雲層主路徑仍維持克制，不做 weather animation、bloom、或更大的特效堆疊。
+目前 approved runtime Earth asset set 仍維持 day / night / cloud 三張 WebP derivatives；Commit 3 只是在這組既有 baseline 上補 restrained ocean/specular 與 Earth grading，不做新的 texture / mask / LUT intake，也不做 weather animation、bloom、或更大的特效堆疊。
 目前 `vite build` 的 chunk hardening 已把 React / globe runtime / `three` 邊界拆開；剩餘 warning 被隔離在 `three-core`，原因是 `three` 仍以 monolithic published module 進入 bundle。這一輪不再用更脆弱的 source-entry alias 來硬拆它。
-目前的 approved cloud shell 也不代表會自動膨脹成 replay/provider integration、bloom、ocean specular、grading、focus lens、或更大的 camera/control overhaul，更不代表 `estnet-bootstrap-kit` 會回到主線。
+目前這條 Earth appearance 主線也不代表會自動膨脹成 replay/provider integration、bloom、focus lens、terrain、3D tiles、或更大的 camera/control overhaul，更不代表 `estnet-bootstrap-kit` 會回到主線。

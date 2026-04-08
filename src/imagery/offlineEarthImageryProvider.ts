@@ -1,7 +1,7 @@
 import { createStaticImageryProvider } from './provider';
 
 export const offlineEarthImageryProvider = createStaticImageryProvider({
-  providerId: 'offline-earth-imagery-step-6',
+  providerId: 'offline-earth-imagery-step-7',
   providerKind: 'static',
   textureSet: {
     availability: 'approved-runtime',
@@ -11,9 +11,9 @@ export const offlineEarthImageryProvider = createStaticImageryProvider({
     nightAssetId: 'earth-night-nasa-black-marble-2016-4096x2048-webp',
     cloudTextureUrl: '/assets/earth/earth-clouds-nasa-blue-marble-2002-4096x2048.webp',
     cloudAssetId: 'earth-clouds-nasa-blue-marble-2002-4096x2048-webp',
-    appearanceProfileId: 'offline-balanced-v2',
+    appearanceProfileId: 'offline-balanced-v3',
     textureQuality: 'runtime-4k-webp',
     governanceDocPath: 'docs/assets/earth-assets.md',
-    note: 'Commit 2 keeps the approved NASA day/night WebP derivatives, adds an approved NASA GSFC cloud derivative, and layers a restrained cloud shell between the Earth surface and atmosphere. The runtime path remains repo-safe WebP only; bloom, weather animation, ocean specular, grading, and KTX2 stay deferred.',
+    note: 'Commit 3 keeps the approved NASA day/night/cloud WebP derivatives, adds restrained ocean/specular and a controlled Earth grading pass, and stays inside the same repo-safe imagery seam. No new runtime asset intake, bloom, weather animation, provider expansion, or KTX2 path is introduced here.',
   },
 });

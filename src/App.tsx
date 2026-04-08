@@ -12,6 +12,7 @@ const completedScope = [
   'Approved NASA day and night runtime derivatives through the existing imagery seam',
   'Approved NASA GSFC Blue Marble cloud derivative through the same governance path',
   'Day-night Earth shader v1 with a controlled terminator and restrained twilight band',
+  'Restrained ocean/specular treatment and Earth grading pass using the same approved day/night/cloud baseline',
   'Restrained cloud shell layered between the Earth surface and atmosphere',
   'Restrained procedural atmosphere shell that continues to add depth without becoming a cloud substitute',
   'Corridor-aware first screen with explicit Home and Fit Corridor framing actions',
@@ -93,7 +94,7 @@ export function App() {
     'The unavailable candidate corridor is still mock availability truth, not KPI, SLA, or coverage-field truth.',
     'Dark-side readability now comes from a controlled day/night shader and approved Black Marble night lights, not from washing the whole globe with ambient fill.',
     'Home and Fit Corridor still stay globe-centered. The cloud shell does not reopen generic free pan or free-fly camera drift.',
-    'The approved cloud shell stays restrained and texture-backed. This commit does not add bloom, weather animation, ocean specular, grading, or a larger planet-rendering stack.',
+    'Ocean/specular and grading stay restrained and texture-backed. This commit uses the same approved day/night/cloud assets and does not add bloom, weather animation, new runtime Earth assets, or a larger planet-rendering stack.',
     truthSnapshot.eventTruth.events.length === 0
       ? 'EventTruth remains a derived-only surface with an intentionally empty event set in this static baseline.'
       : `EventTruth contains ${truthSnapshot.eventTruth.events.length} derived cues.`,
@@ -120,7 +121,7 @@ export function App() {
   const earthSurfaceMode =
     earthImageryAvailability === 'approved-runtime'
       ? earthTextures?.cloudTextureUrl
-        ? 'Day-night Earth shader v1 + restrained cloud shell + atmosphere'
+        ? 'Day-night Earth shader v1 + restrained grading/specular + cloud shell + atmosphere'
         : 'Day-night Earth shader v1 + restrained atmosphere'
       : earthTextures?.dayTextureUrl
         ? 'Step 1 day-only fallback surface'
@@ -275,7 +276,7 @@ export function App() {
                 </div>
                 <div className="status-facts__row">
                   <dt>Appearance profile</dt>
-                  <dd>{earthTextures?.appearanceProfileId ?? 'offline-balanced-v2'}</dd>
+                  <dd>{earthTextures?.appearanceProfileId ?? 'offline-balanced-v3'}</dd>
                 </div>
                 <div className="status-facts__row">
                   <dt>Texture quality</dt>
@@ -284,6 +285,10 @@ export function App() {
                 <div className="status-facts__row">
                   <dt>Cloud shell</dt>
                   <dd>{cloudShellStatus}</dd>
+                </div>
+                <div className="status-facts__row">
+                  <dt>Ocean/specular</dt>
+                  <dd>restrained-appearance-pass</dd>
                 </div>
                 <div className="status-facts__row">
                   <dt>Governance doc</dt>

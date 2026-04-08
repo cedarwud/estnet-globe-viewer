@@ -42,42 +42,117 @@ interface EarthCloudShellProps extends EarthSurfaceBaseProps {
 const earthShaderVertex = `
 varying vec2 vUv;
 varying vec3 vWorldNormal;
+varying vec3 vWorldPosition;
 
 void main() {
   vUv = uv;
+  vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+  vWorldPosition = worldPosition.xyz;
   vWorldNormal = normalize(mat3(modelMatrix) * normal);
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  gl_Position = projectionMatrix * viewMatrix * worldPosition;
 }
 `;
 
 const earthShaderFragment = `
 uniform sampler2D dayMap;
 uniform sampler2D nightMap;
+uniform sampler2D cloudMap;
 uniform vec3 sunDirection;
 uniform float twilightWidth;
 uniform float nightFloor;
 uniform float nightIntensity;
 uniform float twilightBoost;
+uniform float dayContrast;
+uniform float daySaturation;
+uniform float dayLift;
+uniform float landWarmth;
+uniform float oceanTintStrength;
+uniform float nightSaturation;
+uniform float twilightBlueMix;
+uniform float oceanMaskThreshold;
+uniform float oceanMaskSoftness;
+uniform float oceanSpecularStrength;
+uniform float oceanSpecularSharpness;
+uniform float oceanFresnelStrength;
+uniform float cloudOcclusionStrength;
 
 varying vec2 vUv;
 varying vec3 vWorldNormal;
+varying vec3 vWorldPosition;
+
+float colorLuminance(vec3 color) {
+  return dot(color, vec3(0.2126, 0.7152, 0.0722));
+}
+
+vec3 applySaturation(vec3 color, float amount) {
+  float luminance = colorLuminance(color);
+  return mix(vec3(luminance), color, amount);
+}
+
+vec3 applyContrast(vec3 color, float contrast) {
+  return clamp((color - 0.5) * contrast + 0.5, 0.0, 1.0);
+}
+
+float buildOceanMask(vec3 dayColor, float threshold, float softness) {
+  float maxChannel = max(max(dayColor.r, dayColor.g), dayColor.b);
+  float minChannel = min(min(dayColor.r, dayColor.g), dayColor.b);
+  float saturation = maxChannel - minChannel;
+  float luminance = colorLuminance(dayColor);
+  float blueDominance = dayColor.b - max(dayColor.r * 0.92, dayColor.g * 0.98);
+  float coolness = dayColor.b - dayColor.r * 0.65;
+  float oceanSignal = blueDominance + saturation * 0.18 + coolness * 0.12 - luminance * 0.04;
+  float oceanMask = smoothstep(threshold, threshold + softness, oceanSignal);
+  float landSignal = max(
+    smoothstep(0.015, 0.14, dayColor.g - dayColor.b * 0.82),
+    smoothstep(0.015, 0.16, dayColor.r - dayColor.b * 0.94)
+  );
+  float brightLand = smoothstep(0.42, 0.82, luminance) * (1.0 - saturation * 0.55);
+  return clamp(oceanMask * (1.0 - landSignal * 0.82 - brightLand * 0.28), 0.0, 1.0);
+}
 
 void main() {
   vec3 normal = normalize(vWorldNormal);
-  float lightDot = dot(normal, normalize(sunDirection));
+  vec3 lightDirection = normalize(sunDirection);
+  vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
+  float lightDot = dot(normal, lightDirection);
   float dayFactor = clamp(lightDot, 0.0, 1.0);
   float transition = smoothstep(-twilightWidth, twilightWidth, lightDot);
   float twilight = 1.0 - smoothstep(0.0, twilightWidth * 1.35, abs(lightDot));
 
   vec3 dayColor = texture2D(dayMap, vUv).rgb;
   vec3 nightColor = texture2D(nightMap, vUv).rgb;
+  vec3 cloudColor = texture2D(cloudMap, vUv).rgb;
+  float oceanMask = buildOceanMask(dayColor, oceanMaskThreshold, oceanMaskSoftness);
+  float landMask = 1.0 - oceanMask;
+  float cloudLuminance = colorLuminance(cloudColor);
+  float cloudCoverage = smoothstep(0.38, 0.76, cloudLuminance);
 
-  vec3 litDay = dayColor * mix(0.2, 1.0, pow(dayFactor, 0.7));
-  vec3 nightReadable = dayColor * (nightFloor + twilight * 0.06);
-  nightReadable += nightColor * (nightIntensity + twilight * twilightBoost);
+  vec3 gradedDay = applySaturation(dayColor, daySaturation);
+  gradedDay = mix(gradedDay, gradedDay * vec3(1.03, 1.01, 0.98), landMask * landWarmth);
+  gradedDay = mix(gradedDay, gradedDay * vec3(0.86, 0.96, 1.12), oceanMask * oceanTintStrength);
+  gradedDay = applyContrast(gradedDay, dayContrast);
+  gradedDay = clamp(gradedDay + vec3(dayLift), 0.0, 1.0);
+
+  vec3 gradedNight = applySaturation(nightColor, nightSaturation);
+  gradedNight *= vec3(1.0, 0.98, 0.93);
+
+  vec3 litDay = gradedDay * mix(0.24, 1.03, pow(dayFactor, 0.72));
+  litDay = mix(litDay, litDay * vec3(0.96, 1.02, 1.08), oceanMask * (0.08 + dayFactor * 0.06));
+  vec3 nightReadable = gradedDay * (nightFloor + twilight * 0.058);
+  nightReadable += gradedNight * (nightIntensity + twilight * twilightBoost);
 
   vec3 color = mix(nightReadable, litDay, transition);
-  color += vec3(0.02, 0.04, 0.08) * twilight * 0.35;
+
+  vec3 halfVector = normalize(lightDirection + viewDirection);
+  float specular = pow(max(dot(normal, halfVector), 0.0), oceanSpecularSharpness);
+  float fresnel = pow(1.0 - clamp(dot(viewDirection, normal), 0.0, 1.0), 3.0);
+  float daylightGate = smoothstep(0.14, 0.58, lightDot);
+  float cloudOcclusion = 1.0 - cloudCoverage * cloudOcclusionStrength;
+  float oceanHighlight = oceanMask * daylightGate * cloudOcclusion;
+  oceanHighlight *= specular * oceanSpecularStrength + fresnel * oceanFresnelStrength * 0.32;
+  color += vec3(0.95, 0.98, 1.0) * oceanHighlight;
+
+  color += vec3(0.02, 0.04, 0.08) * twilight * twilightBlueMix;
 
   gl_FragColor = vec4(color, 1.0);
   #include <tonemapping_fragment>
@@ -243,9 +318,10 @@ export function EarthDayNightSurface({
     () => resolveEarthAppearanceProfile(textureSet),
     [textureSet]
   );
-  const [dayTexture, nightTexture] = useTexture([
+  const [dayTexture, nightTexture, cloudTexture] = useTexture([
     textureSet.dayTextureUrl ?? '',
     textureSet.nightTextureUrl ?? '',
+    textureSet.cloudTextureUrl ?? textureSet.dayTextureUrl ?? textureSet.nightTextureUrl ?? '',
   ]);
 
   const configuredDayTexture = useMemo(
@@ -266,6 +342,15 @@ export function EarthDayNightSurface({
       ),
     [appearanceProfile, gl, nightTexture]
   );
+  const configuredCloudTexture = useMemo(
+    () =>
+      configureEarthRuntimeTexture(
+        cloudTexture,
+        gl.capabilities.getMaxAnisotropy(),
+        appearanceProfile
+      ),
+    [appearanceProfile, cloudTexture, gl]
+  );
   const normalizedSunDirection = useMemo(
     () => new Vector3(...sunDirection).normalize(),
     [sunDirection]
@@ -274,6 +359,7 @@ export function EarthDayNightSurface({
     () => ({
       dayMap: { value: configuredDayTexture },
       nightMap: { value: configuredNightTexture },
+      cloudMap: { value: configuredCloudTexture },
       // Step 2 keeps the control surface explicit: the terminator comes from a
       // named sun direction, not from extra ambient fill hidden elsewhere.
       sunDirection: { value: normalizedSunDirection },
@@ -281,8 +367,30 @@ export function EarthDayNightSurface({
       nightFloor: { value: appearanceProfile.dayNight.nightFloor },
       nightIntensity: { value: appearanceProfile.dayNight.nightIntensity },
       twilightBoost: { value: appearanceProfile.dayNight.twilightBoost },
+      dayContrast: { value: appearanceProfile.surfaceGrading.dayContrast },
+      daySaturation: { value: appearanceProfile.surfaceGrading.daySaturation },
+      dayLift: { value: appearanceProfile.surfaceGrading.dayLift },
+      landWarmth: { value: appearanceProfile.surfaceGrading.landWarmth },
+      oceanTintStrength: { value: appearanceProfile.surfaceGrading.oceanTintStrength },
+      nightSaturation: { value: appearanceProfile.surfaceGrading.nightSaturation },
+      twilightBlueMix: { value: appearanceProfile.surfaceGrading.twilightBlueMix },
+      oceanMaskThreshold: { value: appearanceProfile.ocean.maskThreshold },
+      oceanMaskSoftness: { value: appearanceProfile.ocean.maskSoftness },
+      oceanSpecularStrength: { value: appearanceProfile.ocean.specularStrength },
+      oceanSpecularSharpness: { value: appearanceProfile.ocean.specularSharpness },
+      oceanFresnelStrength: { value: appearanceProfile.ocean.fresnelStrength },
+      cloudOcclusionStrength: {
+        value: textureSet.cloudTextureUrl ? appearanceProfile.ocean.cloudOcclusionStrength : 0,
+      },
     }),
-    [appearanceProfile, configuredDayTexture, configuredNightTexture, normalizedSunDirection]
+    [
+      appearanceProfile,
+      configuredCloudTexture,
+      configuredDayTexture,
+      configuredNightTexture,
+      normalizedSunDirection,
+      textureSet.cloudTextureUrl,
+    ]
   );
 
   return (

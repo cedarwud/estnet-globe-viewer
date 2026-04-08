@@ -72,6 +72,7 @@ viewer 必須對 truth 保持保守語言：
 - Commit 2 的 approved runtime cloud texture
 
 但仍維持最小同步邊界，不擴張成更大的 async/provider framework。
+Commit 3 的 ocean/specular 與 Earth grading 只允許在這組既有 approved textures 之上做 shader / appearance tuning，不新增新的 runtime Earth asset intake。
 
 目前規則如下：
 
@@ -115,6 +116,8 @@ repo 內的正式文件分為五層：
 - active / unavailable 的第一版保守差異
 - compact HUD plus on-demand details drawer instead of a permanent dashboard side rail
 - formal day-night Earth shader v1 with explicit `sunDirection` control
+- restrained ocean/specular treatment using the existing approved day/night/cloud texture set
+- Earth grading pass that improves day-side separation and keeps night-side control non-neon
 - restrained cloud shell positioned between the Earth surface and atmosphere
 - restrained procedural atmosphere shell that does not depend on a new runtime texture asset
 - build chunk hardening that isolates React, globe runtime, and `three` bundle boundaries
@@ -145,7 +148,7 @@ repo 內的正式文件分為五層：
 - replay/provider re-entry before an explicit post-Step-5 checkpoint
 - `estnet-bootstrap-kit` reference replay smoke
 
-原因是目前主線只補到 approved cloud shell baseline，不處理 replay/provider integration、KTX2 pipeline、bloom、focus lens、ocean specular、grading、或更大的 control overhaul。這也包含：不為了完全消掉 `three-core` warning 而引入更脆弱的 source-entry alias / chunk graph 實驗。
+原因是目前主線只補到 restrained ocean/specular and Earth grading pass，不處理 replay/provider integration、KTX2 pipeline、bloom、focus lens、terrain / 3D tiles、或更大的 control overhaul。這也包含：不為了完全消掉 `three-core` warning 而引入更脆弱的 source-entry alias / chunk graph 實驗。
 
 目前對 truth 的保守邊界是：
 
