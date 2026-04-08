@@ -2,9 +2,10 @@
 
 This directory stores approved runtime Earth derivatives only.
 
-Current approved runtime asset:
+Current approved runtime assets:
 
 1. `earth-day-nasa-blue-marble-ng-4096x2048.webp`
+2. `earth-night-nasa-black-marble-2016-4096x2048.webp`
 
 Do not add more files here unless:
 

@@ -2,6 +2,8 @@ export interface EarthTextureSet {
   availability: 'none-approved' | 'approved-runtime';
   dayTextureUrl: string | null;
   dayAssetId: string | null;
+  nightTextureUrl: string | null;
+  nightAssetId: string | null;
   governanceDocPath: string;
   note: string;
 }

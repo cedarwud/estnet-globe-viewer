@@ -1,13 +1,15 @@
-import { useMemo } from 'react';
-import { useThree } from '@react-three/fiber';
-import { useTexture } from '@react-three/drei';
-import { BackSide, Color, SRGBColorSpace, Texture } from 'three';
+import { BackSide } from 'three';
 import type {
   ServiceAvailabilityTruth,
   ServiceSelectionTruth,
   WorldGeometryTruth,
 } from '../../truth/contracts';
 import type { EarthTextureSet } from '../../imagery/provider';
+import {
+  EarthDayNightSurface,
+  EarthDaySurface,
+  PlaceholderEarthSurface,
+} from './EarthSurface';
 import { EndpointAnchor } from './EndpointAnchor';
 import { GlobeGraticule } from './GlobeGraticule';
 import { SatelliteMarker } from './SatelliteMarker';
@@ -15,6 +17,7 @@ import { ServiceCorridorOverlay } from './ServiceCorridorOverlay';
 
 interface HeroGlobeProps {
   earthTextures: EarthTextureSet | null;
+  sunDirection: [number, number, number];
   worldGeometry: WorldGeometryTruth;
   serviceAvailability: ServiceAvailabilityTruth;
   serviceSelection: ServiceSelectionTruth;
@@ -22,59 +25,17 @@ interface HeroGlobeProps {
 
 export const GLOBE_RADIUS = 1.8;
 
-function configureEarthDayTexture(texture: Texture, anisotropy: number) {
-  texture.colorSpace = SRGBColorSpace;
-  texture.anisotropy = anisotropy;
-  texture.needsUpdate = true;
-  return texture;
-}
-
-function PlaceholderEarthSurface() {
-  return (
-    <mesh name="earth-placeholder-surface">
-      <sphereGeometry args={[GLOBE_RADIUS, 96, 96]} />
-      <meshStandardMaterial
-        color="#0f223a"
-        emissive={new Color('#1f466d')}
-        emissiveIntensity={0.42}
-        roughness={0.84}
-        metalness={0.08}
-      />
-    </mesh>
-  );
-}
-
-function TexturedEarthSurface({ textureUrl }: { textureUrl: string }) {
-  const { gl } = useThree();
-  const dayTexture = useTexture(textureUrl);
-  const configuredDayTexture = useMemo(
-    () => configureEarthDayTexture(dayTexture, Math.min(gl.capabilities.getMaxAnisotropy(), 8)),
-    [dayTexture, gl]
-  );
-
-  return (
-    <mesh name="earth-textured-surface">
-      <sphereGeometry args={[GLOBE_RADIUS, 96, 96]} />
-      <meshStandardMaterial
-        map={configuredDayTexture}
-        color="#ffffff"
-        emissive={new Color('#05070a')}
-        emissiveIntensity={0.03}
-        roughness={1}
-        metalness={0}
-      />
-    </mesh>
-  );
-}
-
 export function HeroGlobe({
   earthTextures,
+  sunDirection,
   worldGeometry,
   serviceAvailability,
   serviceSelection,
 }: HeroGlobeProps) {
   const usesPlaceholderSurface =
     earthTextures?.availability !== 'approved-runtime' || earthTextures.dayTextureUrl === null;
+  const usesDayNightShader =
+    !usesPlaceholderSurface && earthTextures?.nightTextureUrl !== null;
   const activeRelayIds = new Set(
     serviceSelection.kind === 'supported' && serviceSelection.activePath
       ? serviceSelection.activePath.relaySatelliteIds
@@ -83,12 +44,20 @@ export function HeroGlobe({
 
   return (
     <group rotation={[0.16, -0.72, 0.08]}>
-      {/* The imagery seam decides whether Step 1 may use the approved day baseline.
-          Keep the placeholder path available as an explicit fallback instead of a hidden failure mode. */}
+      {/* Step 2 promotes the main path to a controlled day/night shader.
+          If the approved night derivative is unavailable, fall back to the Step 1
+          day-only surface instead of masking the issue with extra fill light. */}
       {usesPlaceholderSurface || !earthTextures?.dayTextureUrl ? (
-        <PlaceholderEarthSurface />
+        <PlaceholderEarthSurface radius={GLOBE_RADIUS} />
+      ) : usesDayNightShader && earthTextures.nightTextureUrl ? (
+        <EarthDayNightSurface
+          radius={GLOBE_RADIUS}
+          dayTextureUrl={earthTextures.dayTextureUrl}
+          nightTextureUrl={earthTextures.nightTextureUrl}
+          sunDirection={sunDirection}
+        />
       ) : (
-        <TexturedEarthSurface textureUrl={earthTextures.dayTextureUrl} />
+        <EarthDaySurface radius={GLOBE_RADIUS} dayTextureUrl={earthTextures.dayTextureUrl} />
       )}
 
       <mesh scale={1.018}>

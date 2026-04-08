@@ -8,6 +8,8 @@ import type {
 import type { EarthTextureSet } from '../../imagery/provider';
 import { HeroGlobe } from './HeroGlobe';
 
+const heroSunDirection: [number, number, number] = [7.5, 4.5, 6.5];
+
 interface HeroGlobeSceneProps {
   earthTextures: EarthTextureSet | null;
   worldGeometry: WorldGeometryTruth;
@@ -56,10 +58,10 @@ export function HeroGlobeScene({
         maxPolarAngle={Math.PI - 0.45}
       />
 
-      <ambientLight intensity={0.12} />
+      <ambientLight intensity={0.08} />
       <directionalLight
-        position={[7.5, 4.5, 6.5]}
-        intensity={2.4}
+        position={heroSunDirection}
+        intensity={1.9}
         color="#fff3d4"
       />
 
@@ -75,6 +77,7 @@ export function HeroGlobeScene({
 
       <HeroGlobe
         earthTextures={earthTextures}
+        sunDirection={heroSunDirection}
         worldGeometry={worldGeometry}
         serviceAvailability={serviceAvailability}
         serviceSelection={serviceSelection}

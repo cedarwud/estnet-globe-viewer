@@ -8,7 +8,8 @@ import type { DatasetCapabilityProfile } from './truth/contracts';
 import { useTruthSnapshot } from './truth/useTruthSnapshot';
 
 const completedScope = [
-  'Approved NASA day texture baseline through the existing imagery seam',
+  'Approved NASA day and night runtime derivatives through the existing imagery seam',
+  'Day-night Earth shader v1 with a controlled terminator and restrained twilight band',
   'Full-stage globe-first shell with corridor-focused framing',
   'Natural zoom range from whole-globe read to closer corridor inspection',
   'Compact HUD plus on-demand drawer instead of a permanent dashboard rail',
@@ -16,7 +17,7 @@ const completedScope = [
 ];
 
 const deferredScope = [
-  'Night lights, day/night shader, clouds, and atmosphere follow-ons',
+  'Cloud shell, atmosphere shader, and bloom follow-ons',
   'estnet-bootstrap-kit reference replay smoke',
   'Focus lens follow-on interface',
   'Premium world context and site assets',
@@ -81,7 +82,8 @@ export function App() {
   const conservativeBoundaries = [
     'The activePath wording remains limited to current service corridor / current active relay path / current visible relay path.',
     'The unavailable candidate corridor is still mock availability truth, not KPI, SLA, or coverage-field truth.',
-    'Dark-side readability is not formally solved in this baseline. Step 2 will add night lights and day/night control instead of faking it here.',
+    'Dark-side readability now comes from a controlled day/night shader and approved Black Marble night lights, not from washing the whole globe with ambient fill.',
+    'Step 2 still does not claim clouds, atmosphere, bloom, or a full planet-rendering stack.',
     truthSnapshot.eventTruth.events.length === 0
       ? 'EventTruth remains a derived-only surface with an intentionally empty event set in this static baseline.'
       : `EventTruth contains ${truthSnapshot.eventTruth.events.length} derived cues.`,
@@ -99,13 +101,17 @@ export function App() {
         }))
       : [];
   const earthImageryAvailability =
-    earthTextures?.availability === 'approved-runtime' && earthTextures.dayTextureUrl
+    earthTextures?.availability === 'approved-runtime' &&
+    earthTextures.dayTextureUrl &&
+    earthTextures.nightTextureUrl
       ? 'approved-runtime'
       : 'none-approved';
   const earthSurfaceMode =
     earthImageryAvailability === 'approved-runtime'
-      ? 'Texture-backed Earth surface'
-      : 'Placeholder globe fallback';
+      ? 'Day-night Earth shader v1'
+      : earthTextures?.dayTextureUrl
+        ? 'Step 1 day-only fallback surface'
+        : 'Placeholder globe fallback';
   const earthSurfaceNote =
     earthTextures?.note ??
     'No Earth imagery seam state is available. The placeholder globe should remain the only runtime surface.';
@@ -123,11 +129,12 @@ export function App() {
 
       <div className="viewer-overlay">
         <header className="floating-card hero-overlay">
-          <p className="floating-card__eyebrow">Offline Earth Reset Step 1</p>
+          <p className="floating-card__eyebrow">Offline Earth Reset Step 2</p>
           <h1 className="hero-overlay__title">Service-Driven Hero Globe</h1>
           <p className="hero-overlay__body">
-            Step 1 promotes a reviewed NASA day derivative into the offline baseline. The globe now reads
-            as Earth at a glance, while dark-side treatment remains intentionally deferred to Step 2.
+            Step 2 keeps the approved NASA day baseline, adds Black Marble night lights, and promotes a
+            formal day-night shader. The dark side is now readable without pretending clouds, atmosphere,
+            or bloom already exist.
           </p>
         </header>
 
@@ -233,6 +240,10 @@ export function App() {
                 <div className="status-facts__row">
                   <dt>Day asset</dt>
                   <dd>{earthTextures?.dayAssetId ?? 'none-approved'}</dd>
+                </div>
+                <div className="status-facts__row">
+                  <dt>Night asset</dt>
+                  <dd>{earthTextures?.nightAssetId ?? 'none-approved'}</dd>
                 </div>
                 <div className="status-facts__row">
                   <dt>Governance doc</dt>

@@ -59,20 +59,20 @@ viewer 必須對 truth 保持保守語言：
 
 ## Earth Imagery And Asset Boundary
 
-目前 execution authority 只要求一條最小 Earth imagery seam：
+目前 execution authority 對 Earth imagery 仍要求最小 seam，而 Step 2 只在這條 seam 上做必要擴充：
 
 - `EarthTextureSet`
 - `ImageryProvider`
 - `useEarthTextures()`
 
-這條 seam 現在已被用來承接 Step 1 的 approved runtime day texture，但仍維持最小同步邊界，不擴張成更大的 async/provider framework。
+這條 seam 現在已被用來承接 Step 1 的 approved runtime day texture，以及 Step 2 的 approved runtime night texture，但仍維持最小同步邊界，不擴張成更大的 async/provider framework。
 
 目前規則如下：
 
 1. 已批准的 Earth runtime assets 之後只放在 `public/assets/earth/`
 2. asset manifest / attribution / provenance / preprocessing 記錄放在 `docs/assets/earth-assets.md`
 3. preprocessing helper scripts 之後只放在 `scripts/assets/`
-4. 若沒有 approved texture set，scene 必須明確退回 placeholder globe
+4. 若 night derivative 不存在，scene 最多只能退回 Step 1 day-only surface；若 day derivative 也不存在，scene 必須明確退回 placeholder globe
 5. `TerrainProvider`、`Context3DTilesProvider`、`SiteAssetProvider` 在這一輪仍停留在文件 authority，不進空殼 runtime 程式碼
 
 ## Repo 內文件結構
@@ -99,13 +99,15 @@ repo 內的正式文件分為五層：
 - minimal `TruthProvider`
 - minimal `ImageryProvider` seam with `EarthTextureSet` and `useEarthTextures()`
 - approved runtime NASA day texture derivative under `public/assets/earth/`
+- approved runtime NASA Black Marble night texture derivative under `public/assets/earth/`
 - mock truth seed + adapter + provider
 - endpoint anchors sourced from `WorldGeometryTruth`
 - service-relevant satellites sourced from `WorldGeometryTruth`
 - one current service corridor plus one unavailable candidate corridor
 - active / unavailable 的第一版保守差異
 - compact HUD plus on-demand details drawer instead of a permanent dashboard side rail
-- texture-backed Earth baseline with a fallback guard that no longer acts as the main success path
+- formal day-night Earth shader v1 with explicit `sunDirection` control
+- fallback guards that no longer act as the main success path
 
 這個 baseline 的用途是先證明 `HeroGlobeScene` 能獨立站起來，且 scene / UI 已能透過同一份 canonical snapshot 讀值，而不是提前宣稱 service truth 已完整存在。
 
@@ -113,8 +115,8 @@ repo 內的正式文件分為五層：
 
 目前 baseline 不包含：
 
-- night lights / day-night shader
 - cloud shell / atmosphere
+- bloom
 - derived event cue
 - focus lens
 - premium world content
@@ -124,10 +126,10 @@ repo 內的正式文件分為五層：
 
 而且目前刻意延後：
 
-- Step 2 dark-side treatment
+- Step 3 visual follow-ons after the Step 2 shader baseline
 - `estnet-bootstrap-kit` reference replay smoke
 
-原因是 Step 1 只解決 recognizable Earth day-side baseline 與 lighting foundation，不處理 night lights、terminator control、或 twilight readability。
+原因是 Step 2 只解決 formal day/night Earth baseline、terminator control、與 restrained dark-side readability，不處理 clouds、atmosphere、或 bloom。
 
 目前對 truth 的保守邊界是：
 
