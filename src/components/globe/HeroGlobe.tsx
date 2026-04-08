@@ -43,7 +43,7 @@ export function HeroGlobe({
   );
 
   return (
-    <group rotation={[0.16, -0.72, 0.08]}>
+    <group>
       {/* Step 2 promotes the main path to a controlled day/night shader.
           If the approved night derivative is unavailable, fall back to the Step 1
           day-only surface instead of masking the issue with extra fill light. */}

@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { Line } from '@react-three/drei';
 import {
   buildElevatedArcPoints,
+  estimateCorridorLegPeakHeight,
   geoCoordinateToScenePosition,
 } from '../../lib/geo';
 import type {
@@ -31,7 +32,10 @@ function renderCorridorLegs(
     color: string;
     opacity: number;
     lineWidth: number;
-    peakHeight: number;
+    peakCeiling: number;
+    glowColor?: string;
+    glowOpacity?: number;
+    glowLineWidth?: number;
   },
   keyPrefix: string
 ) {
@@ -53,17 +57,34 @@ function renderCorridorLegs(
     }
 
     legs.push(
-      <Line
-        key={`${keyPrefix}-${index}`}
-        points={buildElevatedArcPoints(start, end, globeRadius, {
-          segments: 42,
-          peakHeight: style.peakHeight,
-        })}
-        color={style.color}
-        transparent
-        opacity={style.opacity}
-        lineWidth={style.lineWidth}
-      />
+      <group key={`${keyPrefix}-${index}-group`}>
+        {style.glowLineWidth && style.glowOpacity
+          ? (
+            <Line
+              key={`${keyPrefix}-${index}-glow`}
+              points={buildElevatedArcPoints(start, end, globeRadius, {
+                segments: 42,
+                peakHeight: estimateCorridorLegPeakHeight(start, end, globeRadius, style.peakCeiling),
+              })}
+              color={style.glowColor ?? style.color}
+              transparent
+              opacity={style.glowOpacity}
+              lineWidth={style.glowLineWidth}
+            />
+            )
+          : null}
+        <Line
+          key={`${keyPrefix}-${index}`}
+          points={buildElevatedArcPoints(start, end, globeRadius, {
+            segments: 42,
+            peakHeight: estimateCorridorLegPeakHeight(start, end, globeRadius, style.peakCeiling),
+          })}
+          color={style.color}
+          transparent
+          opacity={style.opacity}
+          lineWidth={style.lineWidth}
+        />
+      </group>
     );
   }
 
@@ -115,10 +136,10 @@ export function ServiceCorridorOverlay({
             worldGeometry,
             globeRadius,
             {
-              color: '#8d97a6',
-              opacity: 0.32,
-              lineWidth: 1.4,
-              peakHeight: 0.24,
+              color: '#d0bfab',
+              opacity: 0.36,
+              lineWidth: 1.7,
+              peakCeiling: 0.1,
             },
             'candidate'
           )
@@ -133,8 +154,11 @@ export function ServiceCorridorOverlay({
             {
               color: '#8ed2ff',
               opacity: 0.94,
-              lineWidth: 2.8,
-              peakHeight: 0.34,
+              lineWidth: 2.4,
+              peakCeiling: 0.12,
+              glowColor: '#8ed2ff',
+              glowOpacity: 0.18,
+              glowLineWidth: 5.6,
             },
             'active'
           )
@@ -154,11 +178,11 @@ export function ServiceCorridorOverlay({
                 key={`relay-highlight-${relayId}`}
                 position={highlightPosition.toArray()}
               >
-                <sphereGeometry args={[0.09, 20, 20]} />
+                <sphereGeometry args={[0.11, 20, 20]} />
                 <meshBasicMaterial
                   color="#8ed2ff"
                   transparent
-                  opacity={0.1}
+                  opacity={0.14}
                   depthWrite={false}
                 />
               </mesh>

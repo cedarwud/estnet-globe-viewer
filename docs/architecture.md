@@ -107,6 +107,10 @@ repo 內的正式文件分為五層：
 - active / unavailable 的第一版保守差異
 - compact HUD plus on-demand details drawer instead of a permanent dashboard side rail
 - formal day-night Earth shader v1 with explicit `sunDirection` control
+- corridor-aware first screen with explicit `Home` / `Fit Corridor` actions
+- globe-centered framing helpers instead of generic free pan
+- minimal in-scene endpoint labels plus clearer endpoint / relay / corridor hierarchy
+- corridor arc heights tightened back toward the relay geometry
 - fallback guards that no longer act as the main success path
 
 這個 baseline 的用途是先證明 `HeroGlobeScene` 能獨立站起來，且 scene / UI 已能透過同一份 canonical snapshot 讀值，而不是提前宣稱 service truth 已完整存在。
@@ -126,10 +130,10 @@ repo 內的正式文件分為五層：
 
 而且目前刻意延後：
 
-- Step 3 visual follow-ons after the Step 2 shader baseline
+- Step 4 visual follow-ons after the Step 3 framing polish
 - `estnet-bootstrap-kit` reference replay smoke
 
-原因是 Step 2 只解決 formal day/night Earth baseline、terminator control、與 restrained dark-side readability，不處理 clouds、atmosphere、或 bloom。
+原因是 Step 3 只解決 first-screen comprehension、corridor inspection framing、與 scene semantic polish，不處理 clouds、atmosphere、bloom、focus lens、或更大的 control overhaul。
 
 目前對 truth 的保守邊界是：
 

@@ -165,6 +165,13 @@ canvas {
   width: min(19.5rem, calc(100vw - 3rem));
 }
 
+.scene-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
 .scene-status {
   width: 100%;
   padding: 0.92rem 0.96rem 0.96rem;
@@ -225,6 +232,7 @@ canvas {
   color: var(--accent-warm);
 }
 
+.scene-action,
 .details-toggle,
 .truth-drawer__close {
   pointer-events: auto;
@@ -240,6 +248,37 @@ canvas {
     background 180ms ease;
 }
 
+.scene-action {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.62rem 0.86rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.scene-action--active {
+  border-color: rgba(142, 210, 255, 0.48);
+  background: rgba(15, 33, 54, 0.94);
+  color: var(--accent-active);
+}
+
+.endpoint-scene-label {
+  padding: 0.28rem 0.52rem;
+  border: 1px solid rgba(142, 210, 255, 0.36);
+  border-radius: 999px;
+  background: rgba(8, 17, 29, 0.84);
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  pointer-events: none;
+  backdrop-filter: blur(10px);
+}
+
+.scene-action:hover,
+.scene-action:focus-visible,
 .details-toggle:hover,
 .details-toggle:focus-visible,
 .truth-drawer__close:hover,
@@ -597,6 +636,10 @@ canvas {
     justify-items: stretch;
   }
 
+  .scene-actions {
+    justify-content: stretch;
+  }
+
   .scene-status__row {
     align-items: flex-start;
     flex-direction: column;
@@ -604,6 +647,11 @@ canvas {
 
   .details-toggle {
     width: 100%;
+  }
+
+  .scene-action {
+    flex: 1 1 0;
+    justify-content: center;
   }
 
   .service-ribbon__path {

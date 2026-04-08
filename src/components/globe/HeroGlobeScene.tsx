@@ -1,59 +1,101 @@
-import { Canvas } from '@react-three/fiber';
+import { useEffect, useMemo, useRef } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Stars } from '@react-three/drei';
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
+import { Vector3 } from 'three';
 import type {
   ServiceAvailabilityTruth,
   ServiceSelectionTruth,
   WorldGeometryTruth,
 } from '../../truth/contracts';
 import type { EarthTextureSet } from '../../imagery/provider';
-import { HeroGlobe } from './HeroGlobe';
+import { buildHeroFramingPose, type FramingMode } from './corridorFraming';
+import { GLOBE_RADIUS, HeroGlobe } from './HeroGlobe';
 
 const heroSunDirection: [number, number, number] = [7.5, 4.5, 6.5];
 
+export interface HeroGlobeFramingRequest {
+  mode: FramingMode;
+  revision: number;
+}
+
 interface HeroGlobeSceneProps {
   earthTextures: EarthTextureSet | null;
+  framingRequest: HeroGlobeFramingRequest;
   worldGeometry: WorldGeometryTruth;
   serviceAvailability: ServiceAvailabilityTruth;
   serviceSelection: ServiceSelectionTruth;
 }
 
-export function HeroGlobeScene({
+interface SceneContentsProps extends HeroGlobeSceneProps {
+  initialCameraPosition: [number, number, number];
+}
+
+function SceneContents({
   earthTextures,
+  framingRequest,
+  initialCameraPosition,
   worldGeometry,
   serviceAvailability,
   serviceSelection,
-}: HeroGlobeSceneProps) {
-  return (
-    <Canvas
-      className="hero-globe-canvas"
-      dpr={[1, 1.8]}
-      gl={{
-        antialias: true,
-        alpha: true,
-        powerPreference: 'high-performance',
-      }}
-    >
-      <color attach="background" args={['#050916']} />
-      <fog attach="fog" args={['#050916', 7, 15]} />
+}: SceneContentsProps) {
+  const controlsRef = useRef<OrbitControlsImpl | null>(null);
+  const transitionTargetRef = useRef<Vector3 | null>(null);
+  const { camera } = useThree();
 
+  useEffect(() => {
+    const pose = buildHeroFramingPose({
+      globeRadius: GLOBE_RADIUS,
+      mode: framingRequest.mode,
+      serviceSelection,
+      worldGeometry,
+    });
+
+    transitionTargetRef.current = new Vector3(...pose.cameraPosition);
+  }, [framingRequest.mode, framingRequest.revision, serviceSelection, worldGeometry]);
+
+  useFrame(() => {
+    const transitionTarget = transitionTargetRef.current;
+    if (transitionTarget) {
+      camera.position.lerp(transitionTarget, 0.12);
+
+      if (camera.position.distanceTo(transitionTarget) < 0.02) {
+        camera.position.copy(transitionTarget);
+        transitionTargetRef.current = null;
+      }
+    }
+
+    const controls = controlsRef.current;
+    if (controls) {
+      // Step 3 keeps every framing action globe-centered. Home and Fit Corridor
+      // may move the camera, but they never leave a drifting pan target behind.
+      controls.target.set(0, 0, 0);
+      controls.update();
+    }
+  });
+
+  return (
+    <>
       <PerspectiveCamera
         makeDefault
-        position={[0.85, 1.45, 10.8]}
+        position={initialCameraPosition}
         fov={32}
         near={0.1}
         far={120}
       />
 
       <OrbitControls
+        ref={controlsRef}
         enableDamping
         dampingFactor={0.08}
         enablePan={false}
-        // Keep the whole globe readable at initial load while still allowing a closer
-        // corridor inspection pass without letting the camera fly off into empty space.
+        target={[0, 0, 0]}
+        // Step 3 adds explicit Home / Fit Corridor presets instead of generic pan.
+        // Keep the interaction globe-centered and bounded to corridor inspection.
         minDistance={3}
         maxDistance={20}
         zoomSpeed={0.85}
-        rotateSpeed={0.72}
+        rotateSpeed={0.68}
         minPolarAngle={0.45}
         maxPolarAngle={Math.PI - 0.45}
       />
@@ -78,6 +120,47 @@ export function HeroGlobeScene({
       <HeroGlobe
         earthTextures={earthTextures}
         sunDirection={heroSunDirection}
+        worldGeometry={worldGeometry}
+        serviceAvailability={serviceAvailability}
+        serviceSelection={serviceSelection}
+      />
+    </>
+  );
+}
+
+export function HeroGlobeScene({
+  earthTextures,
+  framingRequest,
+  worldGeometry,
+  serviceAvailability,
+  serviceSelection,
+}: HeroGlobeSceneProps) {
+  const initialCameraPosition = useMemo(() => {
+    return buildHeroFramingPose({
+      globeRadius: GLOBE_RADIUS,
+      mode: 'home',
+      serviceSelection,
+      worldGeometry,
+    }).cameraPosition;
+  }, [serviceSelection, worldGeometry]);
+
+  return (
+    <Canvas
+      className="hero-globe-canvas"
+      dpr={[1, 1.8]}
+      gl={{
+        antialias: true,
+        alpha: true,
+        powerPreference: 'high-performance',
+      }}
+    >
+      <color attach="background" args={['#050916']} />
+      <fog attach="fog" args={['#050916', 7, 15]} />
+
+      <SceneContents
+        earthTextures={earthTextures}
+        framingRequest={framingRequest}
+        initialCameraPosition={initialCameraPosition}
         worldGeometry={worldGeometry}
         serviceAvailability={serviceAvailability}
         serviceSelection={serviceSelection}

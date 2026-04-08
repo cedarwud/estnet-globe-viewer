@@ -31,7 +31,7 @@ function geoDirection(latitudeDeg: number, longitudeDeg: number) {
   return new Vector3(x, y, z).normalize();
 }
 
-function altitudeToSceneOffset(altitudeKm: number | null, globeRadius: number) {
+export function altitudeKmToSceneOffset(altitudeKm: number | null, globeRadius: number) {
   if (!altitudeKm) {
     return 0;
   }
@@ -63,9 +63,31 @@ export function geoCoordinateToScenePosition(
   globeRadius: number
 ) {
   const direction = geoDirection(coordinate.latitudeDeg, coordinate.longitudeDeg);
-  const radius = globeRadius + altitudeToSceneOffset(coordinate.altitudeKm, globeRadius);
+  const radius = globeRadius + altitudeKmToSceneOffset(coordinate.altitudeKm, globeRadius);
 
   return direction.multiplyScalar(radius);
+}
+
+export function estimateCorridorLegPeakHeight(
+  start: GeoCoordinate,
+  end: GeoCoordinate,
+  globeRadius: number,
+  ceiling = 0.12
+) {
+  const startDirection = geoDirection(start.latitudeDeg, start.longitudeDeg);
+  const endDirection = geoDirection(end.latitudeDeg, end.longitudeDeg);
+  const angularSpan = Math.acos(Math.min(1, Math.max(-1, startDirection.dot(endDirection))));
+  const maxNodeOffset = Math.max(
+    altitudeKmToSceneOffset(start.altitudeKm, globeRadius),
+    altitudeKmToSceneOffset(end.altitudeKm, globeRadius)
+  );
+
+  // Corridor legs should acknowledge altitude and span, but they should not
+  // overshoot the relay geometry enough to suggest a fictitious higher path.
+  return Math.min(
+    ceiling,
+    Math.max(0.03, maxNodeOffset * 0.35 + globeRadius * angularSpan * 0.015)
+  );
 }
 
 export function buildElevatedArcPoints(
@@ -79,8 +101,8 @@ export function buildElevatedArcPoints(
 ) {
   const startDirection = geoDirection(start.latitudeDeg, start.longitudeDeg);
   const endDirection = geoDirection(end.latitudeDeg, end.longitudeDeg);
-  const startRadius = globeRadius + altitudeToSceneOffset(start.altitudeKm, globeRadius);
-  const endRadius = globeRadius + altitudeToSceneOffset(end.altitudeKm, globeRadius);
+  const startRadius = globeRadius + altitudeKmToSceneOffset(start.altitudeKm, globeRadius);
+  const endRadius = globeRadius + altitudeKmToSceneOffset(end.altitudeKm, globeRadius);
   const peakHeight = options?.peakHeight ?? 0.28;
   const segments = options?.segments ?? 32;
   const points: Vector3[] = [];

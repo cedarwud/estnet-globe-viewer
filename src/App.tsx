@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { useState } from 'react';
-import { HeroGlobeScene } from './components/globe/HeroGlobeScene';
+import { HeroGlobeScene, type HeroGlobeFramingRequest } from './components/globe/HeroGlobeScene';
+import type { FramingMode } from './components/globe/corridorFraming';
 import { offlineEarthImageryProvider } from './imagery/offlineEarthImageryProvider';
 import { useEarthTextures } from './imagery/useEarthTextures';
 import { mockTruthProvider } from './mock/mockTruthProvider';
@@ -10,8 +11,9 @@ import { useTruthSnapshot } from './truth/useTruthSnapshot';
 const completedScope = [
   'Approved NASA day and night runtime derivatives through the existing imagery seam',
   'Day-night Earth shader v1 with a controlled terminator and restrained twilight band',
-  'Full-stage globe-first shell with corridor-focused framing',
+  'Corridor-aware first screen with explicit Home and Fit Corridor framing actions',
   'Natural zoom range from whole-globe read to closer corridor inspection',
+  'In-scene endpoint labels and clearer endpoint / relay / corridor hierarchy',
   'Compact HUD plus on-demand drawer instead of a permanent dashboard rail',
   'Mock truth scene and overlays still reading the same canonical snapshot',
 ];
@@ -53,6 +55,10 @@ function formatCorridorLabel(
 
 export function App() {
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [framingRequest, setFramingRequest] = useState<HeroGlobeFramingRequest>({
+    mode: 'home',
+    revision: 0,
+  });
   const truthSnapshot = useTruthSnapshot(mockTruthProvider);
   const earthTextures = useEarthTextures(offlineEarthImageryProvider);
   const capabilityRows = capabilityEntries(truthSnapshot.capabilityProfile);
@@ -83,7 +89,8 @@ export function App() {
     'The activePath wording remains limited to current service corridor / current active relay path / current visible relay path.',
     'The unavailable candidate corridor is still mock availability truth, not KPI, SLA, or coverage-field truth.',
     'Dark-side readability now comes from a controlled day/night shader and approved Black Marble night lights, not from washing the whole globe with ambient fill.',
-    'Step 2 still does not claim clouds, atmosphere, bloom, or a full planet-rendering stack.',
+    'Step 3 adds Home and Fit Corridor, but it still does not permit generic free pan or free-fly camera drift.',
+    'Step 3 still does not claim clouds, atmosphere, bloom, or a full planet-rendering stack.',
     truthSnapshot.eventTruth.events.length === 0
       ? 'EventTruth remains a derived-only surface with an intentionally empty event set in this static baseline.'
       : `EventTruth contains ${truthSnapshot.eventTruth.events.length} derived cues.`,
@@ -115,12 +122,19 @@ export function App() {
   const earthSurfaceNote =
     earthTextures?.note ??
     'No Earth imagery seam state is available. The placeholder globe should remain the only runtime surface.';
+  const setFramingMode = (mode: FramingMode) => {
+    setFramingRequest((current) => ({
+      mode,
+      revision: current.revision + 1,
+    }));
+  };
 
   return (
     <div className="viewer-shell">
       <div className="viewer-stage">
         <HeroGlobeScene
           earthTextures={earthTextures}
+          framingRequest={framingRequest}
           worldGeometry={truthSnapshot.worldGeometry}
           serviceAvailability={truthSnapshot.serviceAvailability}
           serviceSelection={truthSnapshot.serviceSelection}
@@ -129,12 +143,11 @@ export function App() {
 
       <div className="viewer-overlay">
         <header className="floating-card hero-overlay">
-          <p className="floating-card__eyebrow">Offline Earth Reset Step 2</p>
+          <p className="floating-card__eyebrow">Current Service View</p>
           <h1 className="hero-overlay__title">Service-Driven Hero Globe</h1>
           <p className="hero-overlay__body">
-            Step 2 keeps the approved NASA day baseline, adds Black Marble night lights, and promotes a
-            formal day-night shader. The dark side is now readable without pretending clouds, atmosphere,
-            or bloom already exist.
+            The first frame now opens already centered on the current endpoint pair and active relay
+            corridor. Use Fit Corridor for a tighter inspection or Home to reset the whole-globe hero view.
           </p>
         </header>
 
@@ -150,22 +163,38 @@ export function App() {
             <p className="scene-status__path">{currentCorridorLabel}</p>
           </div>
 
-          <button
-            type="button"
-            className="details-toggle"
-            onClick={() => setDetailsOpen((current) => !current)}
-            aria-expanded={detailsOpen}
-            aria-controls="truth-drawer"
-          >
-            {detailsOpen ? 'Hide Details' : 'Open Details'}
-          </button>
+          <div className="scene-actions">
+            <button
+              type="button"
+              className={`scene-action ${framingRequest.mode === 'home' ? 'scene-action--active' : ''}`}
+              onClick={() => setFramingMode('home')}
+            >
+              Home
+            </button>
+            <button
+              type="button"
+              className={`scene-action ${framingRequest.mode === 'fit-corridor' ? 'scene-action--active' : ''}`}
+              onClick={() => setFramingMode('fit-corridor')}
+            >
+              Fit Corridor
+            </button>
+            <button
+              type="button"
+              className="details-toggle"
+              onClick={() => setDetailsOpen((current) => !current)}
+              aria-expanded={detailsOpen}
+              aria-controls="truth-drawer"
+            >
+              {detailsOpen ? 'Hide Details' : 'Open Details'}
+            </button>
+          </div>
         </div>
 
         <section className="floating-card service-ribbon">
           <p className="floating-card__eyebrow">Current Visible Relay Path</p>
           <p className="service-ribbon__path">{currentCorridorLabel}</p>
           <p className="service-ribbon__hint">
-            Drag to rotate. Scroll to zoom from whole-globe framing toward the corridor.
+            Drag to rotate. Scroll to zoom. Use Home to reset the hero framing or Fit Corridor for a closer corridor read.
           </p>
         </section>
 

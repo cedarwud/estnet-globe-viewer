@@ -4,7 +4,7 @@
 
 ## 目前狀態
 
-目前已完成八個早期 baseline：
+目前已完成九個早期 baseline：
 
 1. `init estnet-globe-viewer repo skeleton`
 2. `add offline hero globe shell baseline`
@@ -14,6 +14,7 @@
 6. `add earth asset governance and imagery seam`
 7. `reset offline earth appearance foundation`
 8. `add day-night earth shader baseline`
+9. `add corridor-aware framing and semantic scene polish`
 
 目前已可在沒有外部 producer 的情況下看到並驗證：
 
@@ -40,6 +41,11 @@
 - formal day-night Earth shader v1
 - 更保守的單主光 lighting foundation
 - 受控 terminator 與 restrained dark-side readability
+- corridor-aware first screen，而不是任意 globe rotation
+- 明確的 `Home` / `Fit Corridor` framing actions
+- 最小 in-scene endpoint labels
+- 更清楚的 endpoint / relay / active corridor / unavailable candidate hierarchy
+- 更貼近 relay altitude 的 corridor arc geometry
 - 明確保留但不作為主路徑的 placeholder fallback
 
 目前仍尚未加入：
@@ -58,7 +64,7 @@
 
 ## Commit 邊界
 
-前八個 baseline commit 目前分工如下：
+前九個 baseline commit 目前分工如下：
 
 1. `init estnet-globe-viewer repo skeleton`
    - `.gitignore` 與交付 hygiene baseline
@@ -115,6 +121,13 @@
    - `HeroGlobe` 改為 formal day-night Earth shader v1
    - dark-side readability 來自受控 day/night mixing 與 twilight band，不用整體補光偷渡
 
+9. `add corridor-aware framing and semantic scene polish`
+   - 首屏改為 corridor-aware hero framing，而不是任意地球轉角
+   - 新增 `Home` 與 `Fit Corridor`
+   - scene 維持 globe-centered interaction，不開 generic free pan
+   - 最小 endpoint labels 與更清楚的 endpoint / relay / corridor hierarchy
+   - active corridor 幾何高度回收，避免明顯高於 relay altitude
+
 目前仍刻意不做：
 
 - cloud shell、atmosphere、bloom
@@ -160,6 +173,7 @@ npm run preview
 目前畫面由 repo 內的 mock truth provider 驅動，不依賴任何外部 replay producer。
 `activePath` 只被描述為 current service corridor / current active relay path / current visible relay path，不宣稱 routing truth。
 Earth imagery seam 已進入承載 day/night runtime asset 的 `approved-runtime` 狀態；scene 主路徑已改為 formal day-night Earth shader v1。Step 1 day-only fallback 與 placeholder fallback 仍存在，但只作 guard。
+首屏 framing 現在會先對準 endpoint pair 與 current service corridor，並提供 `Home` / `Fit Corridor` 作為最小直接的 framing controls。
 `estnet-bootstrap-kit` integration 會等到 presentation shell 穩定後再重新開啟。
 
 ## 目錄
@@ -186,7 +200,7 @@ estnet-globe-viewer/
 
 ## 目前 Earth 狀態
 
-這一輪是 offline Earth reset track 的 `Step 2`，不是 `Step 3`。
+這一輪是 offline Earth reset track 的 `Step 3`，不是 `Step 4`。
 
 目前 repo 已經有：
 
@@ -195,6 +209,10 @@ estnet-globe-viewer/
 - approved runtime NASA Black Marble night texture derivative
 - imagery seam 的 `approved-runtime` day/night 路徑
 - formal day-night Earth shader v1
+- corridor-aware first-screen framing
+- `Home` / `Fit Corridor` controls
+- minimal in-scene endpoint labels
+- tightened corridor / relay geometry consistency
 - scene 端保留的 Step 1 day-only 與 placeholder fallback guard
 
 目前 repo 刻意還沒有：
@@ -203,4 +221,4 @@ estnet-globe-viewer/
 - atmosphere
 - bloom
 
-下一個視覺 approval 目標若要前進，必須等 Step 3 authority 另行 promotion；Step 2 不能自己膨脹成完整 planet rendering stack，也不代表 `estnet-bootstrap-kit` 會回到主線。
+下一個視覺 approval 目標若要前進，必須等 Step 4 authority 另行 promotion；Step 3 不能自己膨脹成 atmosphere、bloom、focus lens 或更大的 camera/control overhaul，也不代表 `estnet-bootstrap-kit` 會回到主線。

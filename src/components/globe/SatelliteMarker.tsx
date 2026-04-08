@@ -15,17 +15,17 @@ interface SatelliteMarkerProps {
 const SATELLITE_STYLE = {
   active: {
     color: '#8ed2ff',
-    size: 0.074,
-    haloInner: 0.11,
-    haloOuter: 0.155,
-    opacity: 0.44,
+    size: 0.082,
+    haloInner: 0.118,
+    haloOuter: 0.168,
+    opacity: 0.5,
   },
   candidate: {
-    color: '#b3b9c5',
-    size: 0.058,
-    haloInner: 0.09,
-    haloOuter: 0.13,
-    opacity: 0.24,
+    color: '#c2c8d1',
+    size: 0.05,
+    haloInner: 0.082,
+    haloOuter: 0.118,
+    opacity: 0.16,
   },
 } as const;
 
@@ -55,9 +55,9 @@ export function SatelliteMarker({ satellite, globeRadius, state }: SatelliteMark
         <octahedronGeometry args={[style.size, 0]} />
         <meshStandardMaterial
           color={style.color}
-          emissive={new Color(style.color).multiplyScalar(state === 'active' ? 0.58 : 0.24)}
+          emissive={new Color(style.color).multiplyScalar(state === 'active' ? 0.62 : 0.18)}
           emissiveIntensity={1}
-          roughness={0.25}
+          roughness={0.22}
           metalness={0.16}
         />
       </mesh>
