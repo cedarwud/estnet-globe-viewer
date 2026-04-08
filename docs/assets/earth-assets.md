@@ -2,21 +2,22 @@
 
 This document is the repo-local governance record for Earth imagery intake.
 
-It defines what may become an approved runtime Earth asset inside `estnet-globe-viewer`, records the approved Step 1 day derivative plus the approved Step 2 night derivative, and captures the Step 5 appearance-seam boundary that sits on top of those approved runtime files.
+It defines what may become an approved runtime Earth asset inside `estnet-globe-viewer`, records the approved Step 1 day derivative plus the approved Step 2 night derivative, records the approved Commit 2 cloud derivative, and captures the appearance-seam boundary that sits on top of those approved runtime files.
 
-## Current Step 5 Status
+## Current Mainline Status
 
 - Step 0 established the governance boundary and minimal imagery seam.
 - Step 1 promoted one approved NASA Blue Marble day derivative into the runtime baseline.
 - Step 2 keeps that day baseline, adds an approved NASA Black Marble night derivative, and promotes a formal day-night Earth shader v1.
+- Commit 2 adds one approved NASA GSFC Blue Marble cloud derivative and promotes a restrained cloud shell baseline.
 - Step 4 adds a restrained procedural atmosphere shell without introducing another runtime asset.
 - Approved runtime filenames:
   - `public/assets/earth/earth-day-nasa-blue-marble-ng-4096x2048.webp`
   - `public/assets/earth/earth-night-nasa-black-marble-2016-4096x2048.webp`
-- The scene now uses a controlled day-night Earth surface plus a restrained atmosphere shell on the main path.
+  - `public/assets/earth/earth-clouds-nasa-blue-marble-2002-4096x2048.webp`
+- The scene now uses a controlled day-night Earth surface plus a restrained cloud shell and atmosphere on the main path.
 - Step 1 day-only fallback and placeholder fallback still exist, but they are explicit guards instead of the intended success path.
-- No cloud runtime asset is currently approved. Cloud shell remains intentionally deferred until a formal intake record exists.
-- No KTX2 / Basis runtime derivative is currently approved. Step 5 keeps the WebP runtime pair and hardens the appearance seam around it instead of widening the asset toolchain.
+- No KTX2 / Basis runtime derivative is currently approved. The current mainline keeps a small WebP runtime set and hardens the appearance seam around it instead of widening the asset toolchain.
 
 ## Storage Boundary
 
@@ -46,6 +47,7 @@ Any Earth asset that becomes a committed runtime asset must satisfy all of these
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | earth-day-nasa-blue-marble-ng-4096x2048-webp | approved-runtime | `public/assets/earth/earth-day-nasa-blue-marble-ng-4096x2048.webp` | `https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-base/january/world.200401.3x5400x2700.jpg` | NASA Earth Observatory / NASA Science | NASA images and media usage guidance at `https://www.nasa.gov/nasa-brand-center/images-and-media/`; NASA should be acknowledged as the source of the material | 2026-04-08 | download official JPEG, resize to `4096x2048`, compress to WebP via `scripts/assets/preprocess-earth-day-texture.py` | `4096x2048` | `webp` | `reset offline earth appearance foundation` | Step 1 authority-aligned runtime intake (2026-04-08) |
 | earth-night-nasa-black-marble-2016-4096x2048-webp | approved-runtime | `public/assets/earth/earth-night-nasa-black-marble-2016-4096x2048.webp` | `https://assets.science.nasa.gov/content/dam/science/esd/eo/images/imagerecords/144000/144898/BlackMarble_2016_3km.jpg` | NASA Earth Observatory / NASA Science / Black Marble 2016 | NASA images and media usage guidance at `https://www.nasa.gov/nasa-brand-center/images-and-media/`; NASA should be acknowledged as the source of the material | 2026-04-08 | download official JPEG, resize to `4096x2048`, compress to WebP via `scripts/assets/preprocess-earth-night-texture.py` | `4096x2048` | `webp` | `add day-night earth shader baseline` | Step 2 authority-aligned runtime intake (2026-04-08) |
+| earth-clouds-nasa-blue-marble-2002-4096x2048-webp | approved-runtime | `public/assets/earth/earth-clouds-nasa-blue-marble-2002-4096x2048.webp` | `https://neo.gsfc.nasa.gov/archive/bluemarble/cloud_combined_8192.tif` | NASA GSFC NEO / Blue Marble archive | NASA images and media usage guidance at `https://www.nasa.gov/nasa-brand-center/images-and-media/`; NASA content generally is not subject to copyright in the United States for educational or informational use and NASA should be acknowledged as the source of the material | 2026-04-08 | download official TIFF, resize to `4096x2048`, compress to WebP via `scripts/assets/preprocess-earth-cloud-texture.py` | `4096x2048` | `webp` | `add approved cloud shell baseline` | Commit 2 authority-aligned runtime intake (2026-04-08) |
 
 ## Attribution And Provenance Notes
 
@@ -66,11 +68,19 @@ Any Earth asset that becomes a committed runtime asset must satisfy all of these
 - Usage boundary: NASA images and media usage guidance at `https://www.nasa.gov/nasa-brand-center/images-and-media/`
 - Runtime status in this repo: downloaded, preprocessed, approved for Step 2, committed as a runtime derivative
 
+### Cloud Baseline
+
+- Approved source family: NASA GSFC Blue Marble cloud archive
+- Source page: `https://neo.gsfc.nasa.gov/archive/bluemarble/`
+- Direct source file: `https://neo.gsfc.nasa.gov/archive/bluemarble/cloud_combined_8192.tif`
+- Historical title alignment: legacy NASA Visible Earth search results identify this asset family as `Blue Marble: Clouds`
+- Usage boundary: NASA images and media usage guidance at `https://www.nasa.gov/nasa-brand-center/images-and-media/`
+- Runtime status in this repo: downloaded, preprocessed, approved for Commit 2, committed as a runtime derivative
+
 ### Deferred Follow-ons
 
-- Cloud shell and bloom remain follow-on surfaces, not part of the current approved runtime asset intake.
 - Step 4 atmosphere is procedural and therefore does not add a new governed runtime texture file.
-- KTX2 remains deferred for now because only two approved runtime Earth textures exist, both already fit repo budget, and introducing KTX2 would require Basis preprocessing plus a clear runtime fallback/transcoder path.
+- KTX2 remains deferred for now because only three approved runtime Earth textures exist, all already fit repo budget, and introducing KTX2 would require Basis preprocessing plus a clear runtime fallback/transcoder path.
 - Natural Earth may still be considered later only for helper masks or support textures, not as the final main day albedo.
 
 ## Preprocessing Record
@@ -102,6 +112,20 @@ The approved Step 2 runtime derivative was built with the following reproducible
    - dimensions: `4096x2048`
    - size: `353326` bytes
    - sha256: `f3a163932526c589670e7869b162b8d59d6f6dd6364abf48cf46e9cd5eec785e`
+
+### Commit 2 Cloud Derivative
+
+The approved Commit 2 runtime derivative was built with the following reproducible flow:
+
+1. Download source TIFF outside the repo:
+   - `curl -L -o /tmp/estnet-earth-cloud-source.tif https://neo.gsfc.nasa.gov/archive/bluemarble/cloud_combined_8192.tif`
+2. Run the committed preprocessing helper:
+   - `python3 scripts/assets/preprocess-earth-cloud-texture.py --source /tmp/estnet-earth-cloud-source.tif --output public/assets/earth/earth-clouds-nasa-blue-marble-2002-4096x2048.webp --width 4096 --height 2048 --quality 86`
+3. Result:
+   - output file: `public/assets/earth/earth-clouds-nasa-blue-marble-2002-4096x2048.webp`
+   - dimensions: `4096x2048`
+   - size: `1987994` bytes
+   - sha256: `926243783337fe4c7052b638802f2de06387d602ba4a001dbb9547f3ca232f41`
 
 This keeps the repo on compressed runtime derivatives instead of raw masters.
 
@@ -141,3 +165,10 @@ Step 5 now means:
 - the approved Step 1/2 WebP runtime asset pair remains the main asset path
 - a named appearance profile and runtime texture policy sit between imagery metadata and scene logic
 - KTX2 is intentionally deferred until the repo has enough approved Earth assets to justify a larger transcode / fallback pipeline
+
+Commit 2 now means:
+
+- one approved cloud runtime derivative is added to the governed asset set
+- the imagery seam now carries day, night, and cloud runtime metadata
+- the cloud shell is allowed only as a restrained layer that remains subordinate to endpoint / relay / corridor readability
+- bloom, weather animation, ocean specular, grading, and KTX2 still remain outside this change

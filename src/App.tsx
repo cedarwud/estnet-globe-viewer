@@ -10,8 +10,10 @@ import { useTruthSnapshot } from './truth/useTruthSnapshot';
 
 const completedScope = [
   'Approved NASA day and night runtime derivatives through the existing imagery seam',
+  'Approved NASA GSFC Blue Marble cloud derivative through the same governance path',
   'Day-night Earth shader v1 with a controlled terminator and restrained twilight band',
-  'Restrained procedural atmosphere shell that adds depth without introducing a new runtime asset',
+  'Restrained cloud shell layered between the Earth surface and atmosphere',
+  'Restrained procedural atmosphere shell that continues to add depth without becoming a cloud substitute',
   'Corridor-aware first screen with explicit Home and Fit Corridor framing actions',
   'Natural zoom range from whole-globe read to closer corridor inspection',
   'In-scene endpoint labels and clearer endpoint / relay / corridor hierarchy',
@@ -20,7 +22,6 @@ const completedScope = [
 ];
 
 const deferredScope = [
-  'Cloud shell pending approved runtime asset intake and governance record',
   'Bloom follow-on',
   'estnet-bootstrap-kit reference replay smoke',
   'Focus lens follow-on interface',
@@ -91,8 +92,8 @@ export function App() {
     'The activePath wording remains limited to current service corridor / current active relay path / current visible relay path.',
     'The unavailable candidate corridor is still mock availability truth, not KPI, SLA, or coverage-field truth.',
     'Dark-side readability now comes from a controlled day/night shader and approved Black Marble night lights, not from washing the whole globe with ambient fill.',
-    'Step 5 keeps Home and Fit Corridor, but it still does not permit generic free pan or free-fly camera drift.',
-    'Step 5 keeps the restrained atmosphere shell and adds appearance/runtime hardening, not bloom, not a cloud pack, and not a full planet-rendering stack.',
+    'Home and Fit Corridor still stay globe-centered. The cloud shell does not reopen generic free pan or free-fly camera drift.',
+    'The approved cloud shell stays restrained and texture-backed. This commit does not add bloom, weather animation, ocean specular, grading, or a larger planet-rendering stack.',
     truthSnapshot.eventTruth.events.length === 0
       ? 'EventTruth remains a derived-only surface with an intentionally empty event set in this static baseline.'
       : `EventTruth contains ${truthSnapshot.eventTruth.events.length} derived cues.`,
@@ -115,9 +116,12 @@ export function App() {
     earthTextures.nightTextureUrl
       ? 'approved-runtime'
       : 'none-approved';
+  const cloudShellStatus = earthTextures?.cloudTextureUrl ? 'approved-runtime' : 'not-approved';
   const earthSurfaceMode =
     earthImageryAvailability === 'approved-runtime'
-      ? 'Day-night Earth shader v1 + restrained atmosphere'
+      ? earthTextures?.cloudTextureUrl
+        ? 'Day-night Earth shader v1 + restrained cloud shell + atmosphere'
+        : 'Day-night Earth shader v1 + restrained atmosphere'
       : earthTextures?.dayTextureUrl
         ? 'Step 1 day-only fallback surface'
         : 'Placeholder globe fallback';
@@ -266,12 +270,20 @@ export function App() {
                   <dd>{earthTextures?.nightAssetId ?? 'none-approved'}</dd>
                 </div>
                 <div className="status-facts__row">
+                  <dt>Cloud asset</dt>
+                  <dd>{earthTextures?.cloudAssetId ?? 'none-approved'}</dd>
+                </div>
+                <div className="status-facts__row">
                   <dt>Appearance profile</dt>
-                  <dd>{earthTextures?.appearanceProfileId ?? 'offline-balanced-v1'}</dd>
+                  <dd>{earthTextures?.appearanceProfileId ?? 'offline-balanced-v2'}</dd>
                 </div>
                 <div className="status-facts__row">
                   <dt>Texture quality</dt>
                   <dd>{earthTextures?.textureQuality ?? 'runtime-4k-webp'}</dd>
+                </div>
+                <div className="status-facts__row">
+                  <dt>Cloud shell</dt>
+                  <dd>{cloudShellStatus}</dd>
                 </div>
                 <div className="status-facts__row">
                   <dt>Governance doc</dt>

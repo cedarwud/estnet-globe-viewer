@@ -6,6 +6,7 @@ import type {
 import type { EarthTextureSet } from '../../imagery/provider';
 import {
   EarthAtmosphereShell,
+  EarthCloudShell,
   EarthDayNightSurface,
   EarthDaySurface,
   PlaceholderEarthSurface,
@@ -36,6 +37,8 @@ export function HeroGlobe({
     earthTextures?.availability !== 'approved-runtime' || earthTextures.dayTextureUrl === null;
   const usesDayNightShader =
     !usesPlaceholderSurface && earthTextures?.nightTextureUrl !== null;
+  const usesCloudShell =
+    !usesPlaceholderSurface && earthTextures?.cloudTextureUrl !== null;
   const activeRelayIds = new Set(
     serviceSelection.kind === 'supported' && serviceSelection.activePath
       ? serviceSelection.activePath.relaySatelliteIds
@@ -61,6 +64,14 @@ export function HeroGlobe({
           textureSet={earthTextures}
         />
       )}
+
+      {usesCloudShell && earthTextures?.cloudTextureUrl ? (
+        <EarthCloudShell
+          radius={GLOBE_RADIUS}
+          textureSet={earthTextures}
+          sunDirection={sunDirection}
+        />
+      ) : null}
 
       <EarthAtmosphereShell
         radius={GLOBE_RADIUS}

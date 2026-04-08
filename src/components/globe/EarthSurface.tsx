@@ -5,6 +5,8 @@ import {
   AdditiveBlending,
   BackSide,
   Color,
+  MathUtils,
+  NormalBlending,
   Vector3,
   type Vector3Tuple,
 } from 'three';
@@ -29,6 +31,11 @@ interface EarthDayNightSurfaceProps extends EarthSurfaceBaseProps {
 
 interface EarthAtmosphereShellProps extends EarthSurfaceBaseProps {
   textureSet: EarthTextureSet | null;
+  sunDirection: Vector3Tuple;
+}
+
+interface EarthCloudShellProps extends EarthSurfaceBaseProps {
+  textureSet: EarthTextureSet;
   sunDirection: Vector3Tuple;
 }
 
@@ -112,6 +119,66 @@ void main() {
   float opacity = rim * intensity * (0.28 + dayScatter * 0.55 + twilight * 0.24);
 
   gl_FragColor = vec4(color, opacity);
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+}
+`;
+
+const cloudVertexShader = `
+varying vec2 vUv;
+varying vec3 vWorldNormal;
+varying vec3 vWorldPosition;
+
+void main() {
+  vUv = uv;
+  vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+  vWorldPosition = worldPosition.xyz;
+  vWorldNormal = normalize(mat3(modelMatrix) * normal);
+  gl_Position = projectionMatrix * viewMatrix * worldPosition;
+}
+`;
+
+const cloudFragmentShader = `
+uniform sampler2D cloudMap;
+uniform vec3 sunDirection;
+uniform float opacity;
+uniform float densityThreshold;
+uniform float densitySoftness;
+uniform float dayBoost;
+uniform float nightFloor;
+uniform float limbFadeExponent;
+
+varying vec2 vUv;
+varying vec3 vWorldNormal;
+varying vec3 vWorldPosition;
+
+void main() {
+  vec3 texel = texture2D(cloudMap, vUv).rgb;
+  float luminance = dot(texel, vec3(0.299, 0.587, 0.114));
+  float density = smoothstep(
+    densityThreshold,
+    min(1.0, densityThreshold + densitySoftness),
+    luminance
+  );
+  density *= density;
+
+  vec3 normal = normalize(vWorldNormal);
+  vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
+  float sunDot = dot(normal, normalize(sunDirection));
+  float dayScatter = smoothstep(-0.12, 0.4, sunDot);
+  float twilight = 1.0 - smoothstep(0.04, 0.32, abs(sunDot));
+  float viewFacing = clamp(dot(viewDirection, normal), 0.0, 1.0);
+  float limbFade = mix(0.64, 1.0, pow(viewFacing, limbFadeExponent));
+
+  float shellOpacity = opacity * density * limbFade;
+  shellOpacity *= mix(nightFloor, 1.0 + twilight * 0.08, dayScatter);
+
+  vec3 nightColor = vec3(0.2, 0.23, 0.28) * (0.9 + twilight * 0.2);
+  vec3 dayColor = vec3(0.93, 0.96, 1.0) * (0.72 + dayScatter * dayBoost);
+  vec3 color = mix(nightColor, dayColor, dayScatter);
+  color *= mix(0.68, 1.06, luminance);
+
+  gl_FragColor = vec4(color, shellOpacity);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }
@@ -262,7 +329,7 @@ export function EarthAtmosphereShell({
     <mesh
       name="earth-atmosphere-shell"
       scale={appearanceProfile.atmosphere.shellScale}
-      renderOrder={1}
+      renderOrder={2}
     >
       <sphereGeometry
         args={[radius, appearanceProfile.surfaceSegments, appearanceProfile.surfaceSegments]}
@@ -275,6 +342,73 @@ export function EarthAtmosphereShell({
         transparent
         depthWrite={false}
         blending={AdditiveBlending}
+      />
+    </mesh>
+  );
+}
+
+export function EarthCloudShell({
+  radius,
+  textureSet,
+  sunDirection,
+}: EarthCloudShellProps) {
+  const { gl } = useThree();
+  const appearanceProfile = useMemo(
+    () => resolveEarthAppearanceProfile(textureSet),
+    [textureSet]
+  );
+  const cloudTexture = useTexture(textureSet.cloudTextureUrl ?? '');
+  const configuredCloudTexture = useMemo(
+    () =>
+      configureEarthRuntimeTexture(
+        cloudTexture,
+        gl.capabilities.getMaxAnisotropy(),
+        appearanceProfile
+      ),
+    [appearanceProfile, cloudTexture, gl]
+  );
+  const normalizedSunDirection = useMemo(
+    () => new Vector3(...sunDirection).normalize(),
+    [sunDirection]
+  );
+  const cloudRotation = useMemo(
+    () => MathUtils.degToRad(appearanceProfile.clouds.rotationDeg),
+    [appearanceProfile]
+  );
+  const uniforms = useMemo(
+    () => ({
+      // Commit 2 keeps the cloud shell as a controlled, truth-adjacent visual layer.
+      // The texture is approved and traceable, but the shell stays quiet enough that
+      // endpoint / relay / corridor readability still wins over atmosphere theater.
+      cloudMap: { value: configuredCloudTexture },
+      sunDirection: { value: normalizedSunDirection },
+      opacity: { value: appearanceProfile.clouds.opacity },
+      densityThreshold: { value: appearanceProfile.clouds.densityThreshold },
+      densitySoftness: { value: appearanceProfile.clouds.densitySoftness },
+      dayBoost: { value: appearanceProfile.clouds.dayBoost },
+      nightFloor: { value: appearanceProfile.clouds.nightFloor },
+      limbFadeExponent: { value: appearanceProfile.clouds.limbFadeExponent },
+    }),
+    [appearanceProfile, configuredCloudTexture, normalizedSunDirection]
+  );
+
+  return (
+    <mesh
+      name="earth-cloud-shell"
+      scale={appearanceProfile.clouds.shellScale}
+      rotation={[0, cloudRotation, 0]}
+      renderOrder={1}
+    >
+      <sphereGeometry
+        args={[radius, appearanceProfile.surfaceSegments, appearanceProfile.surfaceSegments]}
+      />
+      <shaderMaterial
+        uniforms={uniforms}
+        vertexShader={cloudVertexShader}
+        fragmentShader={cloudFragmentShader}
+        transparent
+        depthWrite={false}
+        blending={NormalBlending}
       />
     </mesh>
   );

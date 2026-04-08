@@ -19,6 +19,17 @@ export interface EarthAtmosphereAppearanceConfig {
   twilightColor: string;
 }
 
+export interface EarthCloudAppearanceConfig {
+  shellScale: number;
+  rotationDeg: number;
+  opacity: number;
+  densityThreshold: number;
+  densitySoftness: number;
+  dayBoost: number;
+  nightFloor: number;
+  limbFadeExponent: number;
+}
+
 export interface EarthAppearanceProfile {
   id: EarthAppearanceProfileId;
   label: string;
@@ -26,6 +37,7 @@ export interface EarthAppearanceProfile {
   surfaceSegments: number;
   textureAnisotropyCap: number;
   dayNight: EarthDayNightAppearanceConfig;
+  clouds: EarthCloudAppearanceConfig;
   atmosphere: EarthAtmosphereAppearanceConfig;
 }
 
@@ -44,6 +56,16 @@ export const offlineBalancedEarthAppearanceProfile: EarthAppearanceProfile = {
     nightIntensity: 0.92,
     twilightBoost: 0.18,
   },
+  clouds: {
+    shellScale: 1.01,
+    rotationDeg: 0,
+    opacity: 0,
+    densityThreshold: 0.34,
+    densitySoftness: 0.18,
+    dayBoost: 0.82,
+    nightFloor: 0.06,
+    limbFadeExponent: 0.9,
+  },
   atmosphere: {
     shellScale: 1.032,
     rimPower: 3.6,
@@ -53,8 +75,25 @@ export const offlineBalancedEarthAppearanceProfile: EarthAppearanceProfile = {
   },
 };
 
+export const offlineBalancedEarthAppearanceProfileV2: EarthAppearanceProfile = {
+  ...offlineBalancedEarthAppearanceProfile,
+  id: 'offline-balanced-v2',
+  label: 'Offline Balanced Earth v2',
+  clouds: {
+    shellScale: 1.011,
+    rotationDeg: 0,
+    opacity: 0.46,
+    densityThreshold: 0.36,
+    densitySoftness: 0.19,
+    dayBoost: 0.86,
+    nightFloor: 0.03,
+    limbFadeExponent: 1.15,
+  },
+};
+
 const EARTH_APPEARANCE_PROFILES: Record<EarthAppearanceProfileId, EarthAppearanceProfile> = {
   'offline-balanced-v1': offlineBalancedEarthAppearanceProfile,
+  'offline-balanced-v2': offlineBalancedEarthAppearanceProfileV2,
 };
 
 export function resolveEarthAppearanceProfile(

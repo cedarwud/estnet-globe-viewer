@@ -6,6 +6,7 @@ Current approved runtime assets:
 
 1. `earth-day-nasa-blue-marble-ng-4096x2048.webp`
 2. `earth-night-nasa-black-marble-2016-4096x2048.webp`
+3. `earth-clouds-nasa-blue-marble-2002-4096x2048.webp`
 
 Do not add more files here unless:
 

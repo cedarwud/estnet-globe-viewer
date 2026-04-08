@@ -1,4 +1,4 @@
-export type EarthAppearanceProfileId = 'offline-balanced-v1';
+export type EarthAppearanceProfileId = 'offline-balanced-v1' | 'offline-balanced-v2';
 export type EarthTextureQuality = 'runtime-4k-webp';
 
 export interface EarthTextureSet {
@@ -7,6 +7,8 @@ export interface EarthTextureSet {
   dayAssetId: string | null;
   nightTextureUrl: string | null;
   nightAssetId: string | null;
+  cloudTextureUrl: string | null;
+  cloudAssetId: string | null;
   appearanceProfileId: EarthAppearanceProfileId;
   textureQuality: EarthTextureQuality;
   governanceDocPath: string;
