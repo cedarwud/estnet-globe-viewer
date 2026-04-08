@@ -1,9 +1,14 @@
+export type EarthAppearanceProfileId = 'offline-balanced-v1';
+export type EarthTextureQuality = 'runtime-4k-webp';
+
 export interface EarthTextureSet {
   availability: 'none-approved' | 'approved-runtime';
   dayTextureUrl: string | null;
   dayAssetId: string | null;
   nightTextureUrl: string | null;
   nightAssetId: string | null;
+  appearanceProfileId: EarthAppearanceProfileId;
+  textureQuality: EarthTextureQuality;
   governanceDocPath: string;
   note: string;
 }
@@ -23,11 +28,15 @@ interface StaticImageryProviderConfig {
 }
 
 export function createStaticImageryProvider(config: StaticImageryProviderConfig): ImageryProvider {
+  const stableTextureSet = config.textureSet ? Object.freeze({ ...config.textureSet }) : null;
+
   return {
     providerId: config.providerId,
     providerKind: config.providerKind,
     getEarthTextureSet() {
-      return config.textureSet;
+      // Step 5 keeps static imagery provider state immutable so appearance policy
+      // and asset metadata stay a provider concern instead of being mutated in-scene.
+      return stableTextureSet;
     },
   };
 }

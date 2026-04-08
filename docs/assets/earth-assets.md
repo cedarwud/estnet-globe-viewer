@@ -2,9 +2,9 @@
 
 This document is the repo-local governance record for Earth imagery intake.
 
-It defines what may become an approved runtime Earth asset inside `estnet-globe-viewer`, and it records the approved Step 1 day derivative plus the approved Step 2 night derivative.
+It defines what may become an approved runtime Earth asset inside `estnet-globe-viewer`, records the approved Step 1 day derivative plus the approved Step 2 night derivative, and captures the Step 5 appearance-seam boundary that sits on top of those approved runtime files.
 
-## Current Step 4 Status
+## Current Step 5 Status
 
 - Step 0 established the governance boundary and minimal imagery seam.
 - Step 1 promoted one approved NASA Blue Marble day derivative into the runtime baseline.
@@ -16,6 +16,7 @@ It defines what may become an approved runtime Earth asset inside `estnet-globe-
 - The scene now uses a controlled day-night Earth surface plus a restrained atmosphere shell on the main path.
 - Step 1 day-only fallback and placeholder fallback still exist, but they are explicit guards instead of the intended success path.
 - No cloud runtime asset is currently approved. Cloud shell remains intentionally deferred until a formal intake record exists.
+- No KTX2 / Basis runtime derivative is currently approved. Step 5 keeps the WebP runtime pair and hardens the appearance seam around it instead of widening the asset toolchain.
 
 ## Storage Boundary
 
@@ -69,6 +70,7 @@ Any Earth asset that becomes a committed runtime asset must satisfy all of these
 
 - Cloud shell and bloom remain follow-on surfaces, not part of the current approved runtime asset intake.
 - Step 4 atmosphere is procedural and therefore does not add a new governed runtime texture file.
+- KTX2 remains deferred for now because only two approved runtime Earth textures exist, both already fit repo budget, and introducing KTX2 would require Basis preprocessing plus a clear runtime fallback/transcoder path.
 - Natural Earth may still be considered later only for helper masks or support textures, not as the final main day albedo.
 
 ## Preprocessing Record
@@ -133,3 +135,9 @@ Step 4 now means:
 - the globe keeps the approved Step 1/2 day-night runtime asset set
 - atmosphere is added as a restrained procedural shell, not as a new runtime texture claim
 - no cloud shell is introduced unless a formal, approved cloud runtime asset intake is recorded first
+
+Step 5 now means:
+
+- the approved Step 1/2 WebP runtime asset pair remains the main asset path
+- a named appearance profile and runtime texture policy sit between imagery metadata and scene logic
+- KTX2 is intentionally deferred until the repo has enough approved Earth assets to justify a larger transcode / fallback pipeline

@@ -5,35 +5,31 @@ import {
   AdditiveBlending,
   BackSide,
   Color,
-  SRGBColorSpace,
-  Texture,
   Vector3,
   type Vector3Tuple,
 } from 'three';
+import type { EarthTextureSet } from '../../imagery/provider';
+import {
+  resolveEarthAppearanceProfile,
+} from '../../imagery/earthAppearance';
+import { configureEarthRuntimeTexture } from '../../imagery/earthTextureRuntime';
 
 interface EarthSurfaceBaseProps {
   radius: number;
 }
 
 interface EarthDaySurfaceProps extends EarthSurfaceBaseProps {
-  dayTextureUrl: string;
+  textureSet: EarthTextureSet;
 }
 
 interface EarthDayNightSurfaceProps extends EarthSurfaceBaseProps {
-  dayTextureUrl: string;
-  nightTextureUrl: string;
+  textureSet: EarthTextureSet;
   sunDirection: Vector3Tuple;
 }
 
 interface EarthAtmosphereShellProps extends EarthSurfaceBaseProps {
+  textureSet: EarthTextureSet | null;
   sunDirection: Vector3Tuple;
-}
-
-function configureEarthTexture(texture: Texture, anisotropy: number) {
-  texture.colorSpace = SRGBColorSpace;
-  texture.anisotropy = anisotropy;
-  texture.needsUpdate = true;
-  return texture;
 }
 
 const earthShaderVertex = `
@@ -136,17 +132,28 @@ export function PlaceholderEarthSurface({ radius }: EarthSurfaceBaseProps) {
   );
 }
 
-export function EarthDaySurface({ radius, dayTextureUrl }: EarthDaySurfaceProps) {
+export function EarthDaySurface({ radius, textureSet }: EarthDaySurfaceProps) {
   const { gl } = useThree();
-  const dayTexture = useTexture(dayTextureUrl);
+  const appearanceProfile = useMemo(
+    () => resolveEarthAppearanceProfile(textureSet),
+    [textureSet]
+  );
+  const dayTexture = useTexture(textureSet.dayTextureUrl ?? '');
   const configuredDayTexture = useMemo(
-    () => configureEarthTexture(dayTexture, Math.min(gl.capabilities.getMaxAnisotropy(), 8)),
-    [dayTexture, gl]
+    () =>
+      configureEarthRuntimeTexture(
+        dayTexture,
+        gl.capabilities.getMaxAnisotropy(),
+        appearanceProfile
+      ),
+    [appearanceProfile, dayTexture, gl]
   );
 
   return (
     <mesh name="earth-day-surface">
-      <sphereGeometry args={[radius, 96, 96]} />
+      <sphereGeometry
+        args={[radius, appearanceProfile.surfaceSegments, appearanceProfile.surfaceSegments]}
+      />
       <meshStandardMaterial
         map={configuredDayTexture}
         color="#ffffff"
@@ -161,21 +168,36 @@ export function EarthDaySurface({ radius, dayTextureUrl }: EarthDaySurfaceProps)
 
 export function EarthDayNightSurface({
   radius,
-  dayTextureUrl,
-  nightTextureUrl,
+  textureSet,
   sunDirection,
 }: EarthDayNightSurfaceProps) {
   const { gl } = useThree();
-  const [dayTexture, nightTexture] = useTexture([dayTextureUrl, nightTextureUrl]);
+  const appearanceProfile = useMemo(
+    () => resolveEarthAppearanceProfile(textureSet),
+    [textureSet]
+  );
+  const [dayTexture, nightTexture] = useTexture([
+    textureSet.dayTextureUrl ?? '',
+    textureSet.nightTextureUrl ?? '',
+  ]);
 
-  const anisotropy = Math.min(gl.capabilities.getMaxAnisotropy(), 8);
   const configuredDayTexture = useMemo(
-    () => configureEarthTexture(dayTexture, anisotropy),
-    [anisotropy, dayTexture]
+    () =>
+      configureEarthRuntimeTexture(
+        dayTexture,
+        gl.capabilities.getMaxAnisotropy(),
+        appearanceProfile
+      ),
+    [appearanceProfile, dayTexture, gl]
   );
   const configuredNightTexture = useMemo(
-    () => configureEarthTexture(nightTexture, anisotropy),
-    [anisotropy, nightTexture]
+    () =>
+      configureEarthRuntimeTexture(
+        nightTexture,
+        gl.capabilities.getMaxAnisotropy(),
+        appearanceProfile
+      ),
+    [appearanceProfile, gl, nightTexture]
   );
   const normalizedSunDirection = useMemo(
     () => new Vector3(...sunDirection).normalize(),
@@ -188,17 +210,19 @@ export function EarthDayNightSurface({
       // Step 2 keeps the control surface explicit: the terminator comes from a
       // named sun direction, not from extra ambient fill hidden elsewhere.
       sunDirection: { value: normalizedSunDirection },
-      twilightWidth: { value: 0.18 },
-      nightFloor: { value: 0.028 },
-      nightIntensity: { value: 0.92 },
-      twilightBoost: { value: 0.18 },
+      twilightWidth: { value: appearanceProfile.dayNight.twilightWidth },
+      nightFloor: { value: appearanceProfile.dayNight.nightFloor },
+      nightIntensity: { value: appearanceProfile.dayNight.nightIntensity },
+      twilightBoost: { value: appearanceProfile.dayNight.twilightBoost },
     }),
-    [configuredDayTexture, configuredNightTexture, normalizedSunDirection]
+    [appearanceProfile, configuredDayTexture, configuredNightTexture, normalizedSunDirection]
   );
 
   return (
     <mesh name="earth-day-night-surface">
-      <sphereGeometry args={[radius, 96, 96]} />
+      <sphereGeometry
+        args={[radius, appearanceProfile.surfaceSegments, appearanceProfile.surfaceSegments]}
+      />
       <shaderMaterial
         uniforms={uniforms}
         vertexShader={earthShaderVertex}
@@ -208,7 +232,15 @@ export function EarthDayNightSurface({
   );
 }
 
-export function EarthAtmosphereShell({ radius, sunDirection }: EarthAtmosphereShellProps) {
+export function EarthAtmosphereShell({
+  radius,
+  textureSet,
+  sunDirection,
+}: EarthAtmosphereShellProps) {
+  const appearanceProfile = useMemo(
+    () => resolveEarthAppearanceProfile(textureSet),
+    [textureSet]
+  );
   const normalizedSunDirection = useMemo(
     () => new Vector3(...sunDirection).normalize(),
     [sunDirection]
@@ -218,21 +250,23 @@ export function EarthAtmosphereShell({ radius, sunDirection }: EarthAtmosphereSh
       // Step 4 keeps atmosphere procedural and restrained. This adds depth and
       // a planetary rim without introducing another approved runtime asset.
       sunDirection: { value: normalizedSunDirection },
-      dayColor: { value: new Color('#7fb6ff') },
-      twilightColor: { value: new Color('#b8d8ff') },
-      rimPower: { value: 3.6 },
-      intensity: { value: 0.38 },
+      dayColor: { value: new Color(appearanceProfile.atmosphere.dayColor) },
+      twilightColor: { value: new Color(appearanceProfile.atmosphere.twilightColor) },
+      rimPower: { value: appearanceProfile.atmosphere.rimPower },
+      intensity: { value: appearanceProfile.atmosphere.intensity },
     }),
-    [normalizedSunDirection]
+    [appearanceProfile, normalizedSunDirection]
   );
 
   return (
     <mesh
       name="earth-atmosphere-shell"
-      scale={1.032}
+      scale={appearanceProfile.atmosphere.shellScale}
       renderOrder={1}
     >
-      <sphereGeometry args={[radius, 96, 96]} />
+      <sphereGeometry
+        args={[radius, appearanceProfile.surfaceSegments, appearanceProfile.surfaceSegments]}
+      />
       <shaderMaterial
         uniforms={uniforms}
         vertexShader={atmosphereVertexShader}

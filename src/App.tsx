@@ -91,8 +91,8 @@ export function App() {
     'The activePath wording remains limited to current service corridor / current active relay path / current visible relay path.',
     'The unavailable candidate corridor is still mock availability truth, not KPI, SLA, or coverage-field truth.',
     'Dark-side readability now comes from a controlled day/night shader and approved Black Marble night lights, not from washing the whole globe with ambient fill.',
-    'Step 4 keeps Home and Fit Corridor, but it still does not permit generic free pan or free-fly camera drift.',
-    'Step 4 adds a restrained atmosphere shell, not bloom, not a cloud pack, and not a full planet-rendering stack.',
+    'Step 5 keeps Home and Fit Corridor, but it still does not permit generic free pan or free-fly camera drift.',
+    'Step 5 keeps the restrained atmosphere shell and adds appearance/runtime hardening, not bloom, not a cloud pack, and not a full planet-rendering stack.',
     truthSnapshot.eventTruth.events.length === 0
       ? 'EventTruth remains a derived-only surface with an intentionally empty event set in this static baseline.'
       : `EventTruth contains ${truthSnapshot.eventTruth.events.length} derived cues.`,
@@ -261,6 +261,14 @@ export function App() {
                 <div className="status-facts__row">
                   <dt>Night asset</dt>
                   <dd>{earthTextures?.nightAssetId ?? 'none-approved'}</dd>
+                </div>
+                <div className="status-facts__row">
+                  <dt>Appearance profile</dt>
+                  <dd>{earthTextures?.appearanceProfileId ?? 'offline-balanced-v1'}</dd>
+                </div>
+                <div className="status-facts__row">
+                  <dt>Texture quality</dt>
+                  <dd>{earthTextures?.textureQuality ?? 'runtime-4k-webp'}</dd>
                 </div>
                 <div className="status-facts__row">
                   <dt>Governance doc</dt>

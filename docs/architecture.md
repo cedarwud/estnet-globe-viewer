@@ -100,6 +100,7 @@ repo 內的正式文件分為五層：
 - minimal `ImageryProvider` seam with `EarthTextureSet` and `useEarthTextures()`
 - approved runtime NASA day texture derivative under `public/assets/earth/`
 - approved runtime NASA Black Marble night texture derivative under `public/assets/earth/`
+- named Earth appearance profile with explicit texture quality / anisotropy policy
 - mock truth seed + adapter + provider
 - endpoint anchors sourced from `WorldGeometryTruth`
 - service-relevant satellites sourced from `WorldGeometryTruth`
@@ -108,6 +109,8 @@ repo 內的正式文件分為五層：
 - compact HUD plus on-demand details drawer instead of a permanent dashboard side rail
 - formal day-night Earth shader v1 with explicit `sunDirection` control
 - restrained procedural atmosphere shell that does not depend on a new runtime texture asset
+- build chunk hardening that isolates React, globe runtime, and `three` bundle boundaries
+- remaining bundle warning isolated to the monolithic `three-core` vendor chunk rather than the app entry chunk
 - corridor-aware first screen with explicit `Home` / `Fit Corridor` actions
 - globe-centered framing helpers instead of generic free pan
 - minimal in-scene endpoint labels plus clearer endpoint / relay / corridor hierarchy
@@ -121,6 +124,7 @@ repo 內的正式文件分為五層：
 目前 baseline 不包含：
 
 - cloud shell
+- KTX2 / Basis runtime path
 - bloom
 - derived event cue
 - focus lens
@@ -131,10 +135,10 @@ repo 內的正式文件分為五層：
 
 而且目前刻意延後：
 
-- Step 5 visual follow-ons after the Step 4 atmosphere / overlay pass
+- replay/provider re-entry before an explicit post-Step-5 checkpoint
 - `estnet-bootstrap-kit` reference replay smoke
 
-原因是 Step 4 只補 restrained atmosphere 與 overlay reduction，不處理 cloud asset intake、bloom、focus lens、或更大的 control overhaul。
+原因是 Step 5 只補 performance hardening 與 appearance seam，不處理 replay/provider integration、cloud asset intake、KTX2 pipeline、bloom、focus lens、或更大的 control overhaul。這也包含：不為了完全消掉 `three-core` warning 而引入更脆弱的 source-entry alias / chunk graph 實驗。
 
 目前對 truth 的保守邊界是：
 

@@ -4,7 +4,7 @@
 
 ## 目前狀態
 
-目前已完成十個早期 baseline：
+目前已完成十一個早期 baseline：
 
 1. `init estnet-globe-viewer repo skeleton`
 2. `add offline hero globe shell baseline`
@@ -16,6 +16,7 @@
 8. `add day-night earth shader baseline`
 9. `add corridor-aware framing and semantic scene polish`
 10. `add restrained atmosphere and overlay reduction`
+11. `harden earth asset performance and appearance seam`
 
 目前已可在沒有外部 producer 的情況下看到並驗證：
 
@@ -49,11 +50,15 @@
 - 更貼近 relay altitude 的 corridor arc geometry
 - restrained atmosphere shell，補行星感但不搶 corridor 主角
 - 更收斂的 persistent overlay
+- named Earth appearance profile 與 texture runtime policy
+- capped anisotropy 與較保守的 Earth surface detail budget
+- build chunk hardening，將 globe stack 從單一大 bundle 拆成較清楚的 vendor/runtime slices
+- build warning 已從單一 app bundle 收斂成隔離的 `three-core` vendor warning；目前刻意不再往更脆弱的 `three` source-entry split 推進
 - 明確保留但不作為主路徑的 placeholder fallback
 
 目前仍尚未加入：
 
-- cloud shell / bloom
+- cloud shell / KTX2 / bloom
 - `estnet-bootstrap-kit` 整合
 - focus lens
 - producer-backed events
@@ -67,7 +72,7 @@
 
 ## Commit 邊界
 
-前十個 baseline commit 目前分工如下：
+前十一個 baseline commit 目前分工如下：
 
 1. `init estnet-globe-viewer repo skeleton`
    - `.gitignore` 與交付 hygiene baseline
@@ -137,9 +142,15 @@
    - persistent overlay 再縮一層，把重複解說下沉到 drawer
    - 保住 Step 3 的 first-screen comprehension 與 corridor hierarchy
 
+11. `harden earth asset performance and appearance seam`
+   - 引入 named Earth appearance profile 與 texture runtime policy
+   - Earth shader / atmosphere / texture runtime config 不再散在 scene 邏輯
+   - build chunk hardening 把 React / globe runtime / `three` 相關 bundle 邊界拆開
+   - 先不做 KTX2，因為目前兩個 WebP runtime derivatives 已可控，且 Basis/KTX2 tooling + fallback chain 會讓 pipeline 顯著膨脹
+
 目前仍刻意不做：
 
-- cloud shell、bloom
+- cloud shell、KTX2、bloom
 - replay adapter、reference dataset smoke、producer integration
 - `focus lens`、hero site、premium world content
 - KPI dashboard 或任何超出 truth 邊界的 claims
@@ -181,7 +192,7 @@ npm run preview
 
 目前畫面由 repo 內的 mock truth provider 驅動，不依賴任何外部 replay producer。
 `activePath` 只被描述為 current service corridor / current active relay path / current visible relay path，不宣稱 routing truth。
-Earth imagery seam 已進入承載 day/night runtime asset 的 `approved-runtime` 狀態；scene 主路徑已改為 formal day-night Earth shader v1 加 restrained atmosphere。Step 1 day-only fallback 與 placeholder fallback 仍存在，但只作 guard。
+Earth imagery seam 已進入承載 day/night runtime asset 的 `approved-runtime` 狀態；scene 主路徑已改為 formal day-night Earth shader v1 加 restrained atmosphere，並掛上 Step 5 的 appearance profile / texture runtime policy。Step 1 day-only fallback 與 placeholder fallback 仍存在，但只作 guard。
 首屏 framing 現在會先對準 endpoint pair 與 current service corridor，並提供 `Home` / `Fit Corridor` 作為最小直接的 framing controls。
 `estnet-bootstrap-kit` integration 會等到 presentation shell 穩定後再重新開啟。
 
@@ -209,7 +220,7 @@ estnet-globe-viewer/
 
 ## 目前 Earth 狀態
 
-這一輪是 offline Earth reset track 的 `Step 4`，不是更大的 follow-on scope。
+這一輪是 offline Earth reset track 的 `Step 5`，不是 replay/provider integration。
 
 目前 repo 已經有：
 
@@ -217,6 +228,7 @@ estnet-globe-viewer/
 - approved runtime NASA day texture derivative
 - approved runtime NASA Black Marble night texture derivative
 - imagery seam 的 `approved-runtime` day/night 路徑
+- named Earth appearance profile 與 runtime texture quality metadata
 - formal day-night Earth shader v1
 - restrained atmosphere shell
 - corridor-aware first-screen framing
@@ -228,7 +240,10 @@ estnet-globe-viewer/
 目前 repo 刻意還沒有：
 
 - clouds
+- KTX2 / Basis runtime path
 - bloom
 
 目前 cloud shell 仍刻意 deferred，因為 repo 內還沒有正式批准、可追溯、可重現的 cloud runtime asset intake。
-Step 4 也不代表會自動膨脹成 bloom、focus lens、或更大的 camera/control overhaul，更不代表 `estnet-bootstrap-kit` 會回到主線。
+KTX2 也先不做，因為現在只有兩個 repo-safe WebP derivatives；若要轉 KTX2，必須一併處理 Basis preprocessing、runtime transcoder、與 clear fallback chain，這在 Step 5 不值得為了兩個已可控 asset 強行擴管線。
+目前 `vite build` 的 chunk hardening 已把 React / globe runtime / `three` 邊界拆開；剩餘 warning 被隔離在 `three-core`，原因是 `three` 仍以 monolithic published module 進入 bundle。這一輪不再用更脆弱的 source-entry alias 來硬拆它。
+Step 5 也不代表會自動膨脹成 replay/provider integration、bloom、focus lens、或更大的 camera/control overhaul，更不代表 `estnet-bootstrap-kit` 會回到主線。

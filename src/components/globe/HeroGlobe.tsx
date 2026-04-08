@@ -52,16 +52,19 @@ export function HeroGlobe({
       ) : usesDayNightShader && earthTextures.nightTextureUrl ? (
         <EarthDayNightSurface
           radius={GLOBE_RADIUS}
-          dayTextureUrl={earthTextures.dayTextureUrl}
-          nightTextureUrl={earthTextures.nightTextureUrl}
+          textureSet={earthTextures}
           sunDirection={sunDirection}
         />
       ) : (
-        <EarthDaySurface radius={GLOBE_RADIUS} dayTextureUrl={earthTextures.dayTextureUrl} />
+        <EarthDaySurface
+          radius={GLOBE_RADIUS}
+          textureSet={earthTextures}
+        />
       )}
 
       <EarthAtmosphereShell
         radius={GLOBE_RADIUS}
+        textureSet={earthTextures}
         sunDirection={sunDirection}
       />
 
