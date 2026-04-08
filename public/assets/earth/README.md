@@ -1,8 +1,12 @@
 # Earth Runtime Asset Directory
 
-This directory is reserved for approved runtime Earth derivatives only.
+This directory stores approved runtime Earth derivatives only.
 
-Step 0 intentionally leaves it without a committed texture. Do not add files here unless:
+Current approved runtime asset:
+
+1. `earth-day-nasa-blue-marble-ng-4096x2048.webp`
+
+Do not add more files here unless:
 
 1. `docs/assets/earth-assets.md` is updated first
 2. the source URL, license basis, and preprocessing recipe are recorded

@@ -37,9 +37,9 @@ export function GlobeGraticule({ radius }: GlobeGraticuleProps) {
         <Line
           key={`latitude-${latitudeDeg}`}
           points={createLatitudeRing(latitudeDeg, radius)}
-          color="#7eb9e1"
+          color="#9bb7cc"
           transparent
-          opacity={latitudeDeg === 0 ? 0.24 : 0.12}
+          opacity={latitudeDeg === 0 ? 0.14 : 0.06}
         />
       ))}
 
@@ -47,9 +47,9 @@ export function GlobeGraticule({ radius }: GlobeGraticuleProps) {
         <Line
           key={`meridian-${longitudeDeg}`}
           points={createMeridianArc(longitudeDeg, radius)}
-          color="#7eb9e1"
+          color="#9bb7cc"
           transparent
-          opacity={longitudeDeg === 0 ? 0.24 : 0.12}
+          opacity={longitudeDeg === 0 ? 0.14 : 0.06}
         />
       ))}
     </group>

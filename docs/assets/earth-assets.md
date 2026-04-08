@@ -1,14 +1,16 @@
 # Earth Asset Governance
 
-This document is the Step 0 repo-local governance record for Earth imagery intake.
+This document is the repo-local governance record for Earth imagery intake.
 
-It defines what may become an approved runtime Earth asset inside `estnet-globe-viewer`, and it records the current status of Earth imagery sources without pretending that a runtime texture is already approved.
+It defines what may become an approved runtime Earth asset inside `estnet-globe-viewer`, and it records the current approved Step 1 runtime derivative.
 
-## Current Step 0 Status
+## Current Step 1 Status
 
-- Step 0 is complete only when the repo has a clear asset approval boundary and a minimal imagery seam.
-- No approved runtime Earth texture is committed in this step.
-- The runtime globe must remain on the placeholder material until Step 1 approves a reviewed day-texture derivative.
+- Step 0 already established the governance boundary and minimal imagery seam.
+- Step 1 promotes one approved NASA Blue Marble day derivative into the runtime baseline.
+- Approved runtime filename: `public/assets/earth/earth-day-nasa-blue-marble-ng-4096x2048.webp`
+- The scene now uses a texture-backed Earth surface on the main path.
+- Placeholder fallback remains only as a runtime guard if the approved texture set cannot load.
 
 ## Storage Boundary
 
@@ -34,28 +36,19 @@ Any Earth asset that becomes a committed runtime asset must satisfy all of these
 
 ## Approved Runtime Manifest
 
-No approved runtime Earth assets are committed as of Step 0.
-
 | asset id | status | output filename | source URL | source provider | license basis | download date | preprocessing steps | output dimensions | output format | owning change | reviewer |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| none | none-approved | not committed | n/a | n/a | n/a | n/a | n/a | n/a | n/a | `add earth asset governance and imagery seam` | pending |
-
-## Pending Candidate Intake Record
-
-This table records the currently preferred official source for the future Step 1 day baseline. Recording it here does not approve it as a runtime asset yet.
-
-| asset id | status | output filename | source URL | source provider | license basis | download date | preprocessing steps | output dimensions | output format | owning change | reviewer |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| earth-day-nasa-blue-marble-ng | candidate-not-yet-intaked | not committed | `https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-map/` | NASA Earth Observatory / Visible Earth | NASA imagery usage must stay consistent with `https://www.nasa.gov/nasa-brand-center/images-and-media/` | not-downloaded | pending Step 1 derivative recipe and approval | target 4096x2048 derivative | webp preferred | pending | pending |
+| earth-day-nasa-blue-marble-ng-4096x2048-webp | approved-runtime | `public/assets/earth/earth-day-nasa-blue-marble-ng-4096x2048.webp` | `https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-base/january/world.200401.3x5400x2700.jpg` | NASA Earth Observatory / NASA Science | NASA images and media usage guidance at `https://www.nasa.gov/nasa-brand-center/images-and-media/`; NASA should be acknowledged as the source of the material | 2026-04-08 | download official JPEG, resize to `4096x2048`, compress to WebP via `scripts/assets/preprocess-earth-day-texture.py` | `4096x2048` | `webp` | `reset offline earth appearance foundation` | Step 1 authority-aligned runtime intake (2026-04-08) |
 
 ## Attribution And Provenance Notes
 
 ### Candidate Day Baseline
 
-- Candidate source: NASA Blue Marble: Next Generation base map
+- Approved source family: NASA Blue Marble: Next Generation base map
 - Source page: `https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-map/`
+- Direct source file: `https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-base/january/world.200401.3x5400x2700.jpg`
 - Usage boundary: NASA images and media usage guidance at `https://www.nasa.gov/nasa-brand-center/images-and-media/`
-- Runtime status in this repo: not downloaded, not preprocessed, not approved, not committed
+- Runtime status in this repo: downloaded, preprocessed, approved for Step 1, committed as a runtime derivative
 
 ### Deferred Follow-ons
 
@@ -64,26 +57,33 @@ This table records the currently preferred official source for the future Step 1
 
 ## Preprocessing Record
 
-No Earth asset preprocessing has been run in Step 0 because no runtime Earth texture is being committed yet.
+The approved Step 1 runtime derivative was built with the following reproducible flow:
 
-When Step 1 begins, record the exact derivative recipe here before the output is treated as approved. At minimum, capture:
+1. Download source JPEG outside the repo:
+   - `curl -L -o /tmp/estnet-earth-day-source-direct.jpg https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-base/january/world.200401.3x5400x2700.jpg`
+2. Run the committed preprocessing helper:
+   - `python3 scripts/assets/preprocess-earth-day-texture.py --source /tmp/estnet-earth-day-source-direct.jpg --output public/assets/earth/earth-day-nasa-blue-marble-ng-4096x2048.webp --width 4096 --height 2048 --quality 88`
+3. Result:
+   - output file: `public/assets/earth/earth-day-nasa-blue-marble-ng-4096x2048.webp`
+   - dimensions: `4096x2048`
+   - size: `714108` bytes
+   - sha256: `b606b5ba7a577e9e361fecb8b4e6e9399a642fbb8cb81f354a5a9692cb7f2f72`
 
-1. original download location outside the repo
-2. source filename or archive member
-3. resize or crop command
-4. format conversion command
-5. output filename under `public/assets/earth/`
-6. resulting dimensions
-7. resulting file size
+This keeps the repo on a compressed runtime derivative instead of a raw master.
 
 ## Step Boundary Reminder
 
-This document exists so that Step 1 can add a recognizable Earth baseline without blurring approval state.
+This document exists so that Earth appearance can evolve without blurring approval state.
 
-Step 0 means:
+Step 0 meant:
 
 - governance exists
 - the imagery seam exists
 - the placeholder globe remains honest
 
-Step 1 will begin only when an approved runtime day texture derivative is actually intaked, documented, and wired into the scene.
+Step 1 now means:
+
+- one approved runtime day derivative is committed
+- the imagery seam returns `approved-runtime`
+- the globe is recognizable at a glance
+- dark-side treatment is still intentionally deferred to Step 2

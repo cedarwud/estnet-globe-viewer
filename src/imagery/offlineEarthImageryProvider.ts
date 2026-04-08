@@ -1,13 +1,13 @@
 import { createStaticImageryProvider } from './provider';
 
 export const offlineEarthImageryProvider = createStaticImageryProvider({
-  providerId: 'offline-earth-imagery-step-0',
-  providerKind: 'empty',
+  providerId: 'offline-earth-imagery-step-1',
+  providerKind: 'static',
   textureSet: {
-    availability: 'none-approved',
-    dayTextureUrl: null,
-    dayAssetId: null,
+    availability: 'approved-runtime',
+    dayTextureUrl: '/assets/earth/earth-day-nasa-blue-marble-ng-4096x2048.webp',
+    dayAssetId: 'earth-day-nasa-blue-marble-ng-4096x2048-webp',
     governanceDocPath: 'docs/assets/earth-assets.md',
-    note: 'Step 0 lands the imagery seam and asset governance only. No reviewed runtime Earth texture is committed yet, so the scene must stay on the placeholder globe until Step 1 approves a day derivative.',
+    note: 'Step 1 promotes a reviewed NASA Blue Marble day derivative into the offline baseline. The Earth surface is now texture-backed, while dark-side treatment remains intentionally deferred to Step 2.',
   },
 });

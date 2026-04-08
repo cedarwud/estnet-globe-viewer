@@ -4,7 +4,7 @@
 
 ## 目前狀態
 
-目前已完成六個早期 baseline：
+目前已完成七個早期 baseline：
 
 1. `init estnet-globe-viewer repo skeleton`
 2. `add offline hero globe shell baseline`
@@ -12,6 +12,7 @@
 4. `add selective service corridor baseline`
 5. `refine full-stage globe shell and overlay presentation`
 6. `add earth asset governance and imagery seam`
+7. `reset offline earth appearance foundation`
 
 目前已可在沒有外部 producer 的情況下看到並驗證：
 
@@ -32,11 +33,13 @@
 - 最小 `EarthTextureSet`
 - 最小 `ImageryProvider`
 - `useEarthTextures()` imagery seam
-- 尚未有正式 runtime Earth texture 時的明確 placeholder fallback
+- 一個已批准的 NASA day texture runtime derivative
+- texture-backed Earth baseline 取代抽象藍球
+- 更保守的單主光 lighting foundation
+- 明確保留但不作為主路徑的 placeholder fallback
 
 目前仍尚未加入：
 
-- 已批准的 runtime Earth day texture baseline
 - night lights / day-night shader / clouds / atmosphere
 - `estnet-bootstrap-kit` 整合
 - focus lens
@@ -96,9 +99,14 @@
    - scene 接上最小 imagery seam，但尚不導入正式 runtime texture
    - 明確保留 placeholder globe fallback，避免誤判為 Step 1 已完成
 
+7. `reset offline earth appearance foundation`
+   - 正式納入一個 approved NASA day texture derivative
+   - `offlineEarthImageryProvider` 從 `none-approved` 進入 `approved-runtime`
+   - `HeroGlobe` 改為 texture-backed Earth baseline
+   - lighting 收斂為單主 sun 加極低 ambient，不偷做 Step 2
+
 目前仍刻意不做：
 
-- 正式 NASA day texture vendor 與 texture-backed Earth baseline
 - night lights、day/night shader、cloud shell、atmosphere
 - replay adapter、reference dataset smoke、producer integration
 - `focus lens`、hero site、premium world content
@@ -141,7 +149,7 @@ npm run preview
 
 目前畫面由 repo 內的 mock truth provider 驅動，不依賴任何外部 replay producer。
 `activePath` 只被描述為 current service corridor / current active relay path / current visible relay path，不宣稱 routing truth。
-Earth imagery seam 已存在，但目前仍沒有已批准的 runtime texture，因此 scene 會明確維持 placeholder globe fallback。
+Earth imagery seam 已進入 `approved-runtime`，scene 主要路徑已改為 texture-backed Earth baseline；placeholder fallback 仍存在，但只作 guard。
 `estnet-bootstrap-kit` integration 會等到 presentation shell 穩定後再重新開啟。
 
 ## 目錄
@@ -168,19 +176,21 @@ estnet-globe-viewer/
 
 ## 目前 Earth 狀態
 
-這一輪是 offline Earth reset track 的 `Step 0`，不是 `Step 1`。
+這一輪是 offline Earth reset track 的 `Step 1`，不是 `Step 2`。
 
 目前 repo 已經有：
 
 - Earth asset governance 文件
-- 最小 imagery seam
-- scene 端明確的 placeholder fallback
+- approved runtime NASA day texture derivative
+- imagery seam 的 `approved-runtime` 路徑
+- texture-backed Earth baseline
+- scene 端保留的 placeholder fallback guard
 
 目前 repo 刻意還沒有：
 
-- 已批准的 runtime Earth texture
-- texture-backed Earth material swap
-- night-side strategy
+- night lights
+- day/night shader
+- dark-side readability 正式策略
 
 下一個視覺 approval 目標若要前進，應是 execution authority 定義的：
 

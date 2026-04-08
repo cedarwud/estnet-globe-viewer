@@ -1,4 +1,7 @@
-import { BackSide, Color } from 'three';
+import { useMemo } from 'react';
+import { useThree } from '@react-three/fiber';
+import { useTexture } from '@react-three/drei';
+import { BackSide, Color, SRGBColorSpace, Texture } from 'three';
 import type {
   ServiceAvailabilityTruth,
   ServiceSelectionTruth,
@@ -19,6 +22,51 @@ interface HeroGlobeProps {
 
 export const GLOBE_RADIUS = 1.8;
 
+function configureEarthDayTexture(texture: Texture, anisotropy: number) {
+  texture.colorSpace = SRGBColorSpace;
+  texture.anisotropy = anisotropy;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function PlaceholderEarthSurface() {
+  return (
+    <mesh name="earth-placeholder-surface">
+      <sphereGeometry args={[GLOBE_RADIUS, 96, 96]} />
+      <meshStandardMaterial
+        color="#0f223a"
+        emissive={new Color('#1f466d')}
+        emissiveIntensity={0.42}
+        roughness={0.84}
+        metalness={0.08}
+      />
+    </mesh>
+  );
+}
+
+function TexturedEarthSurface({ textureUrl }: { textureUrl: string }) {
+  const { gl } = useThree();
+  const dayTexture = useTexture(textureUrl);
+  const configuredDayTexture = useMemo(
+    () => configureEarthDayTexture(dayTexture, Math.min(gl.capabilities.getMaxAnisotropy(), 8)),
+    [dayTexture, gl]
+  );
+
+  return (
+    <mesh name="earth-textured-surface">
+      <sphereGeometry args={[GLOBE_RADIUS, 96, 96]} />
+      <meshStandardMaterial
+        map={configuredDayTexture}
+        color="#ffffff"
+        emissive={new Color('#05070a')}
+        emissiveIntensity={0.03}
+        roughness={1}
+        metalness={0}
+      />
+    </mesh>
+  );
+}
+
 export function HeroGlobe({
   earthTextures,
   worldGeometry,
@@ -35,25 +83,20 @@ export function HeroGlobe({
 
   return (
     <group rotation={[0.16, -0.72, 0.08]}>
-      {/* Step 0 only lands the imagery seam and governance boundary.
-          Keep the placeholder globe explicit until Step 1 approves a real day texture. */}
-      <mesh name={usesPlaceholderSurface ? 'earth-placeholder-surface' : 'earth-textured-surface'}>
-        <sphereGeometry args={[GLOBE_RADIUS, 96, 96]} />
-        <meshStandardMaterial
-          color="#0f223a"
-          emissive={new Color('#1f466d')}
-          emissiveIntensity={0.42}
-          roughness={0.84}
-          metalness={0.08}
-        />
-      </mesh>
+      {/* The imagery seam decides whether Step 1 may use the approved day baseline.
+          Keep the placeholder path available as an explicit fallback instead of a hidden failure mode. */}
+      {usesPlaceholderSurface || !earthTextures?.dayTextureUrl ? (
+        <PlaceholderEarthSurface />
+      ) : (
+        <TexturedEarthSurface textureUrl={earthTextures.dayTextureUrl} />
+      )}
 
-      <mesh scale={1.035}>
+      <mesh scale={1.018}>
         <sphereGeometry args={[GLOBE_RADIUS, 96, 96]} />
         <meshBasicMaterial
-          color="#3eb0ff"
+          color="#8fc9ef"
           transparent
-          opacity={0.11}
+          opacity={0.045}
           side={BackSide}
           depthWrite={false}
         />

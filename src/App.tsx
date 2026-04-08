@@ -8,7 +8,7 @@ import type { DatasetCapabilityProfile } from './truth/contracts';
 import { useTruthSnapshot } from './truth/useTruthSnapshot';
 
 const completedScope = [
-  'Earth asset governance boundary plus minimal imagery seam',
+  'Approved NASA day texture baseline through the existing imagery seam',
   'Full-stage globe-first shell with corridor-focused framing',
   'Natural zoom range from whole-globe read to closer corridor inspection',
   'Compact HUD plus on-demand drawer instead of a permanent dashboard rail',
@@ -16,7 +16,6 @@ const completedScope = [
 ];
 
 const deferredScope = [
-  'Approved runtime Earth day texture baseline for Step 1',
   'Night lights, day/night shader, clouds, and atmosphere follow-ons',
   'estnet-bootstrap-kit reference replay smoke',
   'Focus lens follow-on interface',
@@ -82,6 +81,7 @@ export function App() {
   const conservativeBoundaries = [
     'The activePath wording remains limited to current service corridor / current active relay path / current visible relay path.',
     'The unavailable candidate corridor is still mock availability truth, not KPI, SLA, or coverage-field truth.',
+    'Dark-side readability is not formally solved in this baseline. Step 2 will add night lights and day/night control instead of faking it here.',
     truthSnapshot.eventTruth.events.length === 0
       ? 'EventTruth remains a derived-only surface with an intentionally empty event set in this static baseline.'
       : `EventTruth contains ${truthSnapshot.eventTruth.events.length} derived cues.`,
@@ -123,11 +123,11 @@ export function App() {
 
       <div className="viewer-overlay">
         <header className="floating-card hero-overlay">
-          <p className="floating-card__eyebrow">Offline Earth Reset Step 0</p>
+          <p className="floating-card__eyebrow">Offline Earth Reset Step 1</p>
           <h1 className="hero-overlay__title">Service-Driven Hero Globe</h1>
           <p className="hero-overlay__body">
-            Step 0 lands Earth asset governance and a minimal imagery seam. The scene still uses the
-            placeholder globe until a reviewed runtime day texture is approved in Step 1.
+            Step 1 promotes a reviewed NASA day derivative into the offline baseline. The globe now reads
+            as Earth at a glance, while dark-side treatment remains intentionally deferred to Step 2.
           </p>
         </header>
 

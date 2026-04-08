@@ -65,7 +65,7 @@ viewer 必須對 truth 保持保守語言：
 - `ImageryProvider`
 - `useEarthTextures()`
 
-這一輪刻意只落這三個 surface，原因是要先把 asset approval 與 runtime replacement boundary 分開。
+這條 seam 現在已被用來承接 Step 1 的 approved runtime day texture，但仍維持最小同步邊界，不擴張成更大的 async/provider framework。
 
 目前規則如下：
 
@@ -98,13 +98,14 @@ repo 內的正式文件分為五層：
 - canonical truth vocabulary
 - minimal `TruthProvider`
 - minimal `ImageryProvider` seam with `EarthTextureSet` and `useEarthTextures()`
+- approved runtime NASA day texture derivative under `public/assets/earth/`
 - mock truth seed + adapter + provider
 - endpoint anchors sourced from `WorldGeometryTruth`
 - service-relevant satellites sourced from `WorldGeometryTruth`
 - one current service corridor plus one unavailable candidate corridor
 - active / unavailable 的第一版保守差異
 - compact HUD plus on-demand details drawer instead of a permanent dashboard side rail
-- explicit placeholder-globe fallback while no approved runtime Earth texture is committed
+- texture-backed Earth baseline with a fallback guard that no longer acts as the main success path
 
 這個 baseline 的用途是先證明 `HeroGlobeScene` 能獨立站起來，且 scene / UI 已能透過同一份 canonical snapshot 讀值，而不是提前宣稱 service truth 已完整存在。
 
@@ -112,7 +113,6 @@ repo 內的正式文件分為五層：
 
 目前 baseline 不包含：
 
-- approved runtime Earth day texture baseline
 - night lights / day-night shader
 - cloud shell / atmosphere
 - derived event cue
@@ -124,10 +124,10 @@ repo 內的正式文件分為五層：
 
 而且目前刻意延後：
 
-- Step 1 texture-backed Earth baseline
+- Step 2 dark-side treatment
 - `estnet-bootstrap-kit` reference replay smoke
 
-原因是 viewer shell 還需要先維持 globe-first presentation 的穩定性，並且先把 Earth asset governance 落地，避免在 approval state 仍含糊時就把 runtime texture 當成正式 baseline。
+原因是 Step 1 只解決 recognizable Earth day-side baseline 與 lighting foundation，不處理 night lights、terminator control、或 twilight readability。
 
 目前對 truth 的保守邊界是：
 

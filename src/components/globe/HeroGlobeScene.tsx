@@ -56,21 +56,11 @@ export function HeroGlobeScene({
         maxPolarAngle={Math.PI - 0.45}
       />
 
-      <ambientLight intensity={0.72} />
-      <hemisphereLight
-        color="#a8d4ff"
-        groundColor="#08121d"
-        intensity={0.7}
-      />
+      <ambientLight intensity={0.12} />
       <directionalLight
-        position={[6, 4, 6]}
-        intensity={1.9}
-        color="#fff1cf"
-      />
-      <directionalLight
-        position={[-5, -3, -4]}
-        intensity={0.28}
-        color="#69d0ff"
+        position={[7.5, 4.5, 6.5]}
+        intensity={2.4}
+        color="#fff3d4"
       />
 
       <Stars
