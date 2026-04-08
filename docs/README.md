@@ -6,20 +6,23 @@
 
 1. [../README.md](../README.md)
 2. [architecture.md](./architecture.md)
-3. [sdd/service-driven-hero-globe-sdd-v1.md](./sdd/service-driven-hero-globe-sdd-v1.md)
-4. [phases/README.md](./phases/README.md)
-5. [phases/phase-00-repo-init.md](./phases/phase-00-repo-init.md)
-6. [phases/phase-01-offline-hero-globe-shell.md](./phases/phase-01-offline-hero-globe-shell.md)
-7. [phases/phase-02-canonical-truth-mock-path.md](./phases/phase-02-canonical-truth-mock-path.md)
-8. [phases/phase-03-selective-service-corridor.md](./phases/phase-03-selective-service-corridor.md)
-9. [phases/phase-04-full-stage-globe-presentation.md](./phases/phase-04-full-stage-globe-presentation.md)
-10. [devlogs/README.md](./devlogs/README.md)
-11. [devlogs/2026-04-07-full-stage-globe-presentation.md](./devlogs/2026-04-07-full-stage-globe-presentation.md)
+3. [assets/earth-assets.md](./assets/earth-assets.md)
+4. [sdd/service-driven-hero-globe-sdd-v1.md](./sdd/service-driven-hero-globe-sdd-v1.md)
+5. [phases/README.md](./phases/README.md)
+6. [phases/phase-00-repo-init.md](./phases/phase-00-repo-init.md)
+7. [phases/phase-01-offline-hero-globe-shell.md](./phases/phase-01-offline-hero-globe-shell.md)
+8. [phases/phase-02-canonical-truth-mock-path.md](./phases/phase-02-canonical-truth-mock-path.md)
+9. [phases/phase-03-selective-service-corridor.md](./phases/phase-03-selective-service-corridor.md)
+10. [phases/phase-04-full-stage-globe-presentation.md](./phases/phase-04-full-stage-globe-presentation.md)
+11. [devlogs/README.md](./devlogs/README.md)
+12. [devlogs/2026-04-07-full-stage-globe-presentation.md](./devlogs/2026-04-07-full-stage-globe-presentation.md)
 
 ## 文件分類
 
 - [architecture.md](./architecture.md)
   - repo 角色、產品 claim、truth 邊界、依賴邊界
+- [assets/earth-assets.md](./assets/earth-assets.md)
+  - Earth asset manifest、attribution / provenance / preprocessing 邊界與 Step 0 現況
 - [sdd/service-driven-hero-globe-sdd-v1.md](./sdd/service-driven-hero-globe-sdd-v1.md)
   - 第一個 globe-first 交付線的正式 kickoff SDD
 - [phases/README.md](./phases/README.md)

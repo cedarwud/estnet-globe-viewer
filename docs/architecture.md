@@ -57,14 +57,33 @@ viewer 必須對 truth 保持保守語言：
 2. 最小 offline hero globe shell 完成前，不接真實 producer。
 3. viewer core 不依賴 bootstrap-kit 的 branch 命名、scenario 命名、資料夾結構或 exporter internals。
 
+## Earth Imagery And Asset Boundary
+
+目前 execution authority 只要求一條最小 Earth imagery seam：
+
+- `EarthTextureSet`
+- `ImageryProvider`
+- `useEarthTextures()`
+
+這一輪刻意只落這三個 surface，原因是要先把 asset approval 與 runtime replacement boundary 分開。
+
+目前規則如下：
+
+1. 已批准的 Earth runtime assets 之後只放在 `public/assets/earth/`
+2. asset manifest / attribution / provenance / preprocessing 記錄放在 `docs/assets/earth-assets.md`
+3. preprocessing helper scripts 之後只放在 `scripts/assets/`
+4. 若沒有 approved texture set，scene 必須明確退回 placeholder globe
+5. `TerrainProvider`、`Context3DTilesProvider`、`SiteAssetProvider` 在這一輪仍停留在文件 authority，不進空殼 runtime 程式碼
+
 ## Repo 內文件結構
 
-repo 內的正式文件分為四層：
+repo 內的正式文件分為五層：
 
 1. `README.md`
-2. `docs/sdd/`
-3. `docs/phases/` 與 `docs/devlogs/`
-4. `archive/`
+2. `docs/assets/`
+3. `docs/sdd/`
+4. `docs/phases/` 與 `docs/devlogs/`
+5. `archive/`
 
 這個結構的目的不是增加文件量，而是避免 authority、工作紀錄與過時草稿混在一起。
 
@@ -78,12 +97,14 @@ repo 內的正式文件分為四層：
 - orbit / zoom camera baseline with wider usable framing range
 - canonical truth vocabulary
 - minimal `TruthProvider`
+- minimal `ImageryProvider` seam with `EarthTextureSet` and `useEarthTextures()`
 - mock truth seed + adapter + provider
 - endpoint anchors sourced from `WorldGeometryTruth`
 - service-relevant satellites sourced from `WorldGeometryTruth`
 - one current service corridor plus one unavailable candidate corridor
 - active / unavailable 的第一版保守差異
 - compact HUD plus on-demand details drawer instead of a permanent dashboard side rail
+- explicit placeholder-globe fallback while no approved runtime Earth texture is committed
 
 這個 baseline 的用途是先證明 `HeroGlobeScene` 能獨立站起來，且 scene / UI 已能透過同一份 canonical snapshot 讀值，而不是提前宣稱 service truth 已完整存在。
 
@@ -91,6 +112,9 @@ repo 內的正式文件分為四層：
 
 目前 baseline 不包含：
 
+- approved runtime Earth day texture baseline
+- night lights / day-night shader
+- cloud shell / atmosphere
 - derived event cue
 - focus lens
 - premium world content
@@ -100,9 +124,10 @@ repo 內的正式文件分為四層：
 
 而且目前刻意延後：
 
+- Step 1 texture-backed Earth baseline
 - `estnet-bootstrap-kit` reference replay smoke
 
-原因是 viewer shell 還需要先維持 globe-first presentation 的穩定性，避免被過早的 producer surface 綁死。
+原因是 viewer shell 還需要先維持 globe-first presentation 的穩定性，並且先把 Earth asset governance 落地，避免在 approval state 仍含糊時就把 runtime texture 當成正式 baseline。
 
 目前對 truth 的保守邊界是：
 

@@ -5,15 +5,18 @@ import type {
   ServiceSelectionTruth,
   WorldGeometryTruth,
 } from '../../truth/contracts';
+import type { EarthTextureSet } from '../../imagery/provider';
 import { HeroGlobe } from './HeroGlobe';
 
 interface HeroGlobeSceneProps {
+  earthTextures: EarthTextureSet | null;
   worldGeometry: WorldGeometryTruth;
   serviceAvailability: ServiceAvailabilityTruth;
   serviceSelection: ServiceSelectionTruth;
 }
 
 export function HeroGlobeScene({
+  earthTextures,
   worldGeometry,
   serviceAvailability,
   serviceSelection,
@@ -81,6 +84,7 @@ export function HeroGlobeScene({
       />
 
       <HeroGlobe
+        earthTextures={earthTextures}
         worldGeometry={worldGeometry}
         serviceAvailability={serviceAvailability}
         serviceSelection={serviceSelection}

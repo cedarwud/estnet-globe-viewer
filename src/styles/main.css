@@ -377,6 +377,13 @@ canvas {
   margin-top: 1.2rem;
 }
 
+.drawer-copy {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
 .status-facts {
   display: grid;
   gap: 0.8rem;

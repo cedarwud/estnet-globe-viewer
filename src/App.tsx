@@ -1,11 +1,14 @@
 import type { CSSProperties } from 'react';
 import { useState } from 'react';
 import { HeroGlobeScene } from './components/globe/HeroGlobeScene';
+import { offlineEarthImageryProvider } from './imagery/offlineEarthImageryProvider';
+import { useEarthTextures } from './imagery/useEarthTextures';
 import { mockTruthProvider } from './mock/mockTruthProvider';
 import type { DatasetCapabilityProfile } from './truth/contracts';
 import { useTruthSnapshot } from './truth/useTruthSnapshot';
 
 const completedScope = [
+  'Earth asset governance boundary plus minimal imagery seam',
   'Full-stage globe-first shell with corridor-focused framing',
   'Natural zoom range from whole-globe read to closer corridor inspection',
   'Compact HUD plus on-demand drawer instead of a permanent dashboard rail',
@@ -13,6 +16,8 @@ const completedScope = [
 ];
 
 const deferredScope = [
+  'Approved runtime Earth day texture baseline for Step 1',
+  'Night lights, day/night shader, clouds, and atmosphere follow-ons',
   'estnet-bootstrap-kit reference replay smoke',
   'Focus lens follow-on interface',
   'Premium world context and site assets',
@@ -49,6 +54,7 @@ function formatCorridorLabel(
 export function App() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const truthSnapshot = useTruthSnapshot(mockTruthProvider);
+  const earthTextures = useEarthTextures(offlineEarthImageryProvider);
   const capabilityRows = capabilityEntries(truthSnapshot.capabilityProfile);
   const endpointLabels = new Map(truthSnapshot.worldGeometry.endpoints.map((endpoint) => [endpoint.id, endpoint.label]));
   const satelliteLabels = new Map(truthSnapshot.worldGeometry.satellites.map((satellite) => [satellite.id, satellite.label]));
@@ -92,11 +98,23 @@ export function App() {
           }),
         }))
       : [];
+  const earthImageryAvailability =
+    earthTextures?.availability === 'approved-runtime' && earthTextures.dayTextureUrl
+      ? 'approved-runtime'
+      : 'none-approved';
+  const earthSurfaceMode =
+    earthImageryAvailability === 'approved-runtime'
+      ? 'Texture-backed Earth surface'
+      : 'Placeholder globe fallback';
+  const earthSurfaceNote =
+    earthTextures?.note ??
+    'No Earth imagery seam state is available. The placeholder globe should remain the only runtime surface.';
 
   return (
     <div className="viewer-shell">
       <div className="viewer-stage">
         <HeroGlobeScene
+          earthTextures={earthTextures}
           worldGeometry={truthSnapshot.worldGeometry}
           serviceAvailability={truthSnapshot.serviceAvailability}
           serviceSelection={truthSnapshot.serviceSelection}
@@ -105,11 +123,11 @@ export function App() {
 
       <div className="viewer-overlay">
         <header className="floating-card hero-overlay">
-          <p className="floating-card__eyebrow">Commit 05 Presentation Pass</p>
-          <h1 className="hero-overlay__title">Full-Stage Service-Driven Globe</h1>
+          <p className="floating-card__eyebrow">Offline Earth Reset Step 0</p>
+          <h1 className="hero-overlay__title">Service-Driven Hero Globe</h1>
           <p className="hero-overlay__body">
-            The globe is back to being the main stage. Persistent information is reduced to a compact HUD so
-            the two endpoints and their current service corridor dominate the read.
+            Step 0 lands Earth asset governance and a minimal imagery seam. The scene still uses the
+            placeholder globe until a reviewed runtime day texture is approved in Step 1.
           </p>
         </header>
 
@@ -160,7 +178,7 @@ export function App() {
             <div className="truth-drawer__header">
               <div>
                 <p className="floating-card__eyebrow">On-Demand Overlay</p>
-                <h2 className="truth-drawer__title">Truth and Corridor Details</h2>
+                <h2 className="truth-drawer__title">Truth, Corridor, and Earth Surface</h2>
               </div>
               <button
                 type="button"
@@ -191,6 +209,37 @@ export function App() {
                   <dd>{truthSnapshot.worldGeometry.satellites.length}</dd>
                 </div>
               </dl>
+            </section>
+
+            <section className="drawer-section">
+              <p className="floating-card__eyebrow">Earth Surface Boundary</p>
+              <dl className="status-facts">
+                <div className="status-facts__row">
+                  <dt>Provider</dt>
+                  <dd>{offlineEarthImageryProvider.providerId}</dd>
+                </div>
+                <div className="status-facts__row">
+                  <dt>Kind</dt>
+                  <dd>{offlineEarthImageryProvider.providerKind}</dd>
+                </div>
+                <div className="status-facts__row">
+                  <dt>Availability</dt>
+                  <dd>{earthImageryAvailability}</dd>
+                </div>
+                <div className="status-facts__row">
+                  <dt>Surface</dt>
+                  <dd>{earthSurfaceMode}</dd>
+                </div>
+                <div className="status-facts__row">
+                  <dt>Day asset</dt>
+                  <dd>{earthTextures?.dayAssetId ?? 'none-approved'}</dd>
+                </div>
+                <div className="status-facts__row">
+                  <dt>Governance doc</dt>
+                  <dd>{earthTextures?.governanceDocPath ?? 'docs/assets/earth-assets.md'}</dd>
+                </div>
+              </dl>
+              <p className="drawer-copy">{earthSurfaceNote}</p>
             </section>
 
             <section className="drawer-section">

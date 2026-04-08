@@ -4,12 +4,14 @@ import type {
   ServiceSelectionTruth,
   WorldGeometryTruth,
 } from '../../truth/contracts';
+import type { EarthTextureSet } from '../../imagery/provider';
 import { EndpointAnchor } from './EndpointAnchor';
 import { GlobeGraticule } from './GlobeGraticule';
 import { SatelliteMarker } from './SatelliteMarker';
 import { ServiceCorridorOverlay } from './ServiceCorridorOverlay';
 
 interface HeroGlobeProps {
+  earthTextures: EarthTextureSet | null;
   worldGeometry: WorldGeometryTruth;
   serviceAvailability: ServiceAvailabilityTruth;
   serviceSelection: ServiceSelectionTruth;
@@ -18,10 +20,13 @@ interface HeroGlobeProps {
 export const GLOBE_RADIUS = 1.8;
 
 export function HeroGlobe({
+  earthTextures,
   worldGeometry,
   serviceAvailability,
   serviceSelection,
 }: HeroGlobeProps) {
+  const usesPlaceholderSurface =
+    earthTextures?.availability !== 'approved-runtime' || earthTextures.dayTextureUrl === null;
   const activeRelayIds = new Set(
     serviceSelection.kind === 'supported' && serviceSelection.activePath
       ? serviceSelection.activePath.relaySatelliteIds
@@ -30,7 +35,9 @@ export function HeroGlobe({
 
   return (
     <group rotation={[0.16, -0.72, 0.08]}>
-      <mesh>
+      {/* Step 0 only lands the imagery seam and governance boundary.
+          Keep the placeholder globe explicit until Step 1 approves a real day texture. */}
+      <mesh name={usesPlaceholderSurface ? 'earth-placeholder-surface' : 'earth-textured-surface'}>
         <sphereGeometry args={[GLOBE_RADIUS, 96, 96]} />
         <meshStandardMaterial
           color="#0f223a"
