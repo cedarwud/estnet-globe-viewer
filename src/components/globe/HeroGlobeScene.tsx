@@ -79,7 +79,7 @@ function SceneContents({
       <PerspectiveCamera
         makeDefault
         position={initialCameraPosition}
-        fov={32}
+        fov={28}
         near={0.1}
         far={120}
       />
@@ -92,29 +92,29 @@ function SceneContents({
         target={[0, 0, 0]}
         // Step 3 adds explicit Home / Fit Corridor presets instead of generic pan.
         // Keep the interaction globe-centered and bounded to corridor inspection.
-        minDistance={3}
-        maxDistance={20}
+        minDistance={2.8}
+        maxDistance={18.5}
         zoomSpeed={0.85}
-        rotateSpeed={0.68}
-        minPolarAngle={0.45}
-        maxPolarAngle={Math.PI - 0.45}
+        rotateSpeed={0.62}
+        minPolarAngle={0.5}
+        maxPolarAngle={Math.PI - 0.5}
       />
 
-      <ambientLight intensity={0.08} />
+      <ambientLight intensity={0.07} />
       <directionalLight
         position={heroSunDirection}
-        intensity={1.9}
+        intensity={1.85}
         color="#fff3d4"
       />
 
       <Stars
         radius={90}
         depth={45}
-        count={3200}
-        factor={3.4}
+        count={2800}
+        factor={3.1}
         saturation={0}
         fade
-        speed={0.55}
+        speed={0.45}
       />
 
       <HeroGlobe
@@ -154,8 +154,8 @@ export function HeroGlobeScene({
         powerPreference: 'high-performance',
       }}
     >
-      <color attach="background" args={['#050916']} />
-      <fog attach="fog" args={['#050916', 7, 15]} />
+      <color attach="background" args={['#040816']} />
+      <fog attach="fog" args={['#040816', 5.8, 13.4]} />
 
       <SceneContents
         earthTextures={earthTextures}

@@ -24,8 +24,8 @@ function clamp(value: number, min: number, max: number) {
 }
 
 function fallbackPose(mode: FramingMode): FramingPose {
-  const distance = mode === 'home' ? 10.6 : 6.6;
-  const direction = new Vector3(0.18, 0.26, 0.95).normalize().multiplyScalar(distance);
+  const distance = mode === 'home' ? 9.4 : 6;
+  const direction = new Vector3(0.12, 0.22, 0.97).normalize().multiplyScalar(distance);
 
   return {
     cameraPosition: direction.toArray() as Vec3,
@@ -61,8 +61,9 @@ function averageDirection(positions: Vector3[]) {
   }
 
   // The active corridor sits in the northern hemisphere. Flatten the north bias
-  // slightly so the first frame reads the pair and corridor before it feels top-down.
-  direction.y *= 0.55;
+  // more aggressively so the first frame reads as a calmer hero Earth rather than
+  // an obviously top-down service diagram.
+  direction.y *= 0.46;
   return direction.normalize();
 }
 
@@ -107,13 +108,13 @@ export function buildHeroFramingPose({
   }, 0);
   const distance =
     mode === 'home'
-      ? clamp(9.5 + spreadAngle * 1.15, 9.5, 10.2)
-      : clamp(5.35 + spreadAngle * 1.85, 5.7, 6.7);
+      ? clamp(8.9 + spreadAngle * 0.88, 8.95, 9.35)
+      : clamp(5.1 + spreadAngle * 1.4, 5.25, 6);
   const cameraDirection = focusDirection
     .clone()
     .multiplyScalar(1)
-    .add(shoulderDirection.clone().multiplyScalar(mode === 'home' ? 0.1 : 0.18))
-    .add(worldUp.clone().multiplyScalar(mode === 'home' ? 0.09 : 0.03))
+    .add(shoulderDirection.clone().multiplyScalar(mode === 'home' ? 0.065 : 0.14))
+    .add(worldUp.clone().multiplyScalar(mode === 'home' ? 0.055 : 0.015))
     .normalize();
 
   return {

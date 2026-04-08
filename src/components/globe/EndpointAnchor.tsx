@@ -26,6 +26,7 @@ export function EndpointAnchor({ endpoint, globeRadius }: EndpointAnchorProps) {
   );
   const markerDirection = new Vector3(...markerPosition).normalize();
   const phaseOffset = endpoint.id === 'endpoint-alpha' ? 0 : 0.4;
+  const usesCenteredLabel = endpoint.id === 'endpoint-alpha';
 
   useFrame(({ camera, clock }) => {
     const cycle = (clock.getElapsedTime() * 0.28 + phaseOffset) % 1;
@@ -86,13 +87,13 @@ export function EndpointAnchor({ endpoint, globeRadius }: EndpointAnchorProps) {
         <group
           ref={labelGroupRef}
           position={[
-            endpoint.id === 'endpoint-alpha' ? -0.22 : 0.22,
-            endpoint.id === 'endpoint-alpha' ? -0.16 : 0.18,
+            endpoint.id === 'endpoint-alpha' ? -0.24 : 0.28,
+            endpoint.id === 'endpoint-alpha' ? -0.14 : 0.16,
             0,
           ]}
         >
           <Html
-            center
+            center={usesCenteredLabel}
             occlude={false}
           >
             <div

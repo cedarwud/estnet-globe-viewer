@@ -147,19 +147,22 @@ export function App() {
         <header className="floating-card hero-overlay">
           <p className="floating-card__eyebrow">Service-Driven Hero Globe</p>
           <p className="hero-overlay__summary">
-            Two distant endpoints framed by one current relay corridor.
+            Two distant endpoints, one current relay corridor.
           </p>
         </header>
 
-        <div className="top-hud">
-          <div className="floating-card scene-status">
+        <section
+          className="floating-card top-hud"
+          aria-label="Current service controls"
+        >
+          <div className="scene-status">
             <p className="floating-card__eyebrow">Current Service</p>
             <div className="scene-status__row">
               <span className={`availability-pill availability-pill--${availabilityTone}`}>
                 {availabilityLabel}
               </span>
+              <p className="scene-status__path">{currentCorridorLabel}</p>
             </div>
-            <p className="scene-status__path">{currentCorridorLabel}</p>
           </div>
 
           <div className="scene-actions">
@@ -187,7 +190,7 @@ export function App() {
               {detailsOpen ? 'Hide Details' : 'Open Details'}
             </button>
           </div>
-        </div>
+        </section>
 
         <section className="legend-overlay" aria-label="Scene legend">
           <span className="scene-legend scene-legend--active">Current corridor</span>
