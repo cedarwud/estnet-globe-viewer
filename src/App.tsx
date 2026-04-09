@@ -4,7 +4,11 @@ import { HeroGlobeScene, type HeroGlobeFramingRequest } from './components/globe
 import type { FramingMode } from './components/globe/corridorFraming';
 import { offlineEarthImageryProvider } from './imagery/offlineEarthImageryProvider';
 import { useEarthTextures } from './imagery/useEarthTextures';
-import { endpointAlphaLocalContextPack, getOfflineLocalContextPack } from './localContext/offlineAoiPacks';
+import {
+  endpointAlphaLocalContextPack,
+  getOfflineLocalContextPack,
+  type LocalContextAoiPack,
+} from './localContext/offlineAoiPacks';
 import { parseViewerRouteHash, syncViewerRouteHash, type ViewerRoute } from './localContext/routes';
 import { getTerrainCapabilityReport } from './localContext/terrainCapability';
 import { mockTruthProvider } from './mock/mockTruthProvider';
@@ -15,6 +19,8 @@ interface ReturnEchoState {
   aoiId: string;
   revision: number;
 }
+
+const RETURN_ECHO_AUTO_CLEAR_MS = 45_000;
 
 const completedScope = [
   'Approved NASA day and night runtime derivatives through the existing imagery seam',
@@ -27,6 +33,7 @@ const completedScope = [
   'One bounded offline local-context vertical slice tied to Endpoint Alpha through a route-level full-screen takeover',
   'AOI-centered local camera with bounded inspection, explicit Reset Local View, and Back to Globe return grammar',
   'Visible corridor-linked continuity layer for globe discoverability, scale handoff, and return echo',
+  'Phase 3c first-screen product shift with a home-stage service-site spotlight, service-to-site narrative, and compact ground-context preview',
   'Natural zoom range from whole-globe read to closer corridor inspection',
   'In-scene endpoint labels and clearer endpoint / relay / corridor hierarchy',
   'Reduced persistent overlay with more detail pushed down into the drawer',
@@ -80,6 +87,240 @@ function buildCurrentEndpointPairLabel(
   return endpointIds
     .map((endpointId) => endpointLabels.get(endpointId) ?? endpointId)
     .join(' / ');
+}
+
+function formatPreviewAnchorRole(role: LocalContextAoiPack['anchors'][number]['role']) {
+  if (role === 'endpoint-site') {
+    return 'Service site';
+  }
+
+  if (role === 'service-lookout') {
+    return 'Lookout ridge';
+  }
+
+  return 'Support pad';
+}
+
+// The home-stage preview uses the offline AOI pack itself so the site feels concrete
+// before local entry without eager-loading the local runtime.
+function buildGroundPreviewData(pack: LocalContextAoiPack) {
+  const width = 240;
+  const height = 94;
+  const topPadding = 10;
+  const bottomPadding = 12;
+  const terrainRow = pack.terrain.heightsM[Math.floor(pack.terrain.rows / 2)] ?? [];
+  const usableHeight = height - topPadding - bottomPadding;
+  const terrainRange = Math.max(1, pack.terrain.maxHeightM - pack.terrain.baseHeightM);
+  const maxIndex = Math.max(terrainRow.length - 1, 1);
+  const baselineY = height - bottomPadding;
+  const profilePoints = terrainRow.map((sampleHeightM, sampleIndex) => {
+    const x = (sampleIndex / maxIndex) * width;
+    const normalizedHeight = (sampleHeightM - pack.terrain.baseHeightM) / terrainRange;
+    const y = baselineY - normalizedHeight * usableHeight;
+
+    return {
+      x,
+      y,
+    };
+  });
+  const profilePath = profilePoints
+    .map((point, pointIndex) => `${pointIndex === 0 ? 'M' : 'L'} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`)
+    .join(' ');
+  const areaPath =
+    profilePoints.length > 0
+      ? `${profilePath} L ${width.toFixed(1)} ${baselineY.toFixed(1)} L 0 ${baselineY.toFixed(1)} Z`
+      : '';
+  const previewAnchors = pack.anchors.slice(0, 2).map((anchor) => {
+    const eastRatio = (anchor.eastM + pack.halfExtentM) / (pack.halfExtentM * 2);
+    const clampedEastRatio = Math.max(0, Math.min(1, eastRatio));
+    const terrainColumnIndex = Math.round(clampedEastRatio * maxIndex);
+    const terrainHeightM = terrainRow[terrainColumnIndex] ?? pack.terrain.baseHeightM;
+    const normalizedHeight = (terrainHeightM - pack.terrain.baseHeightM) / terrainRange;
+
+    return {
+      id: anchor.id,
+      label: formatPreviewAnchorRole(anchor.role),
+      x: clampedEastRatio * width,
+      y: baselineY - normalizedHeight * usableHeight,
+      accentColor: anchor.accentColor,
+      primary: anchor.role === 'endpoint-site',
+    };
+  });
+
+  return {
+    width,
+    height,
+    baselineY,
+    areaPath,
+    profilePath,
+    previewAnchors,
+    spanKmLabel: ((pack.halfExtentM * 2) / 1000).toFixed(1),
+    reliefMetersLabel: Math.round(pack.terrain.maxHeightM - pack.terrain.baseHeightM),
+    anchorCountLabel: pack.anchors.length,
+    additionalAnchorCount: Math.max(0, pack.anchors.length - previewAnchors.length),
+  };
+}
+
+interface GroundContextPreviewProps {
+  pack: LocalContextAoiPack;
+  currentCorridorLabel: string;
+  endpointPairLabel: string;
+  onClearEcho: () => void;
+  showsReturnEcho: boolean;
+}
+
+function GroundContextPreview({
+  pack,
+  currentCorridorLabel,
+  endpointPairLabel,
+  onClearEcho,
+  showsReturnEcho,
+}: GroundContextPreviewProps) {
+  const previewData = useMemo(() => buildGroundPreviewData(pack), [pack]);
+  const gradientId = `${pack.id}-ground-preview-gradient`;
+  const headline = showsReturnEcho ? 'Recently inspected ground target' : 'Compact ground-context preview';
+  const copy = showsReturnEcho
+    ? 'The same bounded offline site stays concrete on the home stage after the local return.'
+    : 'Bounded offline terrain pack for the current corridor site, visible before local entry.';
+
+  return (
+    <section
+      className={`floating-card ground-preview ${showsReturnEcho ? 'ground-preview--echo' : ''}`}
+      aria-label="Ground context preview"
+    >
+      <div className="ground-preview__header">
+        <div>
+          <p className="floating-card__eyebrow">Ground Context Preview</p>
+          <p className="ground-preview__title">{pack.targetLabel}</p>
+        </div>
+        <div className="ground-preview__header-actions">
+          <span className={`ground-preview__status ${showsReturnEcho ? 'ground-preview__status--echo' : ''}`}>
+            {showsReturnEcho ? 'Pinned after return' : 'Terrain-ready'}
+          </span>
+          {showsReturnEcho ? (
+            <button
+              type="button"
+              className="continuity-echo__clear"
+              onClick={onClearEcho}
+            >
+              Clear Echo
+            </button>
+          ) : null}
+        </div>
+      </div>
+      {showsReturnEcho ? (
+        <div className="continuity-trail continuity-trail--echo ground-preview__echo-trail">
+          <span className="continuity-chip continuity-chip--globe">Home globe</span>
+          <span className="continuity-trail__arrow">-&gt;</span>
+          <span className="continuity-chip continuity-chip--globe">Current corridor</span>
+          <span className="continuity-trail__arrow">-&gt;</span>
+          <span className="continuity-chip continuity-chip--echo">Recently inspected AOI</span>
+        </div>
+      ) : null}
+      <p className="ground-preview__headline">{headline}</p>
+      <p className="ground-preview__copy">{copy}</p>
+      <p className="ground-preview__meta">
+        {endpointPairLabel}
+        {' | '}
+        {pack.regionLabel}
+      </p>
+
+      <div
+        className="ground-preview__terrain"
+        aria-hidden="true"
+      >
+        <svg
+          viewBox={`0 0 ${previewData.width} ${previewData.height}`}
+          preserveAspectRatio="none"
+        >
+          <defs>
+            <linearGradient
+              id={gradientId}
+              x1="0%"
+              y1="0%"
+              x2="0%"
+              y2="100%"
+            >
+              <stop
+                offset="0%"
+                stopColor="#ffbf69"
+                stopOpacity="0.34"
+              />
+              <stop
+                offset="100%"
+                stopColor="#ffbf69"
+                stopOpacity="0.04"
+              />
+            </linearGradient>
+          </defs>
+          <path
+            className="ground-preview__baseline"
+            d={`M 0 ${previewData.baselineY.toFixed(1)} L ${previewData.width.toFixed(1)} ${previewData.baselineY.toFixed(1)}`}
+          />
+          {previewData.areaPath ? (
+            <path
+              className="ground-preview__area"
+              d={previewData.areaPath}
+              fill={`url(#${gradientId})`}
+            />
+          ) : null}
+          {previewData.profilePath ? (
+            <path
+              className="ground-preview__ridge"
+              d={previewData.profilePath}
+            />
+          ) : null}
+          {previewData.previewAnchors.map((anchor) => (
+            <g
+              key={anchor.id}
+              className="ground-preview__anchor-marker"
+            >
+              <line
+                className="ground-preview__anchor-line"
+                x1={anchor.x}
+                x2={anchor.x}
+                y1={previewData.baselineY}
+                y2={anchor.y}
+              />
+              <circle
+                cx={anchor.x}
+                cy={anchor.y}
+                r={anchor.primary ? 4.4 : 3.5}
+                fill={anchor.accentColor}
+              />
+            </g>
+          ))}
+        </svg>
+      </div>
+
+      <div className="ground-preview__facts">
+        <span className="ground-preview__fact">{previewData.spanKmLabel} km AOI span</span>
+        <span className="ground-preview__fact">{previewData.reliefMetersLabel} m relief</span>
+        <span className="ground-preview__fact">{previewData.anchorCountLabel} anchors</span>
+      </div>
+
+      <div className="ground-preview__anchors">
+        {previewData.previewAnchors.map((anchor) => (
+          <span
+            key={anchor.id}
+            className={`ground-preview__anchor-chip ${anchor.primary ? 'ground-preview__anchor-chip--primary' : ''}`}
+          >
+            {anchor.label}
+          </span>
+        ))}
+        {previewData.additionalAnchorCount > 0 ? (
+          <span className="ground-preview__anchor-chip">
+            +{previewData.additionalAnchorCount} support anchor
+          </span>
+        ) : null}
+      </div>
+      {showsReturnEcho ? (
+        <p className="ground-preview__echo-copy">
+          Back on the home globe and still tied to {currentCorridorLabel}.
+        </p>
+      ) : null}
+    </section>
+  );
 }
 
 const LocalContextStage = lazy(async () => {
@@ -222,13 +463,12 @@ export function App() {
           state: showsReturnEcho ? ('echo' as const) : ('discoverable' as const),
         }
       : null;
-  const localEntryEyebrow = showsReturnEcho ? 'Return Echo' : 'Corridor-Linked AOI';
   const localEntryActionLabel = showsReturnEcho ? 'Inspect Again' : 'Inspect Local Context';
   const localEntryReason = !localEntryState.available
     ? localEntryState.reason
     : showsReturnEcho
-      ? 'Recently inspected local context is now re-identified on the home globe and tied back to the current corridor.'
-      : 'The current service corridor exposes one bounded offline AOI that can be inspected through a route-level local takeover.';
+      ? 'The recently inspected site stays pinned on the home globe until you clear the echo or refresh it with another local return.'
+      : 'Bounded offline terrain pack is ready before local entry.';
   const conservativeBoundaries = [
     'The activePath wording remains limited to current service corridor / current active relay path / current visible relay path.',
     'The unavailable candidate corridor is still mock availability truth, not KPI, SLA, or coverage-field truth.',
@@ -279,6 +519,10 @@ export function App() {
     }));
   };
 
+  const clearReturnEcho = () => {
+    setReturnEcho(null);
+  };
+
   const enterLocalContext = () => {
     if (!localEntryState.available || !localEntryState.pack) {
       return;
@@ -294,9 +538,11 @@ export function App() {
 
   const returnToGlobe = () => {
     if (localEntryState.pack) {
+      const revision = Date.now();
+
       setReturnEcho({
         aoiId: localEntryState.pack.id,
-        revision: Date.now(),
+        revision,
       });
     }
 
@@ -333,7 +579,7 @@ export function App() {
 
     const timeoutId = window.setTimeout(() => {
       setReturnEcho((current) => (current?.revision === returnEcho.revision ? null : current));
-    }, 10_000);
+    }, RETURN_ECHO_AUTO_CLEAR_MS);
 
     return () => {
       window.clearTimeout(timeoutId);
@@ -381,58 +627,77 @@ export function App() {
 
       <div className="viewer-overlay">
         <header className="floating-card hero-overlay">
-          <p className="floating-card__eyebrow">Service-Driven Hero Globe</p>
+          <p className="floating-card__eyebrow">Offline-First Dual-Scale Explorer</p>
           <p className="hero-overlay__summary">
-            Two distant endpoints, one current relay corridor.
+            Endpoint pair, current corridor, and one grounded service site now share the home stage.
           </p>
+          {localEntryState.pack ? (
+            <p className="hero-overlay__detail">
+              Spotlighted site: {localEntryState.pack.targetLabel}
+            </p>
+          ) : null}
         </header>
 
         <section
           className="floating-card top-hud"
-          aria-label="Current service controls"
+          aria-label="First-screen service-to-site narrative"
         >
-          <div className="scene-status">
-            <p className="floating-card__eyebrow">Current Service</p>
-            <div className="scene-status__row">
-              <span className={`availability-pill availability-pill--${availabilityTone}`}>
-                {availabilityLabel}
-              </span>
-              <p className="scene-status__path">{currentCorridorLabel}</p>
-            </div>
-          </div>
-
-          <div className="local-entry">
-            <p className="floating-card__eyebrow">{localEntryEyebrow}</p>
-            <div
-              className="continuity-trail"
-              aria-label="Globe discoverability continuity"
-            >
-              <span className="continuity-chip continuity-chip--globe">Current corridor</span>
-              <span className="continuity-trail__arrow">-&gt;</span>
-              <span className={`continuity-chip ${showsReturnEcho ? 'continuity-chip--echo' : 'continuity-chip--local'}`}>
-                {showsReturnEcho ? 'Recently inspected AOI' : 'Local inspectable site'}
-              </span>
-            </div>
-            <p className="local-entry__target">
-              {localEntryState.pack?.targetLabel ?? 'No local target ready'}
-            </p>
-            {localEntryState.pack ? (
-              <p className="local-entry__pair">
-                {currentEndpointPairLabel}
-                {' | '}
-                {localEntryState.pack.regionLabel}
+          <div className="service-story">
+            <div className="service-story__header">
+              <p className="floating-card__eyebrow">First-Screen Service-To-Site Narrative</p>
+              <p className="service-story__lede">
+                Default read path: endpoint pair -&gt; current corridor -&gt; bounded service site.
               </p>
-            ) : null}
-            <button
-              type="button"
-              className="scene-action local-entry__action"
-              disabled={!localEntryState.available}
-              onClick={enterLocalContext}
-              title={localEntryState.available ? 'Open the bounded local-context scene' : localEntryState.reason}
-            >
-              {localEntryActionLabel}
-            </button>
-            <p className="local-entry__reason">{localEntryReason}</p>
+            </div>
+
+            <div className="service-story__step">
+              <span className="service-story__index">1</span>
+              <div className="service-story__body">
+                <p className="service-story__label">Endpoint pair</p>
+                <p className="service-story__value">{currentEndpointPairLabel}</p>
+              </div>
+            </div>
+
+            <div className="service-story__step service-story__step--corridor">
+              <span className="service-story__index">2</span>
+              <div className="service-story__body">
+                <div className="service-story__meta">
+                  <p className="service-story__label">Current corridor</p>
+                  <span className={`availability-pill availability-pill--${availabilityTone}`}>
+                    {availabilityLabel}
+                  </span>
+                </div>
+                <p className="service-story__value">{currentCorridorLabel}</p>
+              </div>
+            </div>
+
+            <div className={`service-story__step service-story__step--site ${showsReturnEcho ? 'service-story__step--echo' : ''}`}>
+              <span className="service-story__index">3</span>
+              <div className="service-story__body">
+                <div className="service-story__meta">
+                  <p className="service-story__label">{showsReturnEcho ? 'Recently inspected site' : 'Inspectable ground site'}</p>
+                  {localEntryState.available ? (
+                    <span className={`ground-readiness-chip ${showsReturnEcho ? 'ground-readiness-chip--echo' : ''}`}>
+                      {showsReturnEcho ? 'Pinned after return' : 'Terrain-ready'}
+                    </span>
+                  ) : null}
+                </div>
+                <p className="service-story__value">{localEntryState.pack?.targetLabel ?? 'No local target ready'}</p>
+                {localEntryState.pack ? (
+                  <p className="service-story__support">{localEntryState.pack.regionLabel}</p>
+                ) : null}
+                <p className="service-story__support service-story__support--muted">{localEntryReason}</p>
+              </div>
+              <button
+                type="button"
+                className="scene-action service-story__action"
+                disabled={!localEntryState.available}
+                onClick={enterLocalContext}
+                title={localEntryState.available ? 'Open the bounded local-context scene' : localEntryState.reason}
+              >
+                {localEntryActionLabel}
+              </button>
+            </div>
           </div>
 
           <div className="scene-actions">
@@ -462,23 +727,17 @@ export function App() {
           </div>
         </section>
 
-        {showsReturnEcho && localEntryState.pack ? (
-          <section
-            className="floating-card continuity-echo"
-            aria-label="Return echo"
-          >
-            <p className="floating-card__eyebrow">Return Echo</p>
-            <div className="continuity-trail continuity-trail--echo">
-              <span className="continuity-chip continuity-chip--local">Local inspect</span>
-              <span className="continuity-trail__arrow">-&gt;</span>
-              <span className="continuity-chip continuity-chip--globe">Globe corridor</span>
-            </div>
-            <p className="continuity-echo__title">{localEntryState.pack.targetLabel}</p>
-            <p className="continuity-echo__copy">
-              Re-linked to {currentCorridorLabel} after the local inspection return.
-            </p>
-          </section>
-        ) : null}
+        <div className="home-stage-stack">
+          {localEntryState.available && localEntryState.pack ? (
+            <GroundContextPreview
+              pack={localEntryState.pack}
+              currentCorridorLabel={currentCorridorLabel}
+              endpointPairLabel={currentEndpointPairLabel}
+              onClearEcho={clearReturnEcho}
+              showsReturnEcho={showsReturnEcho}
+            />
+          ) : null}
+        </div>
 
         <section className="legend-overlay" aria-label="Scene legend">
           <span className="scene-legend scene-legend--active">Current corridor</span>

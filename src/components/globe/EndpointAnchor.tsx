@@ -19,6 +19,7 @@ interface EndpointAnchorProps {
 export function EndpointAnchor({ endpoint, globeRadius, localInspectCue = null }: EndpointAnchorProps) {
   const pulseGroupRef = useRef<Group>(null);
   const pulseMeshRef = useRef<Mesh>(null);
+  const spotlightGroupRef = useRef<Group>(null);
   const labelGroupRef = useRef<Group>(null);
   const cueGroupRef = useRef<Group>(null);
   const sceneLabel = endpoint.label.startsWith('Endpoint ')
@@ -37,9 +38,14 @@ export function EndpointAnchor({ endpoint, globeRadius, localInspectCue = null }
   useFrame(({ camera, clock }) => {
     const cycle = (clock.getElapsedTime() * 0.28 + phaseOffset) % 1;
     const scale = 1 + cycle * 0.95;
+    const spotlightScale = 1.04 + Math.sin(clock.getElapsedTime() * 2 + phaseOffset) * 0.08;
 
     if (pulseGroupRef.current) {
       pulseGroupRef.current.scale.setScalar(scale);
+    }
+
+    if (spotlightGroupRef.current) {
+      spotlightGroupRef.current.scale.setScalar(spotlightScale);
     }
 
     const material = pulseMeshRef.current?.material;
@@ -94,30 +100,63 @@ export function EndpointAnchor({ endpoint, globeRadius, localInspectCue = null }
       </Billboard>
 
       {localInspectCue ? (
-        <Billboard position={markerPosition} follow>
-          <group
-            ref={cueGroupRef}
-            position={[
-              endpoint.id === 'endpoint-alpha' ? -0.2 : 0.2,
-              endpoint.id === 'endpoint-alpha' ? -0.34 : -0.28,
-              0,
-            ]}
-          >
-            <Html occlude={false}>
-              <div className={`local-inspect-cue local-inspect-cue--${localInspectCue.state}`}>
-                <p className="local-inspect-cue__eyebrow">
-                  {localInspectCue.state === 'echo' ? 'Return Echo' : 'Corridor-Linked AOI'}
-                </p>
-                <p className="local-inspect-cue__title">{localInspectCue.targetLabel}</p>
-                <p className="local-inspect-cue__copy">
-                  {localInspectCue.state === 'echo'
-                    ? `Recently inspected and re-linked to ${localInspectCue.regionLabel}.`
-                    : `Ready for bounded local inspect in ${localInspectCue.regionLabel}.`}
-                </p>
-              </div>
-            </Html>
-          </group>
-        </Billboard>
+        <>
+          <Billboard position={markerPosition} follow>
+            <group ref={spotlightGroupRef}>
+              <mesh>
+                <ringGeometry args={[0.158, 0.198, 56]} />
+                <meshBasicMaterial
+                  color={localInspectCue.state === 'echo' ? '#ffbf69' : endpoint.accentColor}
+                  transparent
+                  opacity={localInspectCue.state === 'echo' ? 0.48 : 0.32}
+                  depthWrite={false}
+                />
+              </mesh>
+              <mesh>
+                <ringGeometry args={[0.228, 0.26, 56]} />
+                <meshBasicMaterial
+                  color={localInspectCue.state === 'echo' ? '#ffd39b' : '#ffdfaa'}
+                  transparent
+                  opacity={localInspectCue.state === 'echo' ? 0.16 : 0.1}
+                  depthWrite={false}
+                />
+              </mesh>
+            </group>
+          </Billboard>
+
+          <Billboard position={markerPosition} follow>
+            <group
+              ref={cueGroupRef}
+              position={[
+                endpoint.id === 'endpoint-alpha' ? -0.18 : 0.22,
+                endpoint.id === 'endpoint-alpha' ? -0.41 : -0.32,
+                0,
+              ]}
+            >
+              <Html occlude={false}>
+                <div className={`local-inspect-cue local-inspect-cue--${localInspectCue.state}`}>
+                  <p className="local-inspect-cue__eyebrow">
+                    {localInspectCue.state === 'echo' ? 'Return Echo' : 'Service Site Spotlight'}
+                  </p>
+                  <p className="local-inspect-cue__title">{localInspectCue.targetLabel}</p>
+                  <p className="local-inspect-cue__meta">
+                    {localInspectCue.state === 'echo' ? 'Recently inspected corridor site' : 'Current corridor landing site'}
+                  </p>
+                  <div className="local-inspect-cue__trail">
+                    <span>Home globe</span>
+                    <span className="local-inspect-cue__trail-arrow">-&gt;</span>
+                    <span>{localInspectCue.state === 'echo' ? 'Pinned service site' : 'Bounded local target'}</span>
+                  </div>
+                  <p className="local-inspect-cue__copy">
+                    {localInspectCue.state === 'echo'
+                      ? `Still re-linked to ${localInspectCue.regionLabel} after the latest local return.`
+                      : `Promoted from a minor corridor cue into one bounded inspectable site in ${localInspectCue.regionLabel}.`}
+                  </p>
+                </div>
+              </Html>
+            </group>
+          </Billboard>
+        </>
       ) : null}
 
       <Billboard position={markerPosition} follow>
