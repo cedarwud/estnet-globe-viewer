@@ -9,19 +9,18 @@ import type { EndpointGeometryTruth } from '../../truth/contracts';
 interface EndpointAnchorProps {
   endpoint: EndpointGeometryTruth;
   globeRadius: number;
-  localInspectCue?: {
-    targetLabel: string;
-    regionLabel: string;
-    state: 'discoverable' | 'echo';
-  } | null;
+  localInspectCueState?: 'discoverable' | 'echo' | null;
 }
 
-export function EndpointAnchor({ endpoint, globeRadius, localInspectCue = null }: EndpointAnchorProps) {
+export function EndpointAnchor({
+  endpoint,
+  globeRadius,
+  localInspectCueState = null,
+}: EndpointAnchorProps) {
   const pulseGroupRef = useRef<Group>(null);
   const pulseMeshRef = useRef<Mesh>(null);
   const spotlightGroupRef = useRef<Group>(null);
   const labelGroupRef = useRef<Group>(null);
-  const cueGroupRef = useRef<Group>(null);
   const sceneLabel = endpoint.label.startsWith('Endpoint ')
     ? endpoint.label.slice('Endpoint '.length)
     : endpoint.label;
@@ -56,10 +55,6 @@ export function EndpointAnchor({ endpoint, globeRadius, localInspectCue = null }
     if (labelGroupRef.current) {
       const facingDot = camera.position.clone().normalize().dot(markerDirection);
       labelGroupRef.current.visible = facingDot > 0.02;
-
-      if (cueGroupRef.current) {
-        cueGroupRef.current.visible = facingDot > -0.08;
-      }
     }
   });
 
@@ -99,64 +94,29 @@ export function EndpointAnchor({ endpoint, globeRadius, localInspectCue = null }
         </group>
       </Billboard>
 
-      {localInspectCue ? (
-        <>
-          <Billboard position={markerPosition} follow>
-            <group ref={spotlightGroupRef}>
-              <mesh>
-                <ringGeometry args={[0.158, 0.198, 56]} />
-                <meshBasicMaterial
-                  color={localInspectCue.state === 'echo' ? '#ffbf69' : endpoint.accentColor}
-                  transparent
-                  opacity={localInspectCue.state === 'echo' ? 0.48 : 0.32}
-                  depthWrite={false}
-                />
-              </mesh>
-              <mesh>
-                <ringGeometry args={[0.228, 0.26, 56]} />
-                <meshBasicMaterial
-                  color={localInspectCue.state === 'echo' ? '#ffd39b' : '#ffdfaa'}
-                  transparent
-                  opacity={localInspectCue.state === 'echo' ? 0.16 : 0.1}
-                  depthWrite={false}
-                />
-              </mesh>
-            </group>
-          </Billboard>
-
-          <Billboard position={markerPosition} follow>
-            <group
-              ref={cueGroupRef}
-              position={[
-                endpoint.id === 'endpoint-alpha' ? -0.18 : 0.22,
-                endpoint.id === 'endpoint-alpha' ? -0.41 : -0.32,
-                0,
-              ]}
-            >
-              <Html occlude={false}>
-                <div className={`local-inspect-cue local-inspect-cue--${localInspectCue.state}`}>
-                  <p className="local-inspect-cue__eyebrow">
-                    {localInspectCue.state === 'echo' ? 'Return Echo' : 'Service Site Spotlight'}
-                  </p>
-                  <p className="local-inspect-cue__title">{localInspectCue.targetLabel}</p>
-                  <p className="local-inspect-cue__meta">
-                    {localInspectCue.state === 'echo' ? 'Recently inspected corridor site' : 'Current corridor landing site'}
-                  </p>
-                  <div className="local-inspect-cue__trail">
-                    <span>Home globe</span>
-                    <span className="local-inspect-cue__trail-arrow">-&gt;</span>
-                    <span>{localInspectCue.state === 'echo' ? 'Pinned service site' : 'Bounded local target'}</span>
-                  </div>
-                  <p className="local-inspect-cue__copy">
-                    {localInspectCue.state === 'echo'
-                      ? `Still re-linked to ${localInspectCue.regionLabel} after the latest local return.`
-                      : `Promoted from a minor corridor cue into one bounded inspectable site in ${localInspectCue.regionLabel}.`}
-                  </p>
-                </div>
-              </Html>
-            </group>
-          </Billboard>
-        </>
+      {localInspectCueState ? (
+        <Billboard position={markerPosition} follow>
+          <group ref={spotlightGroupRef}>
+            <mesh>
+              <ringGeometry args={[0.148, 0.176, 56]} />
+              <meshBasicMaterial
+                color={localInspectCueState === 'echo' ? '#ffbf69' : endpoint.accentColor}
+                transparent
+                opacity={localInspectCueState === 'echo' ? 0.42 : 0.24}
+                depthWrite={false}
+              />
+            </mesh>
+            <mesh>
+              <ringGeometry args={[0.196, 0.218, 56]} />
+              <meshBasicMaterial
+                color={localInspectCueState === 'echo' ? '#ffd39b' : '#ffdfaa'}
+                transparent
+                opacity={localInspectCueState === 'echo' ? 0.14 : 0.08}
+                depthWrite={false}
+              />
+            </mesh>
+          </group>
+        </Billboard>
       ) : null}
 
       <Billboard position={markerPosition} follow>

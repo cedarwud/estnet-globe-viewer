@@ -534,6 +534,81 @@ canvas {
   backdrop-filter: blur(10px);
 }
 
+.service-site-anchor {
+  min-width: 13.1rem;
+  max-width: 14.4rem;
+  display: grid;
+  gap: 0.24rem;
+  padding: 0.62rem 0.74rem 0.68rem;
+  border: 1px solid rgba(255, 191, 105, 0.24);
+  border-radius: 1.12rem;
+  background:
+    linear-gradient(180deg, rgba(255, 191, 105, 0.11), rgba(255, 191, 105, 0.04)),
+    rgba(8, 15, 26, 0.92);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(14px);
+}
+
+.service-site-anchor--echo {
+  border-color: rgba(255, 191, 105, 0.3);
+  background:
+    linear-gradient(180deg, rgba(255, 191, 105, 0.15), rgba(255, 191, 105, 0.05)),
+    rgba(18, 14, 10, 0.9);
+}
+
+.service-site-anchor__eyebrow,
+.service-site-anchor__title,
+.service-site-anchor__meta,
+.service-site-anchor__copy {
+  margin: 0;
+}
+
+.service-site-anchor__eyebrow {
+  font-size: 0.54rem;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-warm);
+}
+
+.service-site-anchor__title {
+  font-family: "Space Grotesk", "Avenir Next Condensed", sans-serif;
+  font-size: 0.84rem;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.service-site-anchor__meta {
+  font-size: 0.62rem;
+  line-height: 1.34;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.service-site-anchor__trail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.57rem;
+  line-height: 1.18;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-warm);
+}
+
+.service-site-anchor__trail-arrow {
+  color: var(--text-muted);
+}
+
+.service-site-anchor__copy {
+  font-size: 0.66rem;
+  line-height: 1.42;
+  color: var(--text-secondary);
+}
+
 .local-inspect-cue {
   min-width: 12.8rem;
   display: grid;

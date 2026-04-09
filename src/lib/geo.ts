@@ -31,6 +31,43 @@ function geoDirection(latitudeDeg: number, longitudeDeg: number) {
   return new Vector3(x, y, z).normalize();
 }
 
+export function offsetGeoCoordinateByMeters(
+  coordinate: GeoCoordinate,
+  eastM: number,
+  northM: number
+): GeoCoordinate {
+  const metersPerLatitudeDegree = 111_320;
+  const latitudeRadians = degreesToRadians(coordinate.latitudeDeg);
+  const metersPerLongitudeDegree = Math.max(1, metersPerLatitudeDegree * Math.cos(latitudeRadians));
+
+  return {
+    latitudeDeg: coordinate.latitudeDeg + northM / metersPerLatitudeDegree,
+    longitudeDeg: coordinate.longitudeDeg + eastM / metersPerLongitudeDegree,
+    altitudeKm: coordinate.altitudeKm,
+  };
+}
+
+export function buildSceneTangentBasis(
+  latitudeDeg: number,
+  longitudeDeg: number
+) {
+  const latitude = degreesToRadians(latitudeDeg);
+  const longitude = degreesToRadians(longitudeDeg);
+  const up = geoDirection(latitudeDeg, longitudeDeg);
+  const east = new Vector3(Math.cos(longitude), 0, -Math.sin(longitude)).normalize();
+  const north = new Vector3(
+    -Math.sin(latitude) * Math.sin(longitude),
+    Math.cos(latitude),
+    -Math.sin(latitude) * Math.cos(longitude)
+  ).normalize();
+
+  return {
+    east,
+    north,
+    up,
+  };
+}
+
 export function altitudeKmToSceneOffset(altitudeKm: number | null, globeRadius: number) {
   if (!altitudeKm) {
     return 0;

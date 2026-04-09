@@ -172,3 +172,7 @@ const offlineLocalContextPacks = [endpointAlphaLocalContextPack] as const;
 export function getOfflineLocalContextPack(aoiId: string) {
   return offlineLocalContextPacks.find((pack) => pack.id === aoiId) ?? null;
 }
+
+export function getPrimaryServiceSiteAnchor(pack: LocalContextAoiPack) {
+  return pack.anchors.find((anchor) => anchor.role === 'endpoint-site') ?? pack.anchors[0] ?? null;
+}

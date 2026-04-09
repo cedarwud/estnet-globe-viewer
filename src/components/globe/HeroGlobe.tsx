@@ -1,4 +1,5 @@
 import type {
+  GeoCoordinate,
   ServiceAvailabilityTruth,
   ServiceSelectionTruth,
   WorldGeometryTruth,
@@ -14,6 +15,7 @@ import {
 import { EndpointAnchor } from './EndpointAnchor';
 import { GlobeGraticule } from './GlobeGraticule';
 import { SatelliteMarker } from './SatelliteMarker';
+import { ServiceSiteAnchor } from './ServiceSiteAnchor';
 import { ServiceCorridorOverlay } from './ServiceCorridorOverlay';
 
 interface HeroGlobeProps {
@@ -31,6 +33,12 @@ export interface GlobeLocalInspectCue {
   endpointId: string;
   targetLabel: string;
   regionLabel: string;
+  siteAnchorLabel: string;
+  siteCenter: GeoCoordinate;
+  siteAnchorOffset: {
+    eastM: number;
+    northM: number;
+  };
   state: 'discoverable' | 'echo';
 }
 
@@ -53,6 +61,9 @@ export function HeroGlobe({
       ? serviceSelection.activePath.relaySatelliteIds
       : []
   );
+  const localInspectEndpoint = localInspectCue
+    ? worldGeometry.endpoints.find((endpoint) => endpoint.id === localInspectCue.endpointId) ?? null
+    : null;
 
   return (
     <group>
@@ -95,15 +106,7 @@ export function HeroGlobe({
           key={endpoint.id}
           endpoint={endpoint}
           globeRadius={GLOBE_RADIUS}
-          localInspectCue={
-            localInspectCue?.endpointId === endpoint.id
-              ? {
-                  targetLabel: localInspectCue.targetLabel,
-                  regionLabel: localInspectCue.regionLabel,
-                  state: localInspectCue.state,
-                }
-              : null
-          }
+          localInspectCueState={localInspectCue?.endpointId === endpoint.id ? localInspectCue.state : null}
         />
       ))}
 
@@ -124,6 +127,14 @@ export function HeroGlobe({
         serviceSelection={serviceSelection}
         globeRadius={GLOBE_RADIUS}
       />
+
+      {localInspectCue && localInspectEndpoint ? (
+        <ServiceSiteAnchor
+          cue={localInspectCue}
+          endpoint={localInspectEndpoint}
+          globeRadius={GLOBE_RADIUS}
+        />
+      ) : null}
     </group>
   );
 }

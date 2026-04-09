@@ -7,6 +7,7 @@ import { useEarthTextures } from './imagery/useEarthTextures';
 import {
   endpointAlphaLocalContextPack,
   getOfflineLocalContextPack,
+  getPrimaryServiceSiteAnchor,
   type LocalContextAoiPack,
 } from './localContext/offlineAoiPacks';
 import { parseViewerRouteHash, syncViewerRouteHash, type ViewerRoute } from './localContext/routes';
@@ -34,6 +35,7 @@ const completedScope = [
   'AOI-centered local camera with bounded inspection, explicit Reset Local View, and Back to Globe return grammar',
   'Visible corridor-linked continuity layer for globe discoverability, scale handoff, and return echo',
   'Phase 3c first-screen product shift with a home-stage service-site spotlight, service-to-site narrative, and compact ground-context preview',
+  'Site anchor / site geometry decoupling follow-on with a distinct service-site anchor and restrained corridor-to-site handoff',
   'Natural zoom range from whole-globe read to closer corridor inspection',
   'In-scene endpoint labels and clearer endpoint / relay / corridor hierarchy',
   'Reduced persistent overlay with more detail pushed down into the drawer',
@@ -91,7 +93,7 @@ function buildCurrentEndpointPairLabel(
 
 function formatPreviewAnchorRole(role: LocalContextAoiPack['anchors'][number]['role']) {
   if (role === 'endpoint-site') {
-    return 'Service site';
+    return 'Site anchor';
   }
 
   if (role === 'service-lookout') {
@@ -163,6 +165,7 @@ function buildGroundPreviewData(pack: LocalContextAoiPack) {
 
 interface GroundContextPreviewProps {
   pack: LocalContextAoiPack;
+  siteAnchorLabel: string;
   currentCorridorLabel: string;
   endpointPairLabel: string;
   onClearEcho: () => void;
@@ -171,6 +174,7 @@ interface GroundContextPreviewProps {
 
 function GroundContextPreview({
   pack,
+  siteAnchorLabel,
   currentCorridorLabel,
   endpointPairLabel,
   onClearEcho,
@@ -178,10 +182,10 @@ function GroundContextPreview({
 }: GroundContextPreviewProps) {
   const previewData = useMemo(() => buildGroundPreviewData(pack), [pack]);
   const gradientId = `${pack.id}-ground-preview-gradient`;
-  const headline = showsReturnEcho ? 'Recently inspected ground target' : 'Compact ground-context preview';
+  const headline = showsReturnEcho ? 'Pinned ground destination after local return' : 'Corridor landing footprint and terrain profile';
   const copy = showsReturnEcho
-    ? 'The same bounded offline site stays concrete on the home stage after the local return.'
-    : 'Bounded offline terrain pack for the current corridor site, visible before local entry.';
+    ? `The same bounded ${siteAnchorLabel} stays concrete on the home stage after the local return.`
+    : `The current corridor now hands off into ${siteAnchorLabel} before local entry, backed by the same offline terrain pack.`;
 
   return (
     <section
@@ -191,11 +195,11 @@ function GroundContextPreview({
       <div className="ground-preview__header">
         <div>
           <p className="floating-card__eyebrow">Ground Context Preview</p>
-          <p className="ground-preview__title">{pack.targetLabel}</p>
+          <p className="ground-preview__title">{siteAnchorLabel}</p>
         </div>
         <div className="ground-preview__header-actions">
           <span className={`ground-preview__status ${showsReturnEcho ? 'ground-preview__status--echo' : ''}`}>
-            {showsReturnEcho ? 'Pinned after return' : 'Terrain-ready'}
+            {showsReturnEcho ? 'Pinned after return' : 'Terrain-ready site'}
           </span>
           {showsReturnEcho ? (
             <button
@@ -451,15 +455,26 @@ export function App() {
       }),
     [activeEndpointIds, viewerRoute]
   );
+  const primaryServiceSiteAnchor = useMemo(
+    () => (localEntryState.pack ? getPrimaryServiceSiteAnchor(localEntryState.pack) : null),
+    [localEntryState.pack]
+  );
+  const homeStageSiteLabel = primaryServiceSiteAnchor?.label ?? localEntryState.pack?.targetLabel ?? 'No local target ready';
   const showsReturnEcho =
     viewerRoute.kind === 'globe' &&
     Boolean(localEntryState.pack && returnEcho?.aoiId === localEntryState.pack.id);
   const globeLocalInspectCue =
-    localEntryState.available && localEntryState.pack
+    localEntryState.available && localEntryState.pack && primaryServiceSiteAnchor
       ? {
           endpointId: localEntryState.pack.endpointId,
           targetLabel: localEntryState.pack.targetLabel,
           regionLabel: localEntryState.pack.regionLabel,
+          siteAnchorLabel: homeStageSiteLabel,
+          siteCenter: localEntryState.pack.center,
+          siteAnchorOffset: {
+            eastM: primaryServiceSiteAnchor.eastM,
+            northM: primaryServiceSiteAnchor.northM,
+          },
           state: showsReturnEcho ? ('echo' as const) : ('discoverable' as const),
         }
       : null;
@@ -467,8 +482,8 @@ export function App() {
   const localEntryReason = !localEntryState.available
     ? localEntryState.reason
     : showsReturnEcho
-      ? 'The recently inspected site stays pinned on the home globe until you clear the echo or refresh it with another local return.'
-      : 'Bounded offline terrain pack is ready before local entry.';
+      ? 'The recently inspected site stays pinned as the corridor landing destination until you clear the echo or refresh it with another local return.'
+      : 'The current corridor now hands off into one bounded service site with an offline terrain pack ready behind it.';
   const conservativeBoundaries = [
     'The activePath wording remains limited to current service corridor / current active relay path / current visible relay path.',
     'The unavailable candidate corridor is still mock availability truth, not KPI, SLA, or coverage-field truth.',
@@ -629,11 +644,11 @@ export function App() {
         <header className="floating-card hero-overlay">
           <p className="floating-card__eyebrow">Offline-First Dual-Scale Explorer</p>
           <p className="hero-overlay__summary">
-            Endpoint pair, current corridor, and one grounded service site now share the home stage.
+            Endpoint pair, current corridor, and one distinct corridor landing site now share the home stage.
           </p>
-          {localEntryState.pack ? (
+          {localEntryState.pack && primaryServiceSiteAnchor ? (
             <p className="hero-overlay__detail">
-              Spotlighted site: {localEntryState.pack.targetLabel}
+              Corridor landing site: {homeStageSiteLabel}
             </p>
           ) : null}
         </header>
@@ -646,7 +661,7 @@ export function App() {
             <div className="service-story__header">
               <p className="floating-card__eyebrow">First-Screen Service-To-Site Narrative</p>
               <p className="service-story__lede">
-                Default read path: endpoint pair -&gt; current corridor -&gt; bounded service site.
+                Default read path: endpoint pair -&gt; current corridor -&gt; corridor landing site.
               </p>
             </div>
 
@@ -675,14 +690,14 @@ export function App() {
               <span className="service-story__index">3</span>
               <div className="service-story__body">
                 <div className="service-story__meta">
-                  <p className="service-story__label">{showsReturnEcho ? 'Recently inspected site' : 'Inspectable ground site'}</p>
+                  <p className="service-story__label">{showsReturnEcho ? 'Recently inspected site' : 'Corridor landing site'}</p>
                   {localEntryState.available ? (
                     <span className={`ground-readiness-chip ${showsReturnEcho ? 'ground-readiness-chip--echo' : ''}`}>
                       {showsReturnEcho ? 'Pinned after return' : 'Terrain-ready'}
                     </span>
                   ) : null}
                 </div>
-                <p className="service-story__value">{localEntryState.pack?.targetLabel ?? 'No local target ready'}</p>
+                <p className="service-story__value">{homeStageSiteLabel}</p>
                 {localEntryState.pack ? (
                   <p className="service-story__support">{localEntryState.pack.regionLabel}</p>
                 ) : null}
@@ -731,6 +746,7 @@ export function App() {
           {localEntryState.available && localEntryState.pack ? (
             <GroundContextPreview
               pack={localEntryState.pack}
+              siteAnchorLabel={homeStageSiteLabel}
               currentCorridorLabel={currentCorridorLabel}
               endpointPairLabel={currentEndpointPairLabel}
               onClearEcho={clearReturnEcho}
