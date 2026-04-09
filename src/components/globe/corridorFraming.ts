@@ -1,15 +1,21 @@
 import { Vector3 } from 'three';
-import { geoCoordinateToScenePosition, type Vec3 } from '../../lib/geo';
+import {
+  geoCoordinateToScenePosition,
+  offsetGeoCoordinateByMeters,
+  type Vec3,
+} from '../../lib/geo';
 import type {
   ActivePathTruth,
   ServiceSelectionTruth,
   WorldGeometryTruth,
 } from '../../truth/contracts';
+import type { GlobeLocalInspectCue } from './HeroGlobe';
 
 export type FramingMode = 'home' | 'fit-corridor';
 
 interface BuildHeroFramingPoseOptions {
   globeRadius: number;
+  localInspectCue?: GlobeLocalInspectCue | null;
   mode: FramingMode;
   serviceSelection: ServiceSelectionTruth;
   worldGeometry: WorldGeometryTruth;
@@ -67,8 +73,60 @@ function averageDirection(positions: Vector3[]) {
   return direction.normalize();
 }
 
+function buildArrivalDirection(
+  globeRadius: number,
+  localInspectCue: GlobeLocalInspectCue | null | undefined
+) {
+  if (!localInspectCue) {
+    return null;
+  }
+
+  const serviceSiteCoordinate = offsetGeoCoordinateByMeters(
+    localInspectCue.siteCenter,
+    localInspectCue.siteAnchorOffset.eastM,
+    localInspectCue.siteAnchorOffset.northM
+  );
+
+  return geoCoordinateToScenePosition(serviceSiteCoordinate, globeRadius).normalize();
+}
+
+function buildHomeCameraDirection(params: {
+  arrivalDirection: Vector3 | null;
+  focusDirection: Vector3;
+  shoulderDirection: Vector3;
+  worldUp: Vector3;
+}) {
+  const {
+    arrivalDirection,
+    focusDirection,
+    shoulderDirection,
+    worldUp,
+  } = params;
+
+  if (!arrivalDirection) {
+    return focusDirection
+      .clone()
+      .add(shoulderDirection.clone().multiplyScalar(0.065))
+      .add(worldUp.clone().multiplyScalar(0.055))
+      .normalize();
+  }
+
+  const homeDirection = arrivalDirection
+    .clone()
+    .multiplyScalar(1.52)
+    .add(focusDirection.clone().multiplyScalar(0.8))
+    .add(shoulderDirection.clone().multiplyScalar(-0.18))
+    .add(worldUp.clone().multiplyScalar(0.04));
+
+  // Bias the home stage toward the arrival hemisphere instead of centering the
+  // older corridor-average north-heavy composition.
+  homeDirection.y *= 0.82;
+  return homeDirection.normalize();
+}
+
 export function buildHeroFramingPose({
   globeRadius,
+  localInspectCue = null,
   mode,
   serviceSelection,
   worldGeometry,
@@ -83,6 +141,7 @@ export function buildHeroFramingPose({
   const positions = coordinates.map((coordinate) => geoCoordinateToScenePosition(coordinate, globeRadius));
   const directions = positions.map((position) => position.clone().normalize());
   const focusDirection = averageDirection(positions);
+  const arrivalDirection = buildArrivalDirection(globeRadius, localInspectCue);
   const worldUp = new Vector3(0, 1, 0);
 
   let pathNormal = new Vector3().crossVectors(directions[0], directions[directions.length - 1]);
@@ -108,14 +167,24 @@ export function buildHeroFramingPose({
   }, 0);
   const distance =
     mode === 'home'
-      ? clamp(8.9 + spreadAngle * 0.88, 8.95, 9.35)
+      ? arrivalDirection
+        ? clamp(7.35 + spreadAngle * 0.42, 7.45, 7.95)
+        : clamp(8.9 + spreadAngle * 0.88, 8.95, 9.35)
       : clamp(5.1 + spreadAngle * 1.4, 5.25, 6);
-  const cameraDirection = focusDirection
-    .clone()
-    .multiplyScalar(1)
-    .add(shoulderDirection.clone().multiplyScalar(mode === 'home' ? 0.065 : 0.14))
-    .add(worldUp.clone().multiplyScalar(mode === 'home' ? 0.055 : 0.015))
-    .normalize();
+  const cameraDirection =
+    mode === 'home'
+      ? buildHomeCameraDirection({
+          arrivalDirection,
+          focusDirection,
+          shoulderDirection,
+          worldUp,
+        })
+      : focusDirection
+          .clone()
+          .multiplyScalar(1)
+          .add(shoulderDirection.clone().multiplyScalar(0.14))
+          .add(worldUp.clone().multiplyScalar(0.015))
+          .normalize();
 
   return {
     cameraPosition: cameraDirection.multiplyScalar(distance).toArray() as Vec3,

@@ -39,6 +39,10 @@ export interface GlobeLocalInspectCue {
     eastM: number;
     northM: number;
   };
+  arrivalRegion: {
+    halfWidthM: number;
+    halfHeightM: number;
+  };
   state: 'discoverable' | 'echo';
 }
 

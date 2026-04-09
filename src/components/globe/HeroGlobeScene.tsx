@@ -48,13 +48,14 @@ function SceneContents({
   useEffect(() => {
     const pose = buildHeroFramingPose({
       globeRadius: GLOBE_RADIUS,
+      localInspectCue,
       mode: framingRequest.mode,
       serviceSelection,
       worldGeometry,
     });
 
     transitionTargetRef.current = new Vector3(...pose.cameraPosition);
-  }, [framingRequest.mode, framingRequest.revision, serviceSelection, worldGeometry]);
+  }, [framingRequest.mode, framingRequest.revision, localInspectCue, serviceSelection, worldGeometry]);
 
   useFrame(() => {
     const transitionTarget = transitionTargetRef.current;
@@ -142,11 +143,12 @@ export function HeroGlobeScene({
   const initialCameraPosition = useMemo(() => {
     return buildHeroFramingPose({
       globeRadius: GLOBE_RADIUS,
+      localInspectCue,
       mode: 'home',
       serviceSelection,
       worldGeometry,
     }).cameraPosition;
-  }, [serviceSelection, worldGeometry]);
+  }, [localInspectCue, serviceSelection, worldGeometry]);
 
   return (
     <Canvas

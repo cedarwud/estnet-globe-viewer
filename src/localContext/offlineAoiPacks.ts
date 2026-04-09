@@ -176,3 +176,24 @@ export function getOfflineLocalContextPack(aoiId: string) {
 export function getPrimaryServiceSiteAnchor(pack: LocalContextAoiPack) {
   return pack.anchors.find((anchor) => anchor.role === 'endpoint-site') ?? pack.anchors[0] ?? null;
 }
+
+export function getServiceSiteArrivalRegion(pack: LocalContextAoiPack) {
+  const primaryAnchor = getPrimaryServiceSiteAnchor(pack);
+
+  if (!primaryAnchor) {
+    return null;
+  }
+
+  const secondaryAnchors = pack.anchors.filter((anchor) => anchor.id !== primaryAnchor.id);
+  const maxEastReachM = secondaryAnchors.reduce((maxReachM, anchor) => {
+    return Math.max(maxReachM, Math.abs(anchor.eastM - primaryAnchor.eastM));
+  }, pack.halfExtentM * 0.22);
+  const maxNorthReachM = secondaryAnchors.reduce((maxReachM, anchor) => {
+    return Math.max(maxReachM, Math.abs(anchor.northM - primaryAnchor.northM));
+  }, pack.halfExtentM * 0.18);
+
+  return {
+    halfWidthM: Math.min(pack.halfExtentM * 0.78, maxEastReachM + 620),
+    halfHeightM: Math.min(pack.halfExtentM * 0.68, maxNorthReachM + 540),
+  };
+}

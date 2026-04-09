@@ -8,6 +8,7 @@ import {
   endpointAlphaLocalContextPack,
   getOfflineLocalContextPack,
   getPrimaryServiceSiteAnchor,
+  getServiceSiteArrivalRegion,
   type LocalContextAoiPack,
 } from './localContext/offlineAoiPacks';
 import { parseViewerRouteHash, syncViewerRouteHash, type ViewerRoute } from './localContext/routes';
@@ -36,6 +37,7 @@ const completedScope = [
   'Visible corridor-linked continuity layer for globe discoverability, scale handoff, and return echo',
   'Phase 3c first-screen product shift with a home-stage service-site spotlight, service-to-site narrative, and compact ground-context preview',
   'Site anchor / site geometry decoupling follow-on with a distinct service-site anchor and restrained corridor-to-site handoff',
+  'Arrival-hemisphere composition reset with home-stage framing bias, hemisphere-scaled landing treatment, and stronger terminal approach staging',
   'Natural zoom range from whole-globe read to closer corridor inspection',
   'In-scene endpoint labels and clearer endpoint / relay / corridor hierarchy',
   'Reduced persistent overlay with more detail pushed down into the drawer',
@@ -182,10 +184,10 @@ function GroundContextPreview({
 }: GroundContextPreviewProps) {
   const previewData = useMemo(() => buildGroundPreviewData(pack), [pack]);
   const gradientId = `${pack.id}-ground-preview-gradient`;
-  const headline = showsReturnEcho ? 'Pinned ground destination after local return' : 'Corridor landing footprint and terrain profile';
+  const headline = showsReturnEcho ? 'Pinned arrival hemisphere after local return' : 'Arrival-hemisphere footprint and terrain profile';
   const copy = showsReturnEcho
-    ? `The same bounded ${siteAnchorLabel} stays concrete on the home stage after the local return.`
-    : `The current corridor now hands off into ${siteAnchorLabel} before local entry, backed by the same offline terrain pack.`;
+    ? `The same bounded ${siteAnchorLabel} stays concrete as the active arrival hemisphere after the local return.`
+    : `The current corridor now descends across the active arrival hemisphere around ${siteAnchorLabel} before local entry.`;
 
   return (
     <section
@@ -199,7 +201,7 @@ function GroundContextPreview({
         </div>
         <div className="ground-preview__header-actions">
           <span className={`ground-preview__status ${showsReturnEcho ? 'ground-preview__status--echo' : ''}`}>
-            {showsReturnEcho ? 'Pinned after return' : 'Terrain-ready site'}
+            {showsReturnEcho ? 'Pinned after return' : 'Terrain-ready region'}
           </span>
           {showsReturnEcho ? (
             <button
@@ -459,12 +461,16 @@ export function App() {
     () => (localEntryState.pack ? getPrimaryServiceSiteAnchor(localEntryState.pack) : null),
     [localEntryState.pack]
   );
+  const serviceSiteArrivalRegion = useMemo(
+    () => (localEntryState.pack ? getServiceSiteArrivalRegion(localEntryState.pack) : null),
+    [localEntryState.pack]
+  );
   const homeStageSiteLabel = primaryServiceSiteAnchor?.label ?? localEntryState.pack?.targetLabel ?? 'No local target ready';
   const showsReturnEcho =
     viewerRoute.kind === 'globe' &&
     Boolean(localEntryState.pack && returnEcho?.aoiId === localEntryState.pack.id);
   const globeLocalInspectCue =
-    localEntryState.available && localEntryState.pack && primaryServiceSiteAnchor
+    localEntryState.available && localEntryState.pack && primaryServiceSiteAnchor && serviceSiteArrivalRegion
       ? {
           endpointId: localEntryState.pack.endpointId,
           targetLabel: localEntryState.pack.targetLabel,
@@ -475,6 +481,7 @@ export function App() {
             eastM: primaryServiceSiteAnchor.eastM,
             northM: primaryServiceSiteAnchor.northM,
           },
+          arrivalRegion: serviceSiteArrivalRegion,
           state: showsReturnEcho ? ('echo' as const) : ('discoverable' as const),
         }
       : null;
@@ -482,8 +489,8 @@ export function App() {
   const localEntryReason = !localEntryState.available
     ? localEntryState.reason
     : showsReturnEcho
-      ? 'The recently inspected site stays pinned as the corridor landing destination until you clear the echo or refresh it with another local return.'
-      : 'The current corridor now hands off into one bounded service site with an offline terrain pack ready behind it.';
+      ? 'The recently inspected arrival hemisphere stays pinned until you clear the echo or refresh it with another local return.'
+      : 'The home stage now holds the corridor inside one arrival hemisphere with a bounded landing region and offline terrain pack ready behind it.';
   const conservativeBoundaries = [
     'The activePath wording remains limited to current service corridor / current active relay path / current visible relay path.',
     'The unavailable candidate corridor is still mock availability truth, not KPI, SLA, or coverage-field truth.',
@@ -644,11 +651,11 @@ export function App() {
         <header className="floating-card hero-overlay">
           <p className="floating-card__eyebrow">Offline-First Dual-Scale Explorer</p>
           <p className="hero-overlay__summary">
-            Endpoint pair, current corridor, and one distinct corridor landing site now share the home stage.
+            Endpoint pair, current corridor, and one active arrival hemisphere now share the home stage.
           </p>
           {localEntryState.pack && primaryServiceSiteAnchor ? (
             <p className="hero-overlay__detail">
-              Corridor landing site: {homeStageSiteLabel}
+              Arrival hemisphere core: {homeStageSiteLabel}
             </p>
           ) : null}
         </header>
@@ -661,7 +668,7 @@ export function App() {
             <div className="service-story__header">
               <p className="floating-card__eyebrow">First-Screen Service-To-Site Narrative</p>
               <p className="service-story__lede">
-                Default read path: endpoint pair -&gt; current corridor -&gt; corridor landing site.
+                Default read path: endpoint pair -&gt; current corridor -&gt; arrival hemisphere.
               </p>
             </div>
 
@@ -690,7 +697,7 @@ export function App() {
               <span className="service-story__index">3</span>
               <div className="service-story__body">
                 <div className="service-story__meta">
-                  <p className="service-story__label">{showsReturnEcho ? 'Recently inspected site' : 'Corridor landing site'}</p>
+                  <p className="service-story__label">{showsReturnEcho ? 'Recently inspected hemisphere' : 'Arrival hemisphere and landing region'}</p>
                   {localEntryState.available ? (
                     <span className={`ground-readiness-chip ${showsReturnEcho ? 'ground-readiness-chip--echo' : ''}`}>
                       {showsReturnEcho ? 'Pinned after return' : 'Terrain-ready'}

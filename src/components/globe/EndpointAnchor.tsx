@@ -98,20 +98,20 @@ export function EndpointAnchor({
         <Billboard position={markerPosition} follow>
           <group ref={spotlightGroupRef}>
             <mesh>
-              <ringGeometry args={[0.148, 0.176, 56]} />
+              <ringGeometry args={[0.138, 0.164, 56]} />
               <meshBasicMaterial
                 color={localInspectCueState === 'echo' ? '#ffbf69' : endpoint.accentColor}
                 transparent
-                opacity={localInspectCueState === 'echo' ? 0.42 : 0.24}
+                opacity={localInspectCueState === 'echo' ? 0.32 : 0.16}
                 depthWrite={false}
               />
             </mesh>
             <mesh>
-              <ringGeometry args={[0.196, 0.218, 56]} />
+              <ringGeometry args={[0.182, 0.202, 56]} />
               <meshBasicMaterial
                 color={localInspectCueState === 'echo' ? '#ffd39b' : '#ffdfaa'}
                 transparent
-                opacity={localInspectCueState === 'echo' ? 0.14 : 0.08}
+                opacity={localInspectCueState === 'echo' ? 0.12 : 0.045}
                 depthWrite={false}
               />
             </mesh>
