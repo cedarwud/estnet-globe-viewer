@@ -2,7 +2,10 @@ import type { CSSProperties } from 'react';
 import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { HeroGlobeScene, type HeroGlobeFramingRequest } from './components/globe/HeroGlobeScene';
 import type { FramingMode } from './components/globe/corridorFraming';
-import { offlineEarthImageryProvider } from './imagery/offlineEarthImageryProvider';
+import {
+  resolveHomeGlobeImagerySelection,
+  type HomeGlobeImageryMode,
+} from './imagery/homeGlobeImagery';
 import { useEarthTextures } from './imagery/useEarthTextures';
 import {
   endpointAlphaLocalContextPack,
@@ -27,18 +30,20 @@ const RETURN_ECHO_AUTO_CLEAR_MS = 45_000;
 const completedScope = [
   'Approved NASA day and night runtime derivatives through the existing imagery seam',
   'Approved NASA GSFC Blue Marble cloud derivative through the same governance path',
-  'Day-night Earth shader v1 with a controlled terminator and restrained twilight band',
+  'Opt-in home-globe Google Map Tiles satellite imagery path with explicit offline fallback',
+  'Mostly daylit Earth presentation with restrained limb darkening and a soft far-edge terminator',
   'Restrained ocean/specular treatment and Earth grading pass using the same approved day/night/cloud baseline',
   'Restrained cloud shell layered between the Earth surface and atmosphere',
   'Restrained procedural atmosphere shell that continues to add depth without becoming a cloud substitute',
   'Corridor-aware first screen with explicit Home and Fit Corridor framing actions',
-  'One bounded offline local-context vertical slice tied to Endpoint Alpha through a route-level full-screen takeover',
+  'One bounded offline local-context vertical slice tied to Asia through a route-level full-screen takeover',
   'AOI-centered local camera with bounded inspection, explicit Reset Local View, and Back to Globe return grammar',
   'Visible corridor-linked continuity layer for globe discoverability, scale handoff, and return echo',
   'Phase 3c first-screen product shift with a home-stage service-site spotlight, service-to-site narrative, and compact ground-context preview',
   'Site anchor / site geometry decoupling follow-on with a distinct service-site anchor and restrained corridor-to-site handoff',
   'Arrival-hemisphere composition reset with home-stage framing bias, hemisphere-scaled landing treatment, and stronger terminal approach staging',
   'Offline local-fidelity follow-on with terrain contours, site-ground footprints, and corridor-linked local destination cues for the single AOI scene',
+  'Lazy-loaded official Taipei building footprints and painted sidewalk surfaces clipped into the Asia AOI local scene',
   'Natural zoom range from whole-globe read to closer corridor inspection',
   'In-scene endpoint labels and clearer endpoint / relay / corridor hierarchy',
   'Reduced persistent overlay with more detail pushed down into the drawer',
@@ -50,6 +55,7 @@ const deferredScope = [
   'estnet-bootstrap-kit reference replay smoke',
   'Additional AOI packs and local-to-local switching',
   'Buildings or photogrammetry as local-context enrichment',
+  'AOI/local API uplift or whole-globe deep-zoom parity claims',
   'Premium world context beyond the offline AOI pack baseline',
   'Producer-backed event truth and handover cause',
 ];
@@ -330,6 +336,72 @@ function GroundContextPreview({
   );
 }
 
+interface ImageryDebugBadgeProps {
+  requestedMode: string;
+  requestedProviderId: string;
+  activeProviderId: string;
+  status: 'ready' | 'loading' | 'fallback';
+  activeProviderKind: 'empty' | 'static' | 'api';
+  failureReason: string | null;
+}
+
+function ImageryDebugBadge({
+  requestedMode,
+  requestedProviderId,
+  activeProviderId,
+  status,
+  activeProviderKind,
+  failureReason,
+}: ImageryDebugBadgeProps) {
+  const tone =
+    status === 'loading'
+      ? 'loading'
+      : activeProviderKind === 'api'
+        ? 'active'
+        : status === 'fallback'
+          ? 'fallback'
+          : 'offline';
+  const toneLabel =
+    tone === 'active'
+      ? 'Google live'
+      : tone === 'loading'
+        ? 'Loading'
+        : tone === 'fallback'
+          ? 'Fallback'
+          : 'Offline';
+
+  return (
+    <aside
+      className={`imagery-debug-badge imagery-debug-badge--${tone}`}
+      aria-label="Home globe imagery debug status"
+    >
+      <div className="imagery-debug-badge__header">
+        <p className="imagery-debug-badge__eyebrow">Imagery Debug</p>
+        <span className="imagery-debug-badge__pill">{toneLabel}</span>
+      </div>
+      <p className="imagery-debug-badge__line">
+        <strong>Requested</strong> {requestedMode}
+      </p>
+      <p className="imagery-debug-badge__line">
+        <strong>Provider</strong> {activeProviderId}
+      </p>
+      {requestedProviderId !== activeProviderId ? (
+        <p className="imagery-debug-badge__line imagery-debug-badge__line--muted">
+          Target seam: {requestedProviderId}
+        </p>
+      ) : null}
+      <p className="imagery-debug-badge__line imagery-debug-badge__line--muted">
+        Status: {status}
+      </p>
+      {failureReason ? (
+        <p className="imagery-debug-badge__reason" title={failureReason}>
+          {failureReason}
+        </p>
+      ) : null}
+    </aside>
+  );
+}
+
 const LocalContextStage = lazy(async () => {
   const module = await import('./localContext/LocalContextStage');
 
@@ -399,9 +471,51 @@ function getLocalEntryState(params: {
   };
 }
 
+function readHashQueryParameters(hash: string) {
+  const hashQuery = hash.includes('?') ? hash.slice(hash.indexOf('?') + 1) : '';
+  return new URLSearchParams(hashQuery);
+}
+
+function buildHomeGlobeImagerySearchFromWindow() {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+
+  const combinedParameters = new URLSearchParams(window.location.search);
+  const hashParameters = readHashQueryParameters(window.location.hash);
+
+  hashParameters.forEach((value, key) => {
+    combinedParameters.set(key, value);
+  });
+
+  const queryString = combinedParameters.toString();
+  return queryString ? `?${queryString}` : '';
+}
+
+function replaceHashQueryParameter(name: string, value: string) {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+
+  const hashPath = window.location.hash.includes('?')
+    ? window.location.hash.slice(0, window.location.hash.indexOf('?'))
+    : window.location.hash || '#/globe';
+  const hashParameters = readHashQueryParameters(window.location.hash);
+  hashParameters.set(name, value);
+  const nextHashQuery = hashParameters.toString();
+  const nextHash = nextHashQuery ? `${hashPath}?${nextHashQuery}` : hashPath;
+  const nextUrl = `${window.location.pathname}${window.location.search}${nextHash}`;
+  window.history.replaceState(window.history.state, '', nextUrl);
+
+  return buildHomeGlobeImagerySearchFromWindow();
+}
+
 export function App() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [returnEcho, setReturnEcho] = useState<ReturnEchoState | null>(null);
+  const [imagerySearch, setImagerySearch] = useState(() =>
+    typeof window === 'undefined' ? '' : buildHomeGlobeImagerySearchFromWindow()
+  );
   const [viewerRoute, setViewerRoute] = useState<ViewerRoute>(() => {
     if (typeof window === 'undefined') {
       return { kind: 'globe' };
@@ -413,8 +527,31 @@ export function App() {
     mode: 'home',
     revision: 0,
   });
+  const homeGlobeImagery = useMemo(() => resolveHomeGlobeImagerySelection(imagerySearch), [imagerySearch]);
+  const showImageryDebugBadge = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    const queryParameters = new URLSearchParams(window.location.search);
+    const hashQuery =
+      window.location.hash.includes('?')
+        ? window.location.hash.slice(window.location.hash.indexOf('?') + 1)
+        : '';
+    const hashParameters = new URLSearchParams(hashQuery);
+
+    if (queryParameters.get('imageryDebug') === '1' || hashParameters.get('imageryDebug') === '1') {
+      return true;
+    }
+
+    return import.meta.env.DEV && homeGlobeImagery.requestedMode === 'google-satellite';
+  }, [homeGlobeImagery.requestedMode]);
   const truthSnapshot = useTruthSnapshot(mockTruthProvider);
-  const earthTextures = useEarthTextures(offlineEarthImageryProvider);
+  const earthTextureState = useEarthTextures(
+    homeGlobeImagery.requestedProvider,
+    homeGlobeImagery.fallbackProvider
+  );
+  const earthTextures = earthTextureState.textureSet;
   const capabilityRows = capabilityEntries(truthSnapshot.capabilityProfile);
   const endpointLabels = new Map(truthSnapshot.worldGeometry.endpoints.map((endpoint) => [endpoint.id, endpoint.label]));
   const satelliteLabels = new Map(truthSnapshot.worldGeometry.satellites.map((satellite) => [satellite.id, satellite.label]));
@@ -486,7 +623,7 @@ export function App() {
           state: showsReturnEcho ? ('echo' as const) : ('discoverable' as const),
         }
       : null;
-  const localEntryActionLabel = showsReturnEcho ? 'Inspect Again' : 'Inspect Local Context';
+  const localEntryActionLabel = 'NTPU';
   const localEntryReason = !localEntryState.available
     ? localEntryState.reason
     : showsReturnEcho
@@ -495,9 +632,10 @@ export function App() {
   const conservativeBoundaries = [
     'The activePath wording remains limited to current service corridor / current active relay path / current visible relay path.',
     'The unavailable candidate corridor is still mock availability truth, not KPI, SLA, or coverage-field truth.',
-    'Dark-side readability now comes from a controlled day/night shader and approved Black Marble night lights, not from washing the whole globe with ambient fill.',
+    'The reviewer-facing Earth surface now stays mostly daylit even during globe rotation. Darkening and night lights are pushed to the far limb so the first screen still reads Earth surface, service corridor, and arrival region before anything astronomical.',
     'Home and Fit Corridor still stay globe-centered. The cloud shell does not reopen generic free pan or free-fly camera drift.',
     'Ocean/specular and grading stay restrained and texture-backed. This commit uses the same approved day/night/cloud assets and does not add bloom, weather animation, new runtime Earth assets, or a larger planet-rendering stack.',
+    'Google Map Tiles satellite uplift is bounded to the home globe imagery seam only. It does not reopen AOI/local API, provider migration, or deep-zoom parity claims.',
     'The first local-context slice is still tied to one AOI-capable service target. It does not open arbitrary click-anywhere descent or multi-AOI browsing.',
     'Local mode only counts as available when the offline AOI pack passes structural terrain validation for grid presence, shape, spacing, and non-flat relief. If that gate fails, local entry stays disabled rather than faked.',
     truthSnapshot.eventTruth.events.length === 0
@@ -517,20 +655,54 @@ export function App() {
         }))
       : [];
   const earthImageryAvailability =
-    earthTextures?.availability === 'approved-runtime' &&
-    earthTextures.dayTextureUrl &&
-    earthTextures.nightTextureUrl
-      ? 'approved-runtime'
-      : 'none-approved';
-  const cloudShellStatus = earthTextures?.cloudTextureUrl ? 'approved-runtime' : 'not-approved';
+    earthTextures?.dayTextureUrl ? earthTextures.availability : 'none-approved';
+  const cloudShellStatus = earthTextures?.cloudTextureUrl ? 'approved-runtime' : 'inactive';
+  const imagerySelectionSource =
+    homeGlobeImagery.modeSource === 'query'
+      ? 'query-override'
+      : homeGlobeImagery.modeSource === 'env'
+        ? 'env-default'
+        : 'built-in-default';
+  const activeEarthProviderId = earthTextureState.activeProviderId;
+  const activeEarthProviderKind = earthTextureState.activeProviderKind;
+  const homeGlobeImageryStatus =
+    homeGlobeImagery.requestedMode === 'google-satellite'
+      ? earthTextureState.status === 'loading'
+        ? 'google-satellite-loading'
+        : activeEarthProviderKind === 'api'
+          ? 'google-satellite-active'
+          : 'offline-fallback'
+      : 'offline-baseline';
   const earthSurfaceMode =
-    earthImageryAvailability === 'approved-runtime'
-      ? earthTextures?.cloudTextureUrl
-        ? 'Day-night Earth shader v1 + restrained grading/specular + cloud shell + atmosphere'
-        : 'Day-night Earth shader v1 + restrained atmosphere'
-      : earthTextures?.dayTextureUrl
-        ? 'Step 1 day-only fallback surface'
-        : 'Placeholder globe fallback';
+    activeEarthProviderKind === 'api'
+      ? 'Mostly daylit Google satellite surface + retained night/cloud depth continuity'
+      : earthTextureState.status === 'loading' && homeGlobeImagery.requestedMode === 'google-satellite'
+        ? 'Offline mostly-daylit baseline while Google satellite imagery loads'
+        : earthImageryAvailability === 'approved-runtime'
+          ? earthTextures?.cloudTextureUrl
+            ? 'Mostly daylit Earth presentation + restrained grading/specular + cloud shell + atmosphere'
+            : 'Mostly daylit Earth presentation + restrained atmosphere'
+          : earthTextures?.dayTextureUrl
+            ? 'Step 1 day-only fallback surface'
+            : 'Placeholder globe fallback';
+  const homeGlobeImageryHeadline =
+    homeGlobeImagery.requestedMode === 'google-satellite'
+      ? activeEarthProviderKind === 'api'
+        ? 'Home imagery: Google satellite enhanced with retained depth continuity'
+        : earthTextureState.status === 'loading'
+          ? 'Home imagery: Google satellite loading over the offline baseline'
+          : 'Home imagery: Offline fallback after Google satellite issue'
+      : 'Home imagery: Offline approved Earth baseline';
+  const homeGlobeImageryNote =
+    homeGlobeImagery.requestedMode === 'google-satellite'
+      ? activeEarthProviderKind === 'api'
+        ? 'Google Map Tiles API satellite imagery is active on the home globe. The Google day map keeps the approved offline night lights and restrained cloud shell so the hero globe remains mostly daylit without losing its depth cues. The AOI/local route, truth vocabulary, and dual-scale grammar remain unchanged.'
+        : earthTextureState.status === 'loading'
+          ? 'Google Map Tiles satellite mode was requested, but the app keeps the approved offline globe visible until the runtime composite is ready.'
+          : earthTextureState.failureReason ??
+            homeGlobeImagery.requestedProvider.availabilityReason ??
+            'Google Map Tiles satellite mode could not be activated. The home globe fell back to the approved offline baseline.'
+      : 'The home globe is using the approved offline mostly-daylit Earth baseline with restrained cloud and atmosphere layers.';
   const earthSurfaceNote =
     earthTextures?.note ??
     'No Earth imagery seam state is available. The placeholder globe should remain the only runtime surface.';
@@ -542,21 +714,16 @@ export function App() {
     }));
   };
 
+  const setHomeGlobeImageryMode = (mode: HomeGlobeImageryMode) => {
+    setImagerySearch(replaceHashQueryParameter('imagery', mode));
+  };
+
   const clearReturnEcho = () => {
     setReturnEcho(null);
   };
 
-  const enterLocalContext = () => {
-    if (!localEntryState.available || !localEntryState.pack) {
-      return;
-    }
-
-    setReturnEcho(null);
-    setDetailsOpen(false);
-    syncViewerRouteHash({
-      kind: 'local',
-      aoiId: localEntryState.pack.id,
-    });
+  const openNtpu = () => {
+    window.location.assign('http://localhost:3000');
   };
 
   const returnToGlobe = () => {
@@ -576,9 +743,11 @@ export function App() {
   useEffect(() => {
     const handleHashChange = () => {
       setViewerRoute(parseViewerRouteHash(window.location.hash));
+      setImagerySearch(buildHomeGlobeImagerySearchFromWindow());
     };
 
     window.addEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handleHashChange);
 
     if (!window.location.hash) {
       syncViewerRouteHash({ kind: 'globe' });
@@ -586,6 +755,7 @@ export function App() {
 
     return () => {
       window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('popstate', handleHashChange);
     };
   }, []);
 
@@ -648,12 +818,49 @@ export function App() {
         />
       </div>
 
-      <div className="viewer-overlay">
+      <div className="viewer-overlay viewer-overlay--minimal-home">
+        <section className="floating-card home-controls" aria-label="Home controls">
+          <div className="scene-actions scene-actions--compact">
+            <button
+              type="button"
+              className="scene-action"
+              onClick={openNtpu}
+              title="Open NTPU"
+            >
+              {localEntryActionLabel}
+            </button>
+            <button
+              type="button"
+              className={`scene-action ${framingRequest.mode === 'home' ? 'scene-action--active' : ''}`}
+              onClick={() => setFramingMode('home')}
+            >
+              Home
+            </button>
+            <button
+              type="button"
+              className={`scene-action ${homeGlobeImagery.requestedMode === 'google-satellite' ? 'scene-action--active' : ''}`}
+              onClick={() =>
+                setHomeGlobeImageryMode(
+                  homeGlobeImagery.requestedMode === 'google-satellite' ? 'offline' : 'google-satellite'
+                )
+              }
+              title={
+                homeGlobeImagery.requestedMode === 'google-satellite'
+                  ? 'Switch the home globe back to the offline Earth baseline'
+                  : 'Switch the home globe to Google satellite imagery'
+              }
+            >
+              {homeGlobeImagery.requestedMode === 'google-satellite' ? 'Use Offline Globe' : 'Use Google Globe'}
+            </button>
+          </div>
+        </section>
+
         <header className="floating-card hero-overlay">
           <p className="floating-card__eyebrow">Offline-First Dual-Scale Explorer</p>
           <p className="hero-overlay__summary">
             Endpoint pair, current corridor, and one active arrival hemisphere now share the home stage.
           </p>
+          <p className="hero-overlay__detail">{homeGlobeImageryHeadline}</p>
           {localEntryState.pack && primaryServiceSiteAnchor ? (
             <p className="hero-overlay__detail">
               Arrival hemisphere core: {homeStageSiteLabel}
@@ -714,9 +921,8 @@ export function App() {
               <button
                 type="button"
                 className="scene-action service-story__action"
-                disabled={!localEntryState.available}
-                onClick={enterLocalContext}
-                title={localEntryState.available ? 'Open the bounded local-context scene' : localEntryState.reason}
+                onClick={openNtpu}
+                title="Open NTPU"
               >
                 {localEntryActionLabel}
               </button>
@@ -730,22 +936,6 @@ export function App() {
               onClick={() => setFramingMode('home')}
             >
               Home
-            </button>
-            <button
-              type="button"
-              className={`scene-action ${framingRequest.mode === 'fit-corridor' ? 'scene-action--active' : ''}`}
-              onClick={() => setFramingMode('fit-corridor')}
-            >
-              Fit Corridor
-            </button>
-            <button
-              type="button"
-              className="details-toggle"
-              onClick={() => setDetailsOpen((current) => !current)}
-              aria-expanded={detailsOpen}
-              aria-controls="truth-drawer"
-            >
-              {detailsOpen ? 'Hide Details' : 'Open Details'}
             </button>
           </div>
         </section>
@@ -767,6 +957,17 @@ export function App() {
           <span className="scene-legend scene-legend--active">Current corridor</span>
           <span className="scene-legend scene-legend--unavailable">Unavailable candidate</span>
         </section>
+
+        {showImageryDebugBadge ? (
+          <ImageryDebugBadge
+            requestedMode={homeGlobeImagery.requestedMode}
+            requestedProviderId={homeGlobeImagery.requestedProvider.providerId}
+            activeProviderId={activeEarthProviderId}
+            status={earthTextureState.status}
+            activeProviderKind={activeEarthProviderKind}
+            failureReason={earthTextureState.failureReason}
+          />
+        ) : null}
 
         <aside
           id="truth-drawer"
@@ -813,12 +1014,32 @@ export function App() {
               <p className="floating-card__eyebrow">Earth Surface Boundary</p>
               <dl className="status-facts">
                 <div className="status-facts__row">
-                  <dt>Provider</dt>
-                  <dd>{offlineEarthImageryProvider.providerId}</dd>
+                  <dt>Requested provider</dt>
+                  <dd>{homeGlobeImagery.requestedProvider.providerId}</dd>
                 </div>
                 <div className="status-facts__row">
-                  <dt>Kind</dt>
-                  <dd>{offlineEarthImageryProvider.providerKind}</dd>
+                  <dt>Requested kind</dt>
+                  <dd>{homeGlobeImagery.requestedProvider.providerKind}</dd>
+                </div>
+                <div className="status-facts__row">
+                  <dt>Active provider</dt>
+                  <dd>{activeEarthProviderId}</dd>
+                </div>
+                <div className="status-facts__row">
+                  <dt>Active kind</dt>
+                  <dd>{activeEarthProviderKind}</dd>
+                </div>
+                <div className="status-facts__row">
+                  <dt>Requested mode</dt>
+                  <dd>{homeGlobeImagery.requestedMode}</dd>
+                </div>
+                <div className="status-facts__row">
+                  <dt>Selection source</dt>
+                  <dd>{imagerySelectionSource}</dd>
+                </div>
+                <div className="status-facts__row">
+                  <dt>Status</dt>
+                  <dd>{homeGlobeImageryStatus}</dd>
                 </div>
                 <div className="status-facts__row">
                   <dt>Availability</dt>
@@ -860,7 +1081,26 @@ export function App() {
                   <dt>Governance doc</dt>
                   <dd>{earthTextures?.governanceDocPath ?? 'docs/assets/earth-assets.md'}</dd>
                 </div>
+                {homeGlobeImagery.failureMode !== 'none' ? (
+                  <div className="status-facts__row">
+                    <dt>Failure override</dt>
+                    <dd>{homeGlobeImagery.failureMode}</dd>
+                  </div>
+                ) : null}
+                {homeGlobeImagery.keyOverride !== 'default' ? (
+                  <div className="status-facts__row">
+                    <dt>Key override</dt>
+                    <dd>{homeGlobeImagery.keyOverride}</dd>
+                  </div>
+                ) : null}
+                {earthTextureState.failureReason ? (
+                  <div className="status-facts__row">
+                    <dt>Fallback reason</dt>
+                    <dd>{earthTextureState.failureReason}</dd>
+                  </div>
+                ) : null}
               </dl>
+              <p className="drawer-copy">{homeGlobeImageryNote}</p>
               <p className="drawer-copy">{earthSurfaceNote}</p>
             </section>
 

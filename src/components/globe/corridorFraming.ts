@@ -21,8 +21,9 @@ interface BuildHeroFramingPoseOptions {
   worldGeometry: WorldGeometryTruth;
 }
 
-interface FramingPose {
+export interface FramingPose {
   cameraPosition: Vec3;
+  sunDirection: Vec3;
 }
 
 function clamp(value: number, min: number, max: number) {
@@ -32,9 +33,13 @@ function clamp(value: number, min: number, max: number) {
 function fallbackPose(mode: FramingMode): FramingPose {
   const distance = mode === 'home' ? 9.4 : 6;
   const direction = new Vector3(0.12, 0.22, 0.97).normalize().multiplyScalar(distance);
+  const cameraDirection = direction.clone().normalize();
 
   return {
     cameraPosition: direction.toArray() as Vec3,
+    // Keep the fallback Earth presentation reviewer-first as well: even without
+    // corridor truth, the visible hemisphere should stay mostly daylit.
+    sunDirection: cameraDirection.toArray() as Vec3,
   };
 }
 
@@ -188,5 +193,8 @@ export function buildHeroFramingPose({
 
   return {
     cameraPosition: cameraDirection.multiplyScalar(distance).toArray() as Vec3,
+    // Service-driven home framing keeps the primary read surface daylit. The
+    // dark side only lives on the far limb instead of splitting the main view.
+    sunDirection: cameraDirection.normalize().toArray() as Vec3,
   };
 }

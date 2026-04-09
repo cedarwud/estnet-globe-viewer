@@ -8,7 +8,6 @@ import {
   MathUtils,
   NormalBlending,
   Vector3,
-  type Vector3Tuple,
 } from 'three';
 import type { EarthTextureSet } from '../../imagery/provider';
 import {
@@ -26,17 +25,17 @@ interface EarthDaySurfaceProps extends EarthSurfaceBaseProps {
 
 interface EarthDayNightSurfaceProps extends EarthSurfaceBaseProps {
   textureSet: EarthTextureSet;
-  sunDirection: Vector3Tuple;
+  sunDirection: Vector3;
 }
 
 interface EarthAtmosphereShellProps extends EarthSurfaceBaseProps {
   textureSet: EarthTextureSet | null;
-  sunDirection: Vector3Tuple;
+  sunDirection: Vector3;
 }
 
 interface EarthCloudShellProps extends EarthSurfaceBaseProps {
   textureSet: EarthTextureSet;
-  sunDirection: Vector3Tuple;
+  sunDirection: Vector3;
 }
 
 const earthShaderVertex = `
@@ -100,24 +99,26 @@ float buildOceanMask(vec3 dayColor, float threshold, float softness) {
   float luminance = colorLuminance(dayColor);
   float blueDominance = dayColor.b - max(dayColor.r * 0.92, dayColor.g * 0.98);
   float coolness = dayColor.b - dayColor.r * 0.65;
-  float oceanSignal = blueDominance + saturation * 0.18 + coolness * 0.12 - luminance * 0.04;
+  float oceanSignal = blueDominance + saturation * 0.22 + coolness * 0.16 - luminance * 0.02;
   float oceanMask = smoothstep(threshold, threshold + softness, oceanSignal);
   float landSignal = max(
     smoothstep(0.015, 0.14, dayColor.g - dayColor.b * 0.82),
     smoothstep(0.015, 0.16, dayColor.r - dayColor.b * 0.94)
   );
   float brightLand = smoothstep(0.42, 0.82, luminance) * (1.0 - saturation * 0.55);
-  return clamp(oceanMask * (1.0 - landSignal * 0.82 - brightLand * 0.28), 0.0, 1.0);
+  return clamp(oceanMask * (1.0 - landSignal * 0.82 - brightLand * 0.22), 0.0, 1.0);
 }
 
 void main() {
   vec3 normal = normalize(vWorldNormal);
   vec3 lightDirection = normalize(sunDirection);
   vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
+  float viewFacing = clamp(dot(viewDirection, normal), 0.0, 1.0);
   float lightDot = dot(normal, lightDirection);
   float dayFactor = clamp(lightDot, 0.0, 1.0);
-  float transition = smoothstep(-twilightWidth, twilightWidth, lightDot);
-  float twilight = 1.0 - smoothstep(0.0, twilightWidth * 1.35, abs(lightDot));
+  float nightLimbMask = 1.0 - smoothstep(0.0, 0.02, viewFacing);
+  float twilight = (1.0 - smoothstep(0.0, twilightWidth * 1.35, abs(lightDot))) * nightLimbMask;
+  float presentationLight = clamp(max(dayFactor, 1.02 * viewFacing + 0.2), 0.0, 1.0);
 
   vec3 dayColor = texture2D(dayMap, vUv).rgb;
   vec3 nightColor = texture2D(nightMap, vUv).rgb;
@@ -129,19 +130,30 @@ void main() {
 
   vec3 gradedDay = applySaturation(dayColor, daySaturation);
   gradedDay = mix(gradedDay, gradedDay * vec3(1.03, 1.01, 0.98), landMask * landWarmth);
-  gradedDay = mix(gradedDay, gradedDay * vec3(0.86, 0.96, 1.12), oceanMask * oceanTintStrength);
+  vec3 oceanTintedDay =
+    clamp(gradedDay * vec3(0.76, 1.02, 1.34) + vec3(0.01, 0.022, 0.06), 0.0, 1.0);
+  gradedDay = mix(gradedDay, oceanTintedDay, oceanMask * oceanTintStrength);
+  gradedDay = pow(gradedDay, vec3(0.96));
   gradedDay = applyContrast(gradedDay, dayContrast);
   gradedDay = clamp(gradedDay + vec3(dayLift), 0.0, 1.0);
 
   vec3 gradedNight = applySaturation(nightColor, nightSaturation);
   gradedNight *= vec3(1.0, 0.98, 0.93);
 
-  vec3 litDay = gradedDay * mix(0.24, 1.03, pow(dayFactor, 0.72));
-  litDay = mix(litDay, litDay * vec3(0.96, 1.02, 1.08), oceanMask * (0.08 + dayFactor * 0.06));
-  vec3 nightReadable = gradedDay * (nightFloor + twilight * 0.058);
-  nightReadable += gradedNight * (nightIntensity + twilight * twilightBoost);
+  vec3 litDay = gradedDay * mix(1.06, 1.16, pow(presentationLight, 0.54));
+  litDay = mix(
+    litDay,
+    litDay * vec3(0.995, 1.025, 1.07) + vec3(0.0, 0.008, 0.02),
+    oceanMask * (0.055 + presentationLight * 0.03)
+  );
+  litDay = clamp(pow(litDay, vec3(0.93)), 0.0, 1.0);
+  vec3 nightReadable = gradedDay * (0.985 + nightFloor * 0.025 + twilight * 0.009);
+  nightReadable +=
+    gradedNight * nightLimbMask * (nightIntensity * 0.003 + twilight * twilightBoost * 0.0035);
 
-  vec3 color = mix(nightReadable, litDay, transition);
+  vec3 color = litDay;
+  color += nightReadable * nightLimbMask * 0.0035;
+  color = clamp(color + vec3(0.01, 0.012, 0.015) * (0.28 + 0.52 * viewFacing), 0.0, 1.0);
 
   vec3 halfVector = normalize(lightDirection + viewDirection);
   float specular = pow(max(dot(normal, halfVector), 0.0), oceanSpecularSharpness);
@@ -150,9 +162,9 @@ void main() {
   float cloudOcclusion = 1.0 - cloudCoverage * cloudOcclusionStrength;
   float oceanHighlight = oceanMask * daylightGate * cloudOcclusion;
   oceanHighlight *= specular * oceanSpecularStrength + fresnel * oceanFresnelStrength * 0.32;
-  color += vec3(0.95, 0.98, 1.0) * oceanHighlight;
+  color += vec3(0.88, 0.95, 1.0) * oceanHighlight;
 
-  color += vec3(0.02, 0.04, 0.08) * twilight * twilightBlueMix;
+  color += vec3(0.012, 0.025, 0.05) * twilight * twilightBlueMix;
 
   gl_FragColor = vec4(color, 1.0);
   #include <tonemapping_fragment>
@@ -187,11 +199,11 @@ void main() {
   vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
   float rim = pow(clamp(1.0 - max(dot(viewDirection, normal), 0.0), 0.0, 1.0), rimPower);
   float sunDot = dot(normal, normalize(sunDirection));
-  float dayScatter = smoothstep(-0.2, 0.65, sunDot);
-  float twilight = 1.0 - smoothstep(0.05, 0.45, abs(sunDot));
+  float dayScatter = smoothstep(-0.16, 0.72, sunDot);
+  float twilight = 1.0 - smoothstep(0.02, 0.34, abs(sunDot));
 
   vec3 color = mix(dayColor, twilightColor, twilight * 0.58);
-  float opacity = rim * intensity * (0.28 + dayScatter * 0.55 + twilight * 0.24);
+  float opacity = rim * intensity * (0.22 + dayScatter * 0.64 + twilight * 0.14);
 
   gl_FragColor = vec4(color, opacity);
   #include <tonemapping_fragment>
@@ -348,12 +360,8 @@ export function EarthDayNightSurface({
         cloudTexture,
         gl.capabilities.getMaxAnisotropy(),
         appearanceProfile
-      ),
+    ),
     [appearanceProfile, cloudTexture, gl]
-  );
-  const normalizedSunDirection = useMemo(
-    () => new Vector3(...sunDirection).normalize(),
-    [sunDirection]
   );
   const uniforms = useMemo(
     () => ({
@@ -362,7 +370,7 @@ export function EarthDayNightSurface({
       cloudMap: { value: configuredCloudTexture },
       // Step 2 keeps the control surface explicit: the terminator comes from a
       // named sun direction, not from extra ambient fill hidden elsewhere.
-      sunDirection: { value: normalizedSunDirection },
+      sunDirection: { value: sunDirection },
       twilightWidth: { value: appearanceProfile.dayNight.twilightWidth },
       nightFloor: { value: appearanceProfile.dayNight.nightFloor },
       nightIntensity: { value: appearanceProfile.dayNight.nightIntensity },
@@ -388,7 +396,7 @@ export function EarthDayNightSurface({
       configuredCloudTexture,
       configuredDayTexture,
       configuredNightTexture,
-      normalizedSunDirection,
+      sunDirection,
       textureSet.cloudTextureUrl,
     ]
   );
@@ -416,21 +424,17 @@ export function EarthAtmosphereShell({
     () => resolveEarthAppearanceProfile(textureSet),
     [textureSet]
   );
-  const normalizedSunDirection = useMemo(
-    () => new Vector3(...sunDirection).normalize(),
-    [sunDirection]
-  );
   const uniforms = useMemo(
     () => ({
       // Step 4 keeps atmosphere procedural and restrained. This adds depth and
       // a planetary rim without introducing another approved runtime asset.
-      sunDirection: { value: normalizedSunDirection },
+      sunDirection: { value: sunDirection },
       dayColor: { value: new Color(appearanceProfile.atmosphere.dayColor) },
       twilightColor: { value: new Color(appearanceProfile.atmosphere.twilightColor) },
       rimPower: { value: appearanceProfile.atmosphere.rimPower },
       intensity: { value: appearanceProfile.atmosphere.intensity },
     }),
-    [appearanceProfile, normalizedSunDirection]
+    [appearanceProfile, sunDirection]
   );
 
   return (
@@ -472,12 +476,8 @@ export function EarthCloudShell({
         cloudTexture,
         gl.capabilities.getMaxAnisotropy(),
         appearanceProfile
-      ),
+    ),
     [appearanceProfile, cloudTexture, gl]
-  );
-  const normalizedSunDirection = useMemo(
-    () => new Vector3(...sunDirection).normalize(),
-    [sunDirection]
   );
   const cloudRotation = useMemo(
     () => MathUtils.degToRad(appearanceProfile.clouds.rotationDeg),
@@ -489,7 +489,7 @@ export function EarthCloudShell({
       // The texture is approved and traceable, but the shell stays quiet enough that
       // endpoint / relay / corridor readability still wins over atmosphere theater.
       cloudMap: { value: configuredCloudTexture },
-      sunDirection: { value: normalizedSunDirection },
+      sunDirection: { value: sunDirection },
       opacity: { value: appearanceProfile.clouds.opacity },
       densityThreshold: { value: appearanceProfile.clouds.densityThreshold },
       densitySoftness: { value: appearanceProfile.clouds.densitySoftness },
@@ -497,7 +497,7 @@ export function EarthCloudShell({
       nightFloor: { value: appearanceProfile.clouds.nightFloor },
       limbFadeExponent: { value: appearanceProfile.clouds.limbFadeExponent },
     }),
-    [appearanceProfile, configuredCloudTexture, normalizedSunDirection]
+    [appearanceProfile, configuredCloudTexture, sunDirection]
   );
 
   return (

@@ -1,3 +1,5 @@
+import { useFrame } from '@react-three/fiber';
+import { useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { Line } from '@react-three/drei';
 import {
@@ -11,6 +13,11 @@ import type {
   ServiceSelectionTruth,
   WorldGeometryTruth,
 } from '../../truth/contracts';
+import type { GeoCoordinate } from '../../truth/contracts';
+import {
+  buildSatelliteVisualOrbitDescriptor,
+  sampleSatelliteVisualOrbit,
+} from './satelliteVisualMotion';
 
 interface ServiceCorridorOverlayProps {
   worldGeometry: WorldGeometryTruth;
@@ -27,6 +34,7 @@ function renderCorridorLegs(
   endpointIds: [string, string],
   relaySatelliteIds: string[],
   worldGeometry: WorldGeometryTruth,
+  satellitePositionsById: Map<string, GeoCoordinate>,
   globeRadius: number,
   style: {
     color: string;
@@ -40,11 +48,10 @@ function renderCorridorLegs(
   keyPrefix: string
 ) {
   const endpointById = new Map(worldGeometry.endpoints.map((endpoint) => [endpoint.id, endpoint]));
-  const satelliteById = new Map(worldGeometry.satellites.map((satellite) => [satellite.id, satellite]));
   const legs: ReactElement[] = [];
   const orderedNodes = [
     endpointById.get(endpointIds[0])?.position,
-    ...relaySatelliteIds.map((relayId) => satelliteById.get(relayId)?.position),
+    ...relaySatelliteIds.map((relayId) => satellitePositionsById.get(relayId)),
     endpointById.get(endpointIds[1])?.position,
   ];
 
@@ -120,8 +127,54 @@ export function ServiceCorridorOverlay({
   serviceSelection,
   globeRadius,
 }: ServiceCorridorOverlayProps) {
+  const [motionTimeSec, setMotionTimeSec] = useState(0);
+  const lastMotionUpdateRef = useRef(0);
   const activePath = serviceSelection.kind === 'supported' ? serviceSelection.activePath : null;
   const unavailableCandidate = resolveUnavailableCandidate(serviceAvailability, activePath);
+  const orbitDescriptorsById = useMemo(
+    () =>
+      new Map(
+        worldGeometry.satellites.map((satellite) => [
+          satellite.id,
+          buildSatelliteVisualOrbitDescriptor(satellite, globeRadius),
+        ])
+      ),
+    [globeRadius, worldGeometry.satellites]
+  );
+  const visualOrbitSamplesById = useMemo(
+    () =>
+      new Map(
+        worldGeometry.satellites.map((satellite) => {
+          const descriptor = orbitDescriptorsById.get(satellite.id);
+
+          return [
+            satellite.id,
+            descriptor ? sampleSatelliteVisualOrbit(descriptor, motionTimeSec) : null,
+          ] as const;
+        })
+      ),
+    [motionTimeSec, orbitDescriptorsById, worldGeometry.satellites]
+  );
+  const visualOrbitCoordinatesById = useMemo(
+    () =>
+      new Map(
+        worldGeometry.satellites.map((satellite) => [
+          satellite.id,
+          visualOrbitSamplesById.get(satellite.id)?.coordinate ?? satellite.position,
+        ])
+      ),
+    [visualOrbitSamplesById, worldGeometry.satellites]
+  );
+
+  useFrame(({ clock }) => {
+    const elapsedTime = clock.getElapsedTime();
+    if (elapsedTime - lastMotionUpdateRef.current < 1 / 30) {
+      return;
+    }
+
+    lastMotionUpdateRef.current = elapsedTime;
+    setMotionTimeSec(elapsedTime);
+  });
 
   if (!activePath && !unavailableCandidate) {
     return null;
@@ -134,6 +187,7 @@ export function ServiceCorridorOverlay({
             unavailableCandidate.endpointIds,
             unavailableCandidate.relaySatelliteIds,
             worldGeometry,
+            visualOrbitCoordinatesById,
             globeRadius,
             {
               color: '#d0bfab',
@@ -150,6 +204,7 @@ export function ServiceCorridorOverlay({
             activePath.endpointIds,
             activePath.relaySatelliteIds,
             worldGeometry,
+            visualOrbitCoordinatesById,
             globeRadius,
             {
               color: '#8ed2ff',
@@ -166,17 +221,15 @@ export function ServiceCorridorOverlay({
 
       {activePath
         ? activePath.relaySatelliteIds.map((relayId) => {
-            const satellite = worldGeometry.satellites.find((entry) => entry.id === relayId);
-            if (!satellite) {
+            const orbitSample = visualOrbitSamplesById.get(relayId);
+            if (!orbitSample) {
               return null;
             }
-
-            const highlightPosition = geoCoordinateToScenePosition(satellite.position, globeRadius);
 
             return (
               <mesh
                 key={`relay-highlight-${relayId}`}
-                position={highlightPosition.toArray()}
+                position={orbitSample.scenePosition.toArray()}
               >
                 <sphereGeometry args={[0.11, 20, 20]} />
                 <meshBasicMaterial

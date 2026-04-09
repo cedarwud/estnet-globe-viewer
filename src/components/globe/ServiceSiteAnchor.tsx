@@ -1,4 +1,4 @@
-import { Billboard, Html, Line } from '@react-three/drei';
+import { Billboard, Line } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import type { Group, Mesh } from 'three';
@@ -102,7 +102,6 @@ export function ServiceSiteAnchor({
   const arrivalGateRef = useRef<Group>(null);
   const beaconHaloRef = useRef<Group>(null);
   const beaconPulseRef = useRef<Mesh>(null);
-  const calloutGroupRef = useRef<Group>(null);
   const phaseOffset = cue.state === 'echo' ? 0.35 : 0;
   const siteGeometry = useMemo(() => {
     const endpointPosition = geoCoordinateToScenePosition(endpoint.position, globeRadius);
@@ -379,7 +378,7 @@ export function ServiceSiteAnchor({
     globeRadius,
   ]);
 
-  useFrame(({ camera, clock }) => {
+  useFrame(({ clock }) => {
     const pulseCycle = (clock.getElapsedTime() * 0.65 + phaseOffset) % 1;
     const haloScale = 1 + Math.sin(clock.getElapsedTime() * 2.2 + phaseOffset) * 0.08;
     const regionScale = 1 + Math.sin(clock.getElapsedTime() * 1.6 + phaseOffset) * 0.032;
@@ -401,11 +400,6 @@ export function ServiceSiteAnchor({
     if (pulseMaterial && !Array.isArray(pulseMaterial) && 'opacity' in pulseMaterial) {
       pulseMaterial.opacity = (cue.state === 'echo' ? 0.2 : 0.14) * (1 - pulseCycle);
     }
-
-    if (calloutGroupRef.current) {
-      const facingDot = camera.position.clone().normalize().dot(siteGeometry.surfaceDirection);
-      calloutGroupRef.current.visible = facingDot > -0.04;
-    }
   });
 
   const handoffColor = cue.state === 'echo' ? '#ffd39b' : '#ffbf69';
@@ -413,16 +407,6 @@ export function ServiceSiteAnchor({
   const hemisphereColor = cue.state === 'echo' ? '#ffd39b' : '#62d7ff';
   const regionFillColor = cue.state === 'echo' ? '#ffd39b' : '#8be3ff';
   const landingWedgeColor = cue.state === 'echo' ? '#ffe0ae' : '#d4f6ff';
-  const calloutTitle = cue.siteAnchorLabel;
-  const calloutEyebrow = cue.state === 'echo' ? 'Pinned Arrival Hemisphere' : 'Arrival Hemisphere';
-  const calloutMeta =
-    cue.state === 'echo'
-      ? 'Recently inspected landing region still anchored on return'
-      : 'Current corridor descent into the bounded landing region';
-  const calloutCopy =
-    cue.state === 'echo'
-      ? `Recent local return keeps this arrival hemisphere pinned on the home globe.`
-      : `Corridor descent now commits to this bounded landing region.`;
 
   return (
     <>
@@ -697,32 +681,6 @@ export function ServiceSiteAnchor({
               roughness={0.22}
             />
           </mesh>
-        </group>
-      </Billboard>
-
-      <Billboard
-        position={siteGeometry.beaconPosition.toArray()}
-        follow
-      >
-        <group
-          ref={calloutGroupRef}
-          position={endpoint.id === 'endpoint-alpha' ? [-0.82, 0.52, 0] : [-0.18, 0.08, 0]}
-        >
-          <Html occlude={false}>
-            <div className={`service-site-anchor service-site-anchor--${cue.state}`}>
-              <p className="service-site-anchor__eyebrow">{calloutEyebrow}</p>
-              <p className="service-site-anchor__title">{calloutTitle}</p>
-              <p className="service-site-anchor__meta">{calloutMeta}</p>
-              <div className="service-site-anchor__trail">
-                <span>Current corridor</span>
-                <span className="service-site-anchor__trail-arrow">-&gt;</span>
-                <span>Arrival hemisphere</span>
-                <span className="service-site-anchor__trail-arrow">-&gt;</span>
-                <span>Service-site core</span>
-              </div>
-              <p className="service-site-anchor__copy">{calloutCopy}</p>
-            </div>
-          </Html>
         </group>
       </Billboard>
     </>

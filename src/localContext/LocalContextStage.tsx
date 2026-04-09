@@ -38,8 +38,12 @@ export function LocalContextStage({
   const reliefMetersLabel = Math.round(pack.terrain.maxHeightM - pack.terrain.baseHeightM);
   const aoiSpanKmLabel = ((pack.halfExtentM * 2) / 1000).toFixed(1);
   const localDestinationSummary = useMemo(() => {
-    return `${pack.placeNarrative.placeLabel} stays tied to ${relayLabel} as one bounded hillside destination instead of a free-roam local browser.`;
-  }, [pack.placeNarrative.placeLabel, relayLabel]);
+    if (!pack.officialPlaceContext) {
+      return `${pack.placeNarrative.placeLabel} stays tied to ${relayLabel} as one bounded hillside destination instead of a free-roam local browser.`;
+    }
+
+    return `${pack.placeNarrative.placeLabel} stays tied to ${relayLabel} as one bounded hillside destination and now carries ${pack.officialPlaceContext.buildingCount} official building footprints plus ${pack.officialPlaceContext.sidewalkCount} painted sidewalk polygons.`;
+  }, [pack.officialPlaceContext, pack.placeNarrative.placeLabel, relayLabel]);
 
   const nudgeFocus = (eastDeltaM: number, northDeltaM: number) => {
     setFocusOffset((current) => ({
@@ -90,7 +94,9 @@ export function LocalContextStage({
                   {availabilityLabel}
                 </span>
                 <p className="shared-service-context-bar__title">{pack.placeNarrative.placeLabel}</p>
-                <span className="local-destination-chip">Terrain-ready destination</span>
+                <span className="local-destination-chip">
+                  {pack.officialPlaceContext ? 'Terrain + official place context' : 'Terrain-ready destination'}
+                </span>
               </div>
             </div>
 
@@ -106,6 +112,16 @@ export function LocalContextStage({
               <span className="shared-service-context-bar__fact">{aoiSpanKmLabel} km AOI span</span>
               <span className="shared-service-context-bar__fact">{reliefMetersLabel} m relief</span>
               <span className="shared-service-context-bar__fact">{pack.anchors.length} site-linked anchors</span>
+              {pack.officialPlaceContext ? (
+                <span className="shared-service-context-bar__fact">
+                  {pack.officialPlaceContext.buildingCount} official buildings
+                </span>
+              ) : null}
+              {pack.officialPlaceContext ? (
+                <span className="shared-service-context-bar__fact">
+                  {pack.officialPlaceContext.sidewalkCount} sidewalk polygons
+                </span>
+              ) : null}
             </div>
 
             <div className="shared-service-context-bar__features">

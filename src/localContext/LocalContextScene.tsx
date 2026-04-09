@@ -5,6 +5,11 @@ import type {
   LocalContextPanOffset,
 } from './offlineAoiPacks';
 import {
+  loadOfficialPlaceContextAsset,
+  type OfficialPlaceContextAsset,
+  type OfficialPlaceContextPoint,
+} from './officialPlaceContext';
+import {
   loadCesiumRuntime,
   type CesiumEntity,
   type CesiumRuntime,
@@ -98,6 +103,21 @@ function sampleTerrainHeight(pack: LocalContextAoiPack, eastM: number, northM: n
     heightsM[northRow][westColumn] * (1 - eastWeight) + heightsM[northRow][eastColumn] * eastWeight;
 
   return southHeight * (1 - northWeight) + northHeight * northWeight;
+}
+
+function getPolygonAverageGroundHeight(
+  pack: LocalContextAoiPack,
+  polygon: OfficialPlaceContextPoint[]
+) {
+  if (polygon.length === 0) {
+    return pack.terrain.baseHeightM;
+  }
+
+  const totalHeight = polygon.reduce((sum, point) => {
+    return sum + sampleTerrainHeight(pack, point.eastM, point.northM);
+  }, 0);
+
+  return totalHeight / polygon.length;
 }
 
 function getCellGradient(pack: LocalContextAoiPack, rowIndex: number, columnIndex: number) {
@@ -609,10 +629,125 @@ function buildServiceAnchors(
   }
 }
 
+function getOfficialBuildingMaterial(cesium: CesiumRuntime, floorCount: number) {
+  const base = cesium.Color.fromCssColorString('#83939d');
+  const midrise = cesium.Color.fromCssColorString('#d8cdc0');
+  const highlight = cesium.Color.fromCssColorString('#ffd9a6');
+  const floorWeight = clamp((floorCount - 2) / 24, 0, 1);
+  const color = cesium.Color.lerp(base, midrise, Math.min(1, floorWeight * 1.15), new cesium.Color());
+
+  return cesium.Color.lerp(color, highlight, Math.max(0, floorWeight - 0.28) * 1.55, color).withAlpha(0.82);
+}
+
+function buildOfficialSidewalkContext(
+  cesium: CesiumRuntime,
+  viewer: CesiumViewer,
+  pack: LocalContextAoiPack,
+  officialContext: OfficialPlaceContextAsset
+) {
+  for (const sidewalk of officialContext.sidewalks) {
+    viewer.entities.add({
+      polygon: {
+        hierarchy: new cesium.PolygonHierarchy(
+          sidewalk.polygon.map((point) =>
+            localMetersToCartesian(
+              cesium,
+              pack,
+              point.eastM,
+              point.northM,
+              sampleTerrainHeight(pack, point.eastM, point.northM) + 3
+            )
+          )
+        ),
+        perPositionHeight: true,
+        material: cesium.Color.fromCssColorString('#99d8e9').withAlpha(0.22),
+      },
+    });
+
+    viewer.entities.add({
+      polyline: {
+        positions: [
+          ...sidewalk.polygon.map((point) =>
+            localMetersToCartesian(
+              cesium,
+              pack,
+              point.eastM,
+              point.northM,
+              sampleTerrainHeight(pack, point.eastM, point.northM) + 4.6
+            )
+          ),
+          localMetersToCartesian(
+            cesium,
+            pack,
+            sidewalk.polygon[0].eastM,
+            sidewalk.polygon[0].northM,
+            sampleTerrainHeight(pack, sidewalk.polygon[0].eastM, sidewalk.polygon[0].northM) + 4.6
+          ),
+        ],
+        width: 1.6,
+        material: cesium.Color.fromCssColorString('#d7fbff').withAlpha(0.34),
+      },
+    });
+  }
+}
+
+function buildOfficialBuildingContext(
+  cesium: CesiumRuntime,
+  viewer: CesiumViewer,
+  pack: LocalContextAoiPack,
+  officialContext: OfficialPlaceContextAsset
+) {
+  for (const building of officialContext.buildings) {
+    const averageGroundHeightM = getPolygonAverageGroundHeight(pack, building.footprint);
+    const footprintPositions = building.footprint.map((point) =>
+      localMetersToCartesian(
+        cesium,
+        pack,
+        point.eastM,
+        point.northM,
+        sampleTerrainHeight(pack, point.eastM, point.northM) + 5
+      )
+    );
+    const roofHeightM = averageGroundHeightM + building.heightM + 5;
+
+    viewer.entities.add({
+      polygon: {
+        hierarchy: new cesium.PolygonHierarchy(footprintPositions),
+        perPositionHeight: true,
+        extrudedHeight: roofHeightM,
+        material: getOfficialBuildingMaterial(cesium, building.floors),
+      },
+      description: building.sourcePermitId ?? undefined,
+    });
+
+    viewer.entities.add({
+      polyline: {
+        positions: [
+          ...building.footprint.map((point) =>
+            localMetersToCartesian(cesium, pack, point.eastM, point.northM, roofHeightM)
+          ),
+          localMetersToCartesian(
+            cesium,
+            pack,
+            building.footprint[0].eastM,
+            building.footprint[0].northM,
+            roofHeightM
+          ),
+        ],
+        width: building.floors >= 20 ? 2.4 : 1.4,
+        material: cesium.Color.fromCssColorString('#fff0d9').withAlpha(
+          building.floors >= 20 ? 0.48 : 0.28
+        ),
+      },
+    });
+  }
+}
+
 function createViewer(
   cesium: CesiumRuntime,
   container: HTMLDivElement,
-  pack: LocalContextAoiPack
+  pack: LocalContextAoiPack,
+  officialContext: OfficialPlaceContextAsset | null
 ) {
   const viewer = new cesium.Viewer(container, {
     baseLayer: false,
@@ -656,6 +791,12 @@ function createViewer(
   buildSiteContextFootprints(cesium, viewer, pack);
   buildSiteContextPaths(cesium, viewer, pack);
   buildServiceAnchors(cesium, viewer, pack);
+
+  if (officialContext) {
+    buildOfficialSidewalkContext(cesium, viewer, pack, officialContext);
+    buildOfficialBuildingContext(cesium, viewer, pack, officialContext);
+  }
+
   viewer.scene.requestRender();
 
   return viewer;
@@ -698,7 +839,9 @@ export function LocalContextScene({
     message: string;
   }>({
     status: 'loading',
-    message: 'Loading local context...',
+    message: pack.officialPlaceContext
+      ? 'Loading local context and official Taipei place context...'
+      : 'Loading local context...',
   });
 
   useEffect(() => {
@@ -712,18 +855,26 @@ export function LocalContextScene({
 
     setLoadState({
       status: 'loading',
-      message: 'Loading local context...',
+      message: pack.officialPlaceContext
+        ? 'Loading local context and official Taipei place context...'
+        : 'Loading local context...',
     });
 
     void (async () => {
       try {
         const cesium = await loadCesiumRuntime();
+        const officialContext = pack.officialPlaceContext
+          ? await loadOfficialPlaceContextAsset(pack.officialPlaceContext.assetPath).catch((error) => {
+              console.warn('Unable to load official place-context asset, continuing with terrain-first AOI.', error);
+              return null;
+            })
+          : null;
 
         if (disposed) {
           return;
         }
 
-        const viewer = createViewer(cesium, container, pack);
+        const viewer = createViewer(cesium, container, pack, officialContext);
         const focusEntity = viewer.entities.add({
           position: new cesium.ConstantPositionProperty(
             localMetersToCartesian(

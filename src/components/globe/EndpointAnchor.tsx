@@ -21,6 +21,8 @@ export function EndpointAnchor({
   const pulseMeshRef = useRef<Mesh>(null);
   const spotlightGroupRef = useRef<Group>(null);
   const labelGroupRef = useRef<Group>(null);
+  const labelWorldPosition = new Vector3();
+  const cameraDirection = new Vector3();
   const sceneLabel = endpoint.label.startsWith('Endpoint ')
     ? endpoint.label.slice('Endpoint '.length)
     : endpoint.label;
@@ -30,9 +32,7 @@ export function EndpointAnchor({
     globeRadius,
     0.045
   );
-  const markerDirection = new Vector3(...markerPosition).normalize();
   const phaseOffset = endpoint.id === 'endpoint-alpha' ? 0 : 0.4;
-  const usesCenteredLabel = endpoint.id === 'endpoint-alpha';
 
   useFrame(({ camera, clock }) => {
     const cycle = (clock.getElapsedTime() * 0.28 + phaseOffset) % 1;
@@ -53,7 +53,9 @@ export function EndpointAnchor({
     }
 
     if (labelGroupRef.current) {
-      const facingDot = camera.position.clone().normalize().dot(markerDirection);
+      labelGroupRef.current.getWorldPosition(labelWorldPosition);
+      cameraDirection.copy(camera.position).normalize();
+      const facingDot = cameraDirection.dot(labelWorldPosition.normalize());
       labelGroupRef.current.visible = facingDot > 0.02;
     }
   });
@@ -119,31 +121,25 @@ export function EndpointAnchor({
         </Billboard>
       ) : null}
 
-      <Billboard position={markerPosition} follow>
-        <group
-          ref={labelGroupRef}
-          position={[
-            endpoint.id === 'endpoint-alpha' ? -0.24 : 0.28,
-            endpoint.id === 'endpoint-alpha' ? -0.14 : 0.16,
-            0,
-          ]}
+      <group
+        ref={labelGroupRef}
+        position={markerPosition}
+      >
+        <Html
+          center
+          occlude={false}
         >
-          <Html
-            center={usesCenteredLabel}
-            occlude={false}
+          <div
+            className="endpoint-scene-label endpoint-scene-label--above"
+            style={{
+              borderColor: endpoint.accentColor,
+              boxShadow: `0 0 0 1px ${endpoint.accentColor}22`,
+            }}
           >
-            <div
-              className="endpoint-scene-label"
-              style={{
-                borderColor: endpoint.accentColor,
-                boxShadow: `0 0 0 1px ${endpoint.accentColor}22`,
-              }}
-            >
-              {sceneLabel}
-            </div>
-          </Html>
-        </group>
-      </Billboard>
+            {sceneLabel}
+          </div>
+        </Html>
+      </group>
     </>
   );
 }

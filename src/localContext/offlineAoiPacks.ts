@@ -87,6 +87,12 @@ export interface LocalContextAoiPack {
     terrainSummary: string;
     featureLabels: string[];
   };
+  officialPlaceContext: {
+    assetPath: string;
+    sourceLabel: string;
+    buildingCount: number;
+    sidewalkCount: number;
+  } | null;
 }
 
 function buildEndpointAlphaTerrainGrid(): LocalContextTerrainGrid {
@@ -143,8 +149,8 @@ const endpointAlphaTerrain = buildEndpointAlphaTerrainGrid();
 
 export const endpointAlphaLocalContextPack: LocalContextAoiPack = {
   id: 'endpoint-alpha-taipei-foothills',
-  label: 'Endpoint Alpha Local Context',
-  targetLabel: 'Endpoint Alpha Service Site',
+  label: 'Asia Local Context',
+  targetLabel: 'Asia Service Site',
   endpointId: 'endpoint-alpha',
   regionLabel: 'Taipei foothills offline AOI pack',
   center: {
@@ -155,7 +161,7 @@ export const endpointAlphaLocalContextPack: LocalContextAoiPack = {
   halfExtentM: ((endpointAlphaTerrain.columns - 1) * endpointAlphaTerrain.sampleSpacingM) / 2,
   terrainSourceLabel: 'embedded-offline-height-grid-v1',
   serviceContextNote:
-    'This bounded offline destination keeps one corridor-linked landing terrace, one ridge lookout, and one support shelf inside the same AOI without requiring API world content.',
+    'This bounded offline destination now layers one lazy-loaded official Taipei place-context pack on top of the terrain-first AOI so the service site reads as a real place without requiring API world content.',
   panStepM: 420,
   panBoundsM: {
     eastM: 1260,
@@ -173,7 +179,7 @@ export const endpointAlphaLocalContextPack: LocalContextAoiPack = {
   anchors: [
     {
       id: 'endpoint-alpha-service-site',
-      label: 'Endpoint Alpha Service Site',
+      label: 'Asia Service Site',
       role: 'endpoint-site',
       eastM: -280,
       northM: -180,
@@ -294,12 +300,18 @@ export const endpointAlphaLocalContextPack: LocalContextAoiPack = {
     },
   ],
   placeNarrative: {
-    placeLabel: 'Endpoint Alpha Service Site',
+    placeLabel: 'Asia Service Site',
     placeSummary:
-      'One corridor-linked landing terrace sits below a lookout ridge and above a support shelf, so local mode reads as one bounded hillside destination rather than exposed terrain alone.',
+      'One corridor-linked landing terrace now sits inside a bounded official Taipei building-and-sidewalk context, so local mode reads as one service-linked destination rather than exposed terrain alone.',
     terrainSummary:
-      'The same offline AOI keeps the support shelf, landing terrace, and ridge lookout inside one 8.4 km hillside basin with 465 m of relief.',
-    featureLabels: ['Landing terrace', 'Lookout ridge', 'Support shelf'],
+      'The same offline AOI still keeps the support shelf, landing terrace, and ridge lookout inside one 8.4 km hillside basin with 465 m of relief, while a lazy-loaded official place-context clip strengthens site-scale credibility around the core landing area.',
+    featureLabels: ['Official buildings', 'Painted sidewalks', 'Contour terrain relief'],
+  },
+  officialPlaceContext: {
+    assetPath: '/assets/local-context/endpoint-alpha-taipei-official-place-context-v1.json',
+    sourceLabel: 'Official Taipei building footprints and painted sidewalks',
+    buildingCount: 94,
+    sidewalkCount: 47,
   },
 };
 
