@@ -5,9 +5,13 @@
   "description": "Offline-first globe viewer baseline for ESTNET service-driven hero globe delivery",
   "type": "module",
   "scripts": {
+    "prepare:cesium-runtime": "node scripts/sync-cesium-runtime.mjs",
+    "predev": "npm run prepare:cesium-runtime",
     "dev": "vite",
+    "prebuild": "npm run prepare:cesium-runtime",
     "build": "tsc && vite build",
     "lint": "tsc --noEmit",
+    "prepreview": "npm run prepare:cesium-runtime",
     "preview": "vite preview"
   },
   "keywords": [
@@ -20,6 +24,7 @@
   "dependencies": {
     "@react-three/drei": "^10.7.6",
     "@react-three/fiber": "^9.4.0",
+    "cesium": "^1.140.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "three": "^0.180.0"

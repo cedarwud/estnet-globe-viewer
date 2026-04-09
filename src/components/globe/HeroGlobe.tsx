@@ -18,6 +18,7 @@ import { ServiceCorridorOverlay } from './ServiceCorridorOverlay';
 
 interface HeroGlobeProps {
   earthTextures: EarthTextureSet | null;
+  localInspectCue: GlobeLocalInspectCue | null;
   sunDirection: [number, number, number];
   worldGeometry: WorldGeometryTruth;
   serviceAvailability: ServiceAvailabilityTruth;
@@ -26,8 +27,16 @@ interface HeroGlobeProps {
 
 export const GLOBE_RADIUS = 1.8;
 
+export interface GlobeLocalInspectCue {
+  endpointId: string;
+  targetLabel: string;
+  regionLabel: string;
+  state: 'discoverable' | 'echo';
+}
+
 export function HeroGlobe({
   earthTextures,
+  localInspectCue,
   sunDirection,
   worldGeometry,
   serviceAvailability,
@@ -86,6 +95,15 @@ export function HeroGlobe({
           key={endpoint.id}
           endpoint={endpoint}
           globeRadius={GLOBE_RADIUS}
+          localInspectCue={
+            localInspectCue?.endpointId === endpoint.id
+              ? {
+                  targetLabel: localInspectCue.targetLabel,
+                  regionLabel: localInspectCue.regionLabel,
+                  state: localInspectCue.state,
+                }
+              : null
+          }
         />
       ))}
 

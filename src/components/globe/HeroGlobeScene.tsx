@@ -10,7 +10,7 @@ import type {
 } from '../../truth/contracts';
 import type { EarthTextureSet } from '../../imagery/provider';
 import { buildHeroFramingPose, type FramingMode } from './corridorFraming';
-import { GLOBE_RADIUS, HeroGlobe } from './HeroGlobe';
+import { GLOBE_RADIUS, HeroGlobe, type GlobeLocalInspectCue } from './HeroGlobe';
 
 const heroSunDirection: [number, number, number] = [7.5, 4.5, 6.5];
 
@@ -22,6 +22,7 @@ export interface HeroGlobeFramingRequest {
 interface HeroGlobeSceneProps {
   earthTextures: EarthTextureSet | null;
   framingRequest: HeroGlobeFramingRequest;
+  localInspectCue: GlobeLocalInspectCue | null;
   worldGeometry: WorldGeometryTruth;
   serviceAvailability: ServiceAvailabilityTruth;
   serviceSelection: ServiceSelectionTruth;
@@ -35,6 +36,7 @@ function SceneContents({
   earthTextures,
   framingRequest,
   initialCameraPosition,
+  localInspectCue,
   worldGeometry,
   serviceAvailability,
   serviceSelection,
@@ -119,6 +121,7 @@ function SceneContents({
 
       <HeroGlobe
         earthTextures={earthTextures}
+        localInspectCue={localInspectCue}
         sunDirection={heroSunDirection}
         worldGeometry={worldGeometry}
         serviceAvailability={serviceAvailability}
@@ -131,6 +134,7 @@ function SceneContents({
 export function HeroGlobeScene({
   earthTextures,
   framingRequest,
+  localInspectCue,
   worldGeometry,
   serviceAvailability,
   serviceSelection,
@@ -161,6 +165,7 @@ export function HeroGlobeScene({
         earthTextures={earthTextures}
         framingRequest={framingRequest}
         initialCameraPosition={initialCameraPosition}
+        localInspectCue={localInspectCue}
         worldGeometry={worldGeometry}
         serviceAvailability={serviceAvailability}
         serviceSelection={serviceSelection}

@@ -21,6 +21,10 @@ export default defineConfig({
             return 'globe-drei';
           }
 
+          if (id.includes('/cesium/')) {
+            return 'local-context-cesium';
+          }
+
           if (
             id.includes('/@react-three/fiber/') ||
             id.includes('/three-stdlib/') ||

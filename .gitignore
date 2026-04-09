@@ -28,6 +28,7 @@ tmp/
 temp/
 artifacts/
 exports/
+public/cesium/
 playwright-report/
 test-results/
 

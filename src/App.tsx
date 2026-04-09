@@ -1,12 +1,20 @@
 import type { CSSProperties } from 'react';
-import { useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { HeroGlobeScene, type HeroGlobeFramingRequest } from './components/globe/HeroGlobeScene';
 import type { FramingMode } from './components/globe/corridorFraming';
 import { offlineEarthImageryProvider } from './imagery/offlineEarthImageryProvider';
 import { useEarthTextures } from './imagery/useEarthTextures';
+import { endpointAlphaLocalContextPack, getOfflineLocalContextPack } from './localContext/offlineAoiPacks';
+import { parseViewerRouteHash, syncViewerRouteHash, type ViewerRoute } from './localContext/routes';
+import { getTerrainCapabilityReport } from './localContext/terrainCapability';
 import { mockTruthProvider } from './mock/mockTruthProvider';
 import type { DatasetCapabilityProfile } from './truth/contracts';
 import { useTruthSnapshot } from './truth/useTruthSnapshot';
+
+interface ReturnEchoState {
+  aoiId: string;
+  revision: number;
+}
 
 const completedScope = [
   'Approved NASA day and night runtime derivatives through the existing imagery seam',
@@ -16,6 +24,9 @@ const completedScope = [
   'Restrained cloud shell layered between the Earth surface and atmosphere',
   'Restrained procedural atmosphere shell that continues to add depth without becoming a cloud substitute',
   'Corridor-aware first screen with explicit Home and Fit Corridor framing actions',
+  'One bounded offline local-context vertical slice tied to Endpoint Alpha through a route-level full-screen takeover',
+  'AOI-centered local camera with bounded inspection, explicit Reset Local View, and Back to Globe return grammar',
+  'Visible corridor-linked continuity layer for globe discoverability, scale handoff, and return echo',
   'Natural zoom range from whole-globe read to closer corridor inspection',
   'In-scene endpoint labels and clearer endpoint / relay / corridor hierarchy',
   'Reduced persistent overlay with more detail pushed down into the drawer',
@@ -25,8 +36,9 @@ const completedScope = [
 const deferredScope = [
   'Bloom follow-on',
   'estnet-bootstrap-kit reference replay smoke',
-  'Focus lens follow-on interface',
-  'Premium world context and site assets',
+  'Additional AOI packs and local-to-local switching',
+  'Buildings or photogrammetry as local-context enrichment',
+  'Premium world context beyond the offline AOI pack baseline',
   'Producer-backed event truth and handover cause',
 ];
 
@@ -57,8 +69,98 @@ function formatCorridorLabel(
   ].join(' -> ');
 }
 
+function buildCurrentEndpointPairLabel(
+  endpointLabels: Map<string, string>,
+  endpointIds: [string, string] | null
+) {
+  if (!endpointIds) {
+    return 'Endpoint pair unavailable';
+  }
+
+  return endpointIds
+    .map((endpointId) => endpointLabels.get(endpointId) ?? endpointId)
+    .join(' / ');
+}
+
+const LocalContextStage = lazy(async () => {
+  const module = await import('./localContext/LocalContextStage');
+
+  return {
+    default: module.LocalContextStage,
+  };
+});
+
+function getLocalEntryState(params: {
+  currentRoute: ViewerRoute;
+  activeEndpointIds: [string, string] | null;
+}) {
+  const pack = getOfflineLocalContextPack(endpointAlphaLocalContextPack.id);
+
+  if (!pack) {
+    return {
+      pack: null,
+      available: false,
+      reason: 'No offline AOI pack is installed for the current local target.',
+      routeIsValid: params.currentRoute.kind === 'globe',
+    };
+  }
+
+  if (!params.activeEndpointIds) {
+    return {
+      pack,
+      available: false,
+      reason: 'Local inspection stays hidden until a current service corridor is available.',
+      routeIsValid: params.currentRoute.kind === 'globe',
+    };
+  }
+
+  if (!params.activeEndpointIds.includes(pack.endpointId)) {
+    return {
+      pack,
+      available: false,
+      reason: 'The current service story does not expose an AOI-capable local target.',
+      routeIsValid: params.currentRoute.kind === 'globe',
+    };
+  }
+
+  const terrainCapability = getTerrainCapabilityReport(pack);
+
+  if (!terrainCapability.capable) {
+    return {
+      pack,
+      available: false,
+      reason: terrainCapability.reason,
+      routeIsValid: params.currentRoute.kind === 'globe',
+    };
+  }
+
+  if (params.currentRoute.kind === 'local' && params.currentRoute.aoiId !== pack.id) {
+    return {
+      pack,
+      available: true,
+      reason: '',
+      routeIsValid: false,
+    };
+  }
+
+  return {
+    pack,
+    available: true,
+    reason: '',
+    routeIsValid: true,
+  };
+}
+
 export function App() {
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [returnEcho, setReturnEcho] = useState<ReturnEchoState | null>(null);
+  const [viewerRoute, setViewerRoute] = useState<ViewerRoute>(() => {
+    if (typeof window === 'undefined') {
+      return { kind: 'globe' };
+    }
+
+    return parseViewerRouteHash(window.location.hash);
+  });
   const [framingRequest, setFramingRequest] = useState<HeroGlobeFramingRequest>({
     mode: 'home',
     revision: 0,
@@ -68,6 +170,10 @@ export function App() {
   const capabilityRows = capabilityEntries(truthSnapshot.capabilityProfile);
   const endpointLabels = new Map(truthSnapshot.worldGeometry.endpoints.map((endpoint) => [endpoint.id, endpoint.label]));
   const satelliteLabels = new Map(truthSnapshot.worldGeometry.satellites.map((satellite) => [satellite.id, satellite.label]));
+  const activeEndpointIds =
+    truthSnapshot.serviceSelection.kind === 'supported'
+      ? truthSnapshot.serviceSelection.activePath?.endpointIds ?? null
+      : null;
   const currentCorridorLabel =
     truthSnapshot.serviceSelection.kind === 'supported' && truthSnapshot.serviceSelection.activePath
       ? formatCorridorLabel(
@@ -89,12 +195,48 @@ export function App() {
       : availabilityLabel === 'unavailable'
         ? 'unavailable'
         : 'unsupported';
+  const currentEndpointPairLabel = buildCurrentEndpointPairLabel(endpointLabels, activeEndpointIds);
+  const currentRelayLabel =
+    truthSnapshot.serviceSelection.kind === 'supported' && truthSnapshot.serviceSelection.activePath
+      ? truthSnapshot.serviceSelection.activePath.relaySatelliteIds
+          .map((relayId) => satelliteLabels.get(relayId) ?? relayId)
+          .join(', ')
+      : 'No selected relay';
+  const localEntryState = useMemo(
+    () =>
+      getLocalEntryState({
+        currentRoute: viewerRoute,
+        activeEndpointIds,
+      }),
+    [activeEndpointIds, viewerRoute]
+  );
+  const showsReturnEcho =
+    viewerRoute.kind === 'globe' &&
+    Boolean(localEntryState.pack && returnEcho?.aoiId === localEntryState.pack.id);
+  const globeLocalInspectCue =
+    localEntryState.available && localEntryState.pack
+      ? {
+          endpointId: localEntryState.pack.endpointId,
+          targetLabel: localEntryState.pack.targetLabel,
+          regionLabel: localEntryState.pack.regionLabel,
+          state: showsReturnEcho ? ('echo' as const) : ('discoverable' as const),
+        }
+      : null;
+  const localEntryEyebrow = showsReturnEcho ? 'Return Echo' : 'Corridor-Linked AOI';
+  const localEntryActionLabel = showsReturnEcho ? 'Inspect Again' : 'Inspect Local Context';
+  const localEntryReason = !localEntryState.available
+    ? localEntryState.reason
+    : showsReturnEcho
+      ? 'Recently inspected local context is now re-identified on the home globe and tied back to the current corridor.'
+      : 'The current service corridor exposes one bounded offline AOI that can be inspected through a route-level local takeover.';
   const conservativeBoundaries = [
     'The activePath wording remains limited to current service corridor / current active relay path / current visible relay path.',
     'The unavailable candidate corridor is still mock availability truth, not KPI, SLA, or coverage-field truth.',
     'Dark-side readability now comes from a controlled day/night shader and approved Black Marble night lights, not from washing the whole globe with ambient fill.',
     'Home and Fit Corridor still stay globe-centered. The cloud shell does not reopen generic free pan or free-fly camera drift.',
     'Ocean/specular and grading stay restrained and texture-backed. This commit uses the same approved day/night/cloud assets and does not add bloom, weather animation, new runtime Earth assets, or a larger planet-rendering stack.',
+    'The first local-context slice is still tied to one AOI-capable service target. It does not open arbitrary click-anywhere descent or multi-AOI browsing.',
+    'Local mode only counts as available when the offline AOI pack passes structural terrain validation for grid presence, shape, spacing, and non-flat relief. If that gate fails, local entry stays disabled rather than faked.',
     truthSnapshot.eventTruth.events.length === 0
       ? 'EventTruth remains a derived-only surface with an intentionally empty event set in this static baseline.'
       : `EventTruth contains ${truthSnapshot.eventTruth.events.length} derived cues.`,
@@ -129,6 +271,7 @@ export function App() {
   const earthSurfaceNote =
     earthTextures?.note ??
     'No Earth imagery seam state is available. The placeholder globe should remain the only runtime surface.';
+
   const setFramingMode = (mode: FramingMode) => {
     setFramingRequest((current) => ({
       mode,
@@ -136,12 +279,100 @@ export function App() {
     }));
   };
 
+  const enterLocalContext = () => {
+    if (!localEntryState.available || !localEntryState.pack) {
+      return;
+    }
+
+    setReturnEcho(null);
+    setDetailsOpen(false);
+    syncViewerRouteHash({
+      kind: 'local',
+      aoiId: localEntryState.pack.id,
+    });
+  };
+
+  const returnToGlobe = () => {
+    if (localEntryState.pack) {
+      setReturnEcho({
+        aoiId: localEntryState.pack.id,
+        revision: Date.now(),
+      });
+    }
+
+    setFramingMode('fit-corridor');
+    syncViewerRouteHash({ kind: 'globe' });
+  };
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setViewerRoute(parseViewerRouteHash(window.location.hash));
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+
+    if (!window.location.hash) {
+      syncViewerRouteHash({ kind: 'globe' });
+    }
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (viewerRoute.kind === 'local' && (!localEntryState.available || !localEntryState.routeIsValid)) {
+      syncViewerRouteHash({ kind: 'globe' });
+    }
+  }, [localEntryState.available, localEntryState.routeIsValid, viewerRoute.kind]);
+
+  useEffect(() => {
+    if (!returnEcho || viewerRoute.kind !== 'globe') {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setReturnEcho((current) => (current?.revision === returnEcho.revision ? null : current));
+    }, 10_000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [returnEcho, viewerRoute.kind]);
+
+  if (viewerRoute.kind === 'local' && localEntryState.available && localEntryState.pack) {
+    return (
+      <div className="viewer-shell">
+        <Suspense
+          fallback={
+            <div className="viewer-stage viewer-stage--local viewer-stage--loading">
+              <div className="local-context-scene local-context-scene--loading">
+                <p className="local-context-scene__status">Loading local context...</p>
+              </div>
+            </div>
+          }
+        >
+          <LocalContextStage
+            pack={localEntryState.pack}
+            availabilityLabel={availabilityLabel}
+            availabilityTone={availabilityTone}
+            currentCorridorLabel={currentCorridorLabel}
+            endpointPairLabel={currentEndpointPairLabel}
+            relayLabel={currentRelayLabel}
+            onBackToGlobe={returnToGlobe}
+          />
+        </Suspense>
+      </div>
+    );
+  }
+
   return (
     <div className="viewer-shell">
       <div className="viewer-stage">
         <HeroGlobeScene
           earthTextures={earthTextures}
           framingRequest={framingRequest}
+          localInspectCue={globeLocalInspectCue}
           worldGeometry={truthSnapshot.worldGeometry}
           serviceAvailability={truthSnapshot.serviceAvailability}
           serviceSelection={truthSnapshot.serviceSelection}
@@ -170,6 +401,40 @@ export function App() {
             </div>
           </div>
 
+          <div className="local-entry">
+            <p className="floating-card__eyebrow">{localEntryEyebrow}</p>
+            <div
+              className="continuity-trail"
+              aria-label="Globe discoverability continuity"
+            >
+              <span className="continuity-chip continuity-chip--globe">Current corridor</span>
+              <span className="continuity-trail__arrow">-&gt;</span>
+              <span className={`continuity-chip ${showsReturnEcho ? 'continuity-chip--echo' : 'continuity-chip--local'}`}>
+                {showsReturnEcho ? 'Recently inspected AOI' : 'Local inspectable site'}
+              </span>
+            </div>
+            <p className="local-entry__target">
+              {localEntryState.pack?.targetLabel ?? 'No local target ready'}
+            </p>
+            {localEntryState.pack ? (
+              <p className="local-entry__pair">
+                {currentEndpointPairLabel}
+                {' | '}
+                {localEntryState.pack.regionLabel}
+              </p>
+            ) : null}
+            <button
+              type="button"
+              className="scene-action local-entry__action"
+              disabled={!localEntryState.available}
+              onClick={enterLocalContext}
+              title={localEntryState.available ? 'Open the bounded local-context scene' : localEntryState.reason}
+            >
+              {localEntryActionLabel}
+            </button>
+            <p className="local-entry__reason">{localEntryReason}</p>
+          </div>
+
           <div className="scene-actions">
             <button
               type="button"
@@ -196,6 +461,24 @@ export function App() {
             </button>
           </div>
         </section>
+
+        {showsReturnEcho && localEntryState.pack ? (
+          <section
+            className="floating-card continuity-echo"
+            aria-label="Return echo"
+          >
+            <p className="floating-card__eyebrow">Return Echo</p>
+            <div className="continuity-trail continuity-trail--echo">
+              <span className="continuity-chip continuity-chip--local">Local inspect</span>
+              <span className="continuity-trail__arrow">-&gt;</span>
+              <span className="continuity-chip continuity-chip--globe">Globe corridor</span>
+            </div>
+            <p className="continuity-echo__title">{localEntryState.pack.targetLabel}</p>
+            <p className="continuity-echo__copy">
+              Re-linked to {currentCorridorLabel} after the local inspection return.
+            </p>
+          </section>
+        ) : null}
 
         <section className="legend-overlay" aria-label="Scene legend">
           <span className="scene-legend scene-legend--active">Current corridor</span>
