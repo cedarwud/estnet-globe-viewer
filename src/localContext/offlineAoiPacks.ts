@@ -16,6 +16,35 @@ export interface LocalContextAnchor {
   note: string;
 }
 
+export interface LocalContextFeatureFootprint {
+  id: string;
+  label: string;
+  kind: 'landing-terrace' | 'ridge-shelf' | 'support-shelf';
+  centerEastM: number;
+  centerNorthM: number;
+  halfWidthM: number;
+  halfHeightM: number;
+  rotationDeg: number;
+  heightOffsetM: number;
+  fillColor: string;
+  outlineColor: string;
+  note: string;
+}
+
+export interface LocalContextFeaturePath {
+  id: string;
+  label: string;
+  kind: 'corridor-landing' | 'ridge-traverse' | 'service-access';
+  points: Array<{
+    eastM: number;
+    northM: number;
+  }>;
+  widthM: number;
+  heightOffsetM: number;
+  color: string;
+  note: string;
+}
+
 export interface LocalContextTerrainGrid {
   columns: number;
   rows: number;
@@ -50,6 +79,14 @@ export interface LocalContextAoiPack {
   };
   terrain: LocalContextTerrainGrid;
   anchors: LocalContextAnchor[];
+  footprints: LocalContextFeatureFootprint[];
+  paths: LocalContextFeaturePath[];
+  placeNarrative: {
+    placeLabel: string;
+    placeSummary: string;
+    terrainSummary: string;
+    featureLabels: string[];
+  };
 }
 
 function buildEndpointAlphaTerrainGrid(): LocalContextTerrainGrid {
@@ -107,7 +144,7 @@ const endpointAlphaTerrain = buildEndpointAlphaTerrainGrid();
 export const endpointAlphaLocalContextPack: LocalContextAoiPack = {
   id: 'endpoint-alpha-taipei-foothills',
   label: 'Endpoint Alpha Local Context',
-  targetLabel: 'Endpoint Alpha service site AOI',
+  targetLabel: 'Endpoint Alpha Service Site',
   endpointId: 'endpoint-alpha',
   regionLabel: 'Taipei foothills offline AOI pack',
   center: {
@@ -118,7 +155,7 @@ export const endpointAlphaLocalContextPack: LocalContextAoiPack = {
   halfExtentM: ((endpointAlphaTerrain.columns - 1) * endpointAlphaTerrain.sampleSpacingM) / 2,
   terrainSourceLabel: 'embedded-offline-height-grid-v1',
   serviceContextNote:
-    'This first slice stays tied to Endpoint Alpha. The local scene proves terrain-first AOI inspection without upgrading routing truth or requiring a cloud provider.',
+    'This bounded offline destination keeps one corridor-linked landing terrace, one ridge lookout, and one support shelf inside the same AOI without requiring API world content.',
   panStepM: 420,
   panBoundsM: {
     eastM: 1260,
@@ -165,6 +202,105 @@ export const endpointAlphaLocalContextPack: LocalContextAoiPack = {
       note: 'Optional local support anchor to avoid the slice reading as one isolated marker on empty relief.',
     },
   ],
+  footprints: [
+    {
+      id: 'endpoint-alpha-landing-terrace',
+      label: 'Corridor Landing Terrace',
+      kind: 'landing-terrace',
+      centerEastM: -260,
+      centerNorthM: -120,
+      halfWidthM: 360,
+      halfHeightM: 228,
+      rotationDeg: 18,
+      heightOffsetM: 10,
+      fillColor: '#ffbf69',
+      outlineColor: '#ffd7a4',
+      note: 'Primary corridor-linked landing terrace wrapped around the service site anchor.',
+    },
+    {
+      id: 'endpoint-alpha-ridge-shelf',
+      label: 'Lookout Ridge Shelf',
+      kind: 'ridge-shelf',
+      centerEastM: 1180,
+      centerNorthM: 940,
+      halfWidthM: 470,
+      halfHeightM: 220,
+      rotationDeg: 24,
+      heightOffsetM: 14,
+      fillColor: '#8ed2ff',
+      outlineColor: '#d6efff',
+      note: 'Raised ridge shelf that makes the local relief and corridor-facing lookout legible.',
+    },
+    {
+      id: 'endpoint-alpha-support-shelf',
+      label: 'Support Access Shelf',
+      kind: 'support-shelf',
+      centerEastM: 820,
+      centerNorthM: -940,
+      halfWidthM: 320,
+      halfHeightM: 190,
+      rotationDeg: -12,
+      heightOffsetM: 8,
+      fillColor: '#7bdff2',
+      outlineColor: '#d5f7ff',
+      note: 'Lower support shelf that ties the destination to a grounded service-access surface.',
+    },
+  ],
+  paths: [
+    {
+      id: 'endpoint-alpha-corridor-landing',
+      label: 'Corridor landing spine',
+      kind: 'corridor-landing',
+      points: [
+        { eastM: -1760, northM: 1640 },
+        { eastM: -1120, northM: 980 },
+        { eastM: -620, northM: 260 },
+        { eastM: -280, northM: -180 },
+      ],
+      widthM: 8,
+      heightOffsetM: 20,
+      color: '#ffbf69',
+      note: 'Service-linked arrival line that descends from the AOI shoulder into the landing terrace.',
+    },
+    {
+      id: 'endpoint-alpha-ridge-traverse',
+      label: 'Ridge traverse',
+      kind: 'ridge-traverse',
+      points: [
+        { eastM: -280, northM: -180 },
+        { eastM: 180, northM: 140 },
+        { eastM: 760, northM: 610 },
+        { eastM: 1340, northM: 980 },
+      ],
+      widthM: 5,
+      heightOffsetM: 12,
+      color: '#8ed2ff',
+      note: 'Bounded traverse that connects the service terrace to the corridor lookout ridge.',
+    },
+    {
+      id: 'endpoint-alpha-service-access',
+      label: 'Support access track',
+      kind: 'service-access',
+      points: [
+        { eastM: -280, northM: -180 },
+        { eastM: 150, northM: -430 },
+        { eastM: 510, northM: -760 },
+        { eastM: 860, northM: -1020 },
+      ],
+      widthM: 5,
+      heightOffsetM: 10,
+      color: '#7bdff2',
+      note: 'Service access line that keeps the support shelf visually tied back to the landing terrace.',
+    },
+  ],
+  placeNarrative: {
+    placeLabel: 'Endpoint Alpha Service Site',
+    placeSummary:
+      'One corridor-linked landing terrace sits below a lookout ridge and above a support shelf, so local mode reads as one bounded hillside destination rather than exposed terrain alone.',
+    terrainSummary:
+      'The same offline AOI keeps the support shelf, landing terrace, and ridge lookout inside one 8.4 km hillside basin with 465 m of relief.',
+    featureLabels: ['Landing terrace', 'Lookout ridge', 'Support shelf'],
+  },
 };
 
 const offlineLocalContextPacks = [endpointAlphaLocalContextPack] as const;

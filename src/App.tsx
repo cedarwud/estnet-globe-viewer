@@ -38,6 +38,7 @@ const completedScope = [
   'Phase 3c first-screen product shift with a home-stage service-site spotlight, service-to-site narrative, and compact ground-context preview',
   'Site anchor / site geometry decoupling follow-on with a distinct service-site anchor and restrained corridor-to-site handoff',
   'Arrival-hemisphere composition reset with home-stage framing bias, hemisphere-scaled landing treatment, and stronger terminal approach staging',
+  'Offline local-fidelity follow-on with terrain contours, site-ground footprints, and corridor-linked local destination cues for the single AOI scene',
   'Natural zoom range from whole-globe read to closer corridor inspection',
   'In-scene endpoint labels and clearer endpoint / relay / corridor hierarchy',
   'Reduced persistent overlay with more detail pushed down into the drawer',

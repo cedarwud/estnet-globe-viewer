@@ -103,8 +103,8 @@ canvas {
 
 .viewer-stage--local::after {
   background:
-    radial-gradient(circle at 50% 60%, rgba(14, 24, 39, 0.01) 0%, rgba(5, 11, 18, 0.09) 30%, rgba(4, 8, 16, 0.38) 100%),
-    linear-gradient(180deg, rgba(4, 8, 16, 0.18) 0%, rgba(4, 8, 16, 0.12) 22%, rgba(4, 8, 16, 0.22) 100%);
+    radial-gradient(circle at 52% 68%, rgba(255, 191, 105, 0.03) 0%, rgba(11, 21, 34, 0.04) 28%, rgba(4, 8, 16, 0.3) 100%),
+    linear-gradient(180deg, rgba(4, 8, 16, 0.14) 0%, rgba(4, 8, 16, 0.08) 22%, rgba(4, 8, 16, 0.18) 100%);
 }
 
 .hero-globe-canvas {
@@ -124,6 +124,37 @@ canvas {
 
 .local-context-scene {
   position: relative;
+  background:
+    radial-gradient(circle at 26% 78%, rgba(255, 191, 105, 0.1), transparent 24%),
+    radial-gradient(circle at 78% 18%, rgba(142, 210, 255, 0.1), transparent 28%),
+    linear-gradient(180deg, #08131e 0%, #07111a 100%);
+}
+
+.local-context-scene::before,
+.local-context-scene::after {
+  content: "";
+  position: absolute;
+  inset: auto;
+  pointer-events: none;
+  border-radius: 999px;
+  filter: blur(72px);
+  z-index: 1;
+}
+
+.local-context-scene::before {
+  left: 8%;
+  bottom: -4rem;
+  width: 18rem;
+  height: 9rem;
+  background: rgba(255, 191, 105, 0.12);
+}
+
+.local-context-scene::after {
+  top: -3rem;
+  right: 10%;
+  width: 15rem;
+  height: 8rem;
+  background: rgba(142, 210, 255, 0.1);
 }
 
 .local-context-scene__status-surface {
@@ -1178,27 +1209,36 @@ canvas {
 }
 
 .viewer-overlay--local {
-  padding: 1.1rem 1.2rem;
+  padding: 0.9rem 1rem;
 }
 
 .shared-service-context-bar {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(16rem, 0.95fr);
-  gap: 1rem;
-  width: min(70rem, calc(100vw - 2.4rem));
+  grid-template-columns: minmax(0, 1.62fr) minmax(16rem, 0.86fr);
+  gap: 0.9rem;
+  width: min(74rem, calc(100vw - 2rem));
   margin: 0 auto;
-  padding: 0.95rem 1rem;
+  padding: 0.78rem 0.9rem 0.84rem;
+  background:
+    linear-gradient(180deg, rgba(9, 18, 30, 0.8), rgba(9, 18, 30, 0.58)),
+    rgba(7, 15, 26, 0.52);
 }
 
 .shared-service-context-bar__summary {
   display: grid;
-  gap: 0.34rem;
+  gap: 0.3rem;
+}
+
+.shared-service-context-bar__topline,
+.shared-service-context-bar__continuity {
+  display: grid;
+  gap: 0.2rem;
 }
 
 .shared-service-context-bar__headline {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.5rem;
   flex-wrap: wrap;
 }
 
@@ -1209,23 +1249,64 @@ canvas {
 
 .shared-service-context-bar__title {
   font-family: "Space Grotesk", "Avenir Next Condensed", sans-serif;
-  font-size: 1rem;
+  font-size: 0.96rem;
   line-height: 1.16;
   letter-spacing: -0.02em;
 }
 
 .shared-service-context-bar__copy {
-  font-size: 0.82rem;
-  line-height: 1.42;
+  font-size: 0.76rem;
+  line-height: 1.36;
   color: var(--text-secondary);
 }
 
 .shared-service-context-bar__copy--emphasis {
   color: var(--text-primary);
+  font-size: 0.82rem;
 }
 
 .shared-service-context-bar__copy--muted {
   color: var(--text-muted);
+}
+
+.shared-service-context-bar__facts,
+.shared-service-context-bar__features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.42rem;
+}
+
+.shared-service-context-bar__fact,
+.shared-service-context-bar__feature-chip,
+.local-destination-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  line-height: 1;
+}
+
+.shared-service-context-bar__fact {
+  border: 1px solid rgba(142, 210, 255, 0.14);
+  padding: 0.28rem 0.52rem;
+  background: rgba(142, 210, 255, 0.06);
+  color: var(--text-secondary);
+}
+
+.shared-service-context-bar__feature-chip {
+  border: 1px solid rgba(255, 191, 105, 0.18);
+  padding: 0.28rem 0.5rem;
+  background: rgba(255, 191, 105, 0.08);
+  color: #ffd39b;
+}
+
+.local-destination-chip {
+  border: 1px solid rgba(255, 191, 105, 0.24);
+  padding: 0.3rem 0.56rem;
+  background: rgba(255, 191, 105, 0.12);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ffd39b;
 }
 
 .viewer-stage--loading::after {
@@ -1236,21 +1317,21 @@ canvas {
 
 .shared-service-context-bar__actions {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 0.8rem;
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.7rem;
+  align-items: center;
 }
 
 .local-pan-pad {
   display: grid;
   justify-items: center;
-  gap: 0.38rem;
+  gap: 0.32rem;
 }
 
 .local-pan-pad__row,
 .local-primary-actions {
   display: flex;
-  gap: 0.42rem;
+  gap: 0.38rem;
 }
 
 .local-primary-actions {
@@ -1262,7 +1343,7 @@ canvas {
 .local-pan-pad__button {
   border: 1px solid var(--border-strong);
   border-radius: 999px;
-  padding: 0.54rem 0.78rem;
+  padding: 0.48rem 0.7rem;
   background: rgba(8, 17, 28, 0.76);
   color: var(--text-secondary);
   cursor: pointer;
@@ -1327,7 +1408,7 @@ canvas {
   }
 
   .viewer-overlay--local {
-    padding: 0.95rem;
+    padding: 0.8rem;
   }
 
   .continuity-echo {
@@ -1342,7 +1423,7 @@ canvas {
 
   .shared-service-context-bar {
     grid-template-columns: 1fr;
-    width: calc(100vw - 1.9rem);
+    width: calc(100vw - 1.6rem);
   }
 
   .shared-service-context-bar__actions {
@@ -1427,7 +1508,7 @@ canvas {
   }
 
   .viewer-overlay--local {
-    padding: 0.7rem;
+    padding: 0.62rem;
   }
 
   .home-stage-stack {
@@ -1450,8 +1531,8 @@ canvas {
   }
 
   .shared-service-context-bar {
-    width: calc(100vw - 1.4rem);
-    padding: 0.8rem;
+    width: calc(100vw - 1.24rem);
+    padding: 0.72rem 0.74rem 0.78rem;
   }
 
   .shared-service-context-bar__actions,
