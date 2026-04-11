@@ -38,6 +38,53 @@ function parseTileZoom(value: string | undefined) {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
+function readHashQueryParameters(hash: string) {
+  const hashQuery = hash.includes('?') ? hash.slice(hash.indexOf('?') + 1) : '';
+  return new URLSearchParams(hashQuery);
+}
+
+function buildCombinedHomeGlobeImageryParameters(search: string, hash: string) {
+  const combinedParameters = new URLSearchParams(search);
+  const hashParameters = readHashQueryParameters(hash);
+
+  hashParameters.forEach((value, key) => {
+    combinedParameters.set(key, value);
+  });
+
+  return combinedParameters;
+}
+
+export function buildHomeGlobeImagerySearchFromWindow() {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+
+  const combinedParameters = buildCombinedHomeGlobeImageryParameters(
+    window.location.search,
+    window.location.hash
+  );
+  const queryString = combinedParameters.toString();
+  return queryString ? `?${queryString}` : '';
+}
+
+export function replaceHomeGlobeImageryHashQueryParameter(name: string, value: string) {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+
+  const hashPath = window.location.hash.includes('?')
+    ? window.location.hash.slice(0, window.location.hash.indexOf('?'))
+    : window.location.hash || '#/globe';
+  const hashParameters = readHashQueryParameters(window.location.hash);
+  hashParameters.set(name, value);
+  const nextHashQuery = hashParameters.toString();
+  const nextHash = nextHashQuery ? `${hashPath}?${nextHashQuery}` : hashPath;
+  const nextUrl = `${window.location.pathname}${window.location.search}${nextHash}`;
+  window.history.replaceState(window.history.state, '', nextUrl);
+
+  return buildHomeGlobeImagerySearchFromWindow();
+}
+
 export function resolveHomeGlobeImagerySelection(search: string): HomeGlobeImagerySelection {
   const queryParameters = new URLSearchParams(search);
   const queryMode = parseHomeGlobeImageryMode(queryParameters.get('imagery'));
