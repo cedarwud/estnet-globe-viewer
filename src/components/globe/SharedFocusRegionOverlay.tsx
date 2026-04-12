@@ -14,10 +14,9 @@ interface SharedFocusRegionOverlayProps {
 /**
  * Renders a bounded focus-detail region indicator on the home globe surface.
  *
- * This is the first real shared ceiling above the pure texture-only baseline.
- * The visual is intentionally restrained: a soft multi-ring halo around the
- * focus region center, distinct from the endpoint anchor and clearly
- * not a local-mode terrain view.
+ * Round V1 visible uplift: opacities raised from near-invisible (0.025–0.14)
+ * to clearly readable from home distance. The indicator must be obvious on
+ * first screen without requiring the truth drawer to explain it.
  *
  * The same indicator renders in both offline and API modes — it signals
  * that closer home-globe inspection in this region is grounded in real
@@ -35,12 +34,12 @@ export function SharedFocusRegionOverlay({
     0.008
   );
   const regionColor = new Color('#5ebbde');
-  const regionEmissive = new Color('#5ebbde').multiplyScalar(0.3);
+  const regionEmissive = new Color('#5ebbde').multiplyScalar(0.5);
 
   useFrame(({ clock }) => {
     const material = outerPulseRef.current?.material;
     if (material && !Array.isArray(material) && 'opacity' in material) {
-      const breathe = 0.06 + Math.sin(clock.getElapsedTime() * 0.6) * 0.03;
+      const breathe = 0.18 + Math.sin(clock.getElapsedTime() * 0.7) * 0.07;
       material.opacity = breathe;
     }
   });
@@ -50,65 +49,65 @@ export function SharedFocusRegionOverlay({
       {/* Inner boundary ring — steady, marks the core focus region */}
       <Billboard position={position} follow>
         <mesh>
-          <ringGeometry args={[0.19, 0.21, 64]} />
+          <ringGeometry args={[0.19, 0.215, 64]} />
           <meshBasicMaterial
             color={regionColor}
             transparent
-            opacity={0.14}
+            opacity={0.34}
             depthWrite={false}
           />
         </mesh>
       </Billboard>
 
-      {/* Middle extent ring — slightly larger, softer */}
+      {/* Middle extent ring — slightly larger, visible secondary */}
       <Billboard position={position} follow>
         <mesh>
-          <ringGeometry args={[0.26, 0.275, 64]} />
+          <ringGeometry args={[0.26, 0.28, 64]} />
           <meshBasicMaterial
             color={regionColor}
             transparent
-            opacity={0.07}
+            opacity={0.18}
             depthWrite={false}
           />
         </mesh>
       </Billboard>
 
-      {/* Outer breathing ring — slow pulse to indicate live detail */}
+      {/* Outer breathing ring — pulse to indicate live detail */}
       <Billboard position={position} follow>
         <mesh ref={outerPulseRef}>
-          <ringGeometry args={[0.33, 0.345, 64]} />
+          <ringGeometry args={[0.33, 0.35, 64]} />
           <meshBasicMaterial
             color={regionColor}
             transparent
-            opacity={0.06}
+            opacity={0.18}
             depthWrite={false}
           />
         </mesh>
       </Billboard>
 
-      {/* Soft filled disc behind the rings — very faint region highlight */}
+      {/* Filled disc behind the rings — visible region highlight */}
       <Billboard position={position} follow>
         <mesh>
           <circleGeometry args={[0.19, 64]} />
           <meshBasicMaterial
             color={regionColor}
             transparent
-            opacity={0.025}
+            opacity={0.08}
             depthWrite={false}
           />
         </mesh>
       </Billboard>
 
-      {/* Small center marker — distinct from endpoint anchor */}
+      {/* Center marker — larger, clearly distinct from endpoint anchor */}
       <mesh position={position}>
-        <sphereGeometry args={[0.018, 20, 20]} />
+        <sphereGeometry args={[0.024, 24, 24]} />
         <meshStandardMaterial
           color={regionColor}
           emissive={regionEmissive}
-          emissiveIntensity={1}
-          roughness={0.3}
+          emissiveIntensity={1.2}
+          roughness={0.25}
           transparent
-          opacity={0.6}
+          opacity={0.8}
         />
       </mesh>
 

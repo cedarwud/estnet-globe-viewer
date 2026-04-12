@@ -58,9 +58,12 @@ function SceneContents({
 }: SceneContentsProps) {
   const earthTextures = homeGlobePayload.earthBaseline;
   const sharedFocusDetail = homeGlobePayload.sharedFocusDetail;
-  // When shared focus detail is resolved, allow modestly closer inspection.
-  // The tighter bound is tied to real data, not arbitrary camera drift.
-  const minDistance = sharedFocusDetail ? 2.45 : 2.7;
+  // When shared focus detail is resolved, allow closer inspection within the
+  // shared data boundary. Round V1 tightens the bound from 2.45 to 2.3 so the
+  // closer read provides a more perceptible reward (richer surface grading,
+  // visible ocean specular, cloud structure) without pretending to have detail
+  // beyond what the shared offline data actually provides.
+  const minDistance = sharedFocusDetail ? 2.3 : 2.7;
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const transitionTargetRef = useRef<Vector3 | null>(null);
   const rotationInertiaRef = useRef({
@@ -233,10 +236,10 @@ function SceneContents({
         maxPolarAngle={Math.PI - 0.5}
       />
 
-      <ambientLight intensity={0.06} />
+      <ambientLight intensity={0.09} />
       <directionalLight
         position={initialLightPosition}
-        intensity={1.9}
+        intensity={2.2}
         color="#fff6e2"
       />
 
@@ -278,7 +281,7 @@ export function HeroGlobeScene({
   return (
     <Canvas
       className="hero-globe-canvas"
-      dpr={[1, 1.8]}
+      dpr={[1, 2]}
       gl={{
         antialias: true,
         alpha: true,
@@ -286,7 +289,7 @@ export function HeroGlobeScene({
       }}
     >
       <color attach="background" args={['#03101b']} />
-      <fog attach="fog" args={['#0b1a2c', 5.8, 14.0]} />
+      <fog attach="fog" args={['#0b1a2c', 5.4, 13.0]} />
 
       <SceneContents
         homeGlobePayload={homeGlobePayload}

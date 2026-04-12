@@ -298,13 +298,117 @@ export const googleSatelliteHomeEarthAppearanceProfileV2: EarthAppearanceProfile
   },
 };
 
+/**
+ * V5 offline profile — Round V1 shared visible uplift.
+ *
+ * Changes versus V4:
+ * - dayContrast 1.08 → 1.12: stronger tonal separation on day side
+ * - daySaturation 1.06 → 1.12: land greens and desert tans read richer
+ * - dayLift 0.038 → 0.052: shadow regions no longer sink into dark gray
+ * - landWarmth 0.05 → 0.07: warmer continental hue, away from "flat photo" feel
+ * - oceanTintStrength 0.35 → 0.42: oceans read bluer, not gray-green
+ * - specularStrength 0.36 → 0.42: ocean glint more visible from home distance
+ * - specularSharpness 52 → 62: tighter highlight, reads as water surface
+ * - fresnelStrength 0.22 → 0.28: stronger limb brightening on ocean
+ * - cloud opacity 0.22 → 0.30: clouds present enough to read as atmosphere
+ * - cloud dayBoost 1.0 → 1.05: brighter cloud surfaces on day side
+ * - atmosphere intensity 0.28 → 0.34: visible planetary rim from home distance
+ */
+export const offlineBalancedEarthAppearanceProfileV5: EarthAppearanceProfile = {
+  ...offlineBalancedEarthAppearanceProfileV4,
+  id: 'offline-balanced-v5',
+  label: 'Offline Balanced Earth v5',
+  dayNight: {
+    twilightWidth: 0.12,
+    nightFloor: 0.022,
+    nightIntensity: 0.55,
+    twilightBoost: 0.04,
+  },
+  surfaceGrading: {
+    dayContrast: 1.12,
+    daySaturation: 1.12,
+    dayLift: 0.052,
+    landWarmth: 0.07,
+    oceanTintStrength: 0.42,
+    nightSaturation: 0.65,
+    twilightBlueMix: 0.16,
+  },
+  ocean: {
+    maskThreshold: 0.03,
+    maskSoftness: 0.13,
+    specularStrength: 0.42,
+    specularSharpness: 62,
+    fresnelStrength: 0.28,
+    cloudOcclusionStrength: 0.48,
+  },
+  clouds: {
+    ...offlineBalancedEarthAppearanceProfileV4.clouds,
+    opacity: 0.30,
+    dayBoost: 1.05,
+    nightFloor: 0.004,
+  },
+  atmosphere: {
+    ...offlineBalancedEarthAppearanceProfileV4.atmosphere,
+    intensity: 0.34,
+    dayColor: '#8ec7ff',
+  },
+};
+
+/**
+ * V3 Google satellite profile — Round V1 shared visible uplift.
+ * Matches the V5 offline direction so both modes present same product meaning.
+ */
+export const googleSatelliteHomeEarthAppearanceProfileV3: EarthAppearanceProfile = {
+  ...offlineBalancedEarthAppearanceProfileV5,
+  id: 'google-satellite-home-v3',
+  label: 'Google Satellite Home v3',
+  textureQuality: 'runtime-google-satellite-composite',
+  dayNight: {
+    twilightWidth: 0.10,
+    nightFloor: 0.016,
+    nightIntensity: 0.45,
+    twilightBoost: 0.032,
+  },
+  surfaceGrading: {
+    dayContrast: 1.10,
+    daySaturation: 1.12,
+    dayLift: 0.054,
+    landWarmth: 0.05,
+    oceanTintStrength: 0.44,
+    nightSaturation: 0.6,
+    twilightBlueMix: 0.14,
+  },
+  ocean: {
+    maskThreshold: 0.025,
+    maskSoftness: 0.16,
+    specularStrength: 0.44,
+    specularSharpness: 56,
+    fresnelStrength: 0.30,
+    cloudOcclusionStrength: 0.42,
+  },
+  clouds: {
+    ...offlineBalancedEarthAppearanceProfileV5.clouds,
+    opacity: 0.10,
+    dayBoost: 1.0,
+    nightFloor: 0.002,
+  },
+  atmosphere: {
+    ...offlineBalancedEarthAppearanceProfileV5.atmosphere,
+    intensity: 0.30,
+    dayColor: '#92ccff',
+    twilightColor: '#e0f0ff',
+  },
+};
+
 const EARTH_APPEARANCE_PROFILES: Record<EarthAppearanceProfileId, EarthAppearanceProfile> = {
   'offline-balanced-v1': offlineBalancedEarthAppearanceProfile,
   'offline-balanced-v2': offlineBalancedEarthAppearanceProfileV2,
   'offline-balanced-v3': offlineBalancedEarthAppearanceProfileV3,
   'offline-balanced-v4': offlineBalancedEarthAppearanceProfileV4,
+  'offline-balanced-v5': offlineBalancedEarthAppearanceProfileV5,
   'google-satellite-home-v1': googleSatelliteHomeEarthAppearanceProfile,
   'google-satellite-home-v2': googleSatelliteHomeEarthAppearanceProfileV2,
+  'google-satellite-home-v3': googleSatelliteHomeEarthAppearanceProfileV3,
 };
 
 export function resolveEarthAppearanceProfile(

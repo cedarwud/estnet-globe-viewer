@@ -827,7 +827,7 @@ export function App() {
                 </div>
                 <div className="status-facts__row">
                   <dt>Appearance profile</dt>
-                  <dd>{earthTextures?.appearanceProfileId ?? 'offline-balanced-v3'}</dd>
+                  <dd>{earthTextures?.appearanceProfileId ?? 'offline-balanced-v5'}</dd>
                 </div>
                 <div className="status-facts__row">
                   <dt>Texture quality</dt>

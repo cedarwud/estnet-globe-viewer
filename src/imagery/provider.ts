@@ -3,8 +3,10 @@ export type EarthAppearanceProfileId =
   | 'offline-balanced-v2'
   | 'offline-balanced-v3'
   | 'offline-balanced-v4'
+  | 'offline-balanced-v5'
   | 'google-satellite-home-v1'
-  | 'google-satellite-home-v2';
+  | 'google-satellite-home-v2'
+  | 'google-satellite-home-v3';
 export type EarthTextureQuality = 'runtime-4k-webp' | 'runtime-google-satellite-composite';
 export type EarthTextureAvailability =
   | 'none-approved'

@@ -590,17 +590,17 @@ canvas {
 }
 
 .focus-region-label {
-  padding: 0.22rem 0.48rem;
-  border: 1px solid rgba(94, 187, 222, 0.22);
+  padding: 0.24rem 0.54rem;
+  border: 1px solid rgba(94, 187, 222, 0.38);
   border-radius: 999px;
-  background: rgba(8, 17, 29, 0.72);
-  color: rgba(94, 187, 222, 0.7);
-  font-size: 0.56rem;
+  background: rgba(8, 17, 29, 0.78);
+  color: rgba(94, 187, 222, 0.92);
+  font-size: 0.60rem;
   line-height: 1;
   letter-spacing: 0.05em;
   white-space: nowrap;
   pointer-events: none;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
   transform: translateY(0.8rem);
 }
 
