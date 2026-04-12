@@ -14,6 +14,7 @@ import {
   buildHomeGlobeLocalInspectCue,
   GroundContextPreview,
 } from './homeGlobe/homeGlobeLocalEntry';
+import { resolveHomeGlobePayload } from './homeGlobe/homeGlobePayload';
 import {
   endpointAlphaLocalContextPack,
   getOfflineLocalContextPack,
@@ -283,6 +284,7 @@ export function App() {
     homeGlobeImagery.fallbackProvider
   );
   const earthTextures = earthTextureState.textureSet;
+  const homeGlobePayload = useMemo(() => resolveHomeGlobePayload(earthTextures), [earthTextures]);
   const capabilityRows = capabilityEntries(truthSnapshot.capabilityProfile);
   const endpointLabels = new Map(truthSnapshot.worldGeometry.endpoints.map((endpoint) => [endpoint.id, endpoint.label]));
   const satelliteLabels = new Map(truthSnapshot.worldGeometry.satellites.map((satellite) => [satellite.id, satellite.label]));
@@ -555,7 +557,7 @@ export function App() {
     <div className="viewer-shell">
       <div className="viewer-stage">
         <HeroGlobeScene
-          earthTextures={earthTextures}
+          homeGlobePayload={homeGlobePayload}
           framingRequest={framingRequest}
           localInspectCue={globeLocalInspectCue}
           worldGeometry={truthSnapshot.worldGeometry}
@@ -850,6 +852,27 @@ export function App() {
               </dl>
               <p className="drawer-copy">{homeGlobeImageryNote}</p>
               <p className="drawer-copy">{earthSurfaceNote}</p>
+            </section>
+
+            <section className="drawer-section">
+              <p className="floating-card__eyebrow">Home Globe Capability Layers</p>
+              <dl className="status-facts">
+                <div className="status-facts__row">
+                  <dt>Layer 1 — Earth baseline</dt>
+                  <dd>{homeGlobePayload.earthBaseline ? homeGlobePayload.earthBaseline.availability : 'none'}</dd>
+                </div>
+                <div className="status-facts__row">
+                  <dt>Layer 2 — Shared focus detail</dt>
+                  <dd>{homeGlobePayload.sharedFocusDetail ? homeGlobePayload.sharedFocusDetail.detailKind : 'not-yet-resolved'}</dd>
+                </div>
+                <div className="status-facts__row">
+                  <dt>Layer 3 — API-only enhancement</dt>
+                  <dd>reserved</dd>
+                </div>
+              </dl>
+              <p className="drawer-copy">
+                EarthTextureSet remains the Layer 1 baseline seam. Layer 2 and Layer 3 are separate contracts that will be resolved in later rounds.
+              </p>
             </section>
 
             <section className="drawer-section">

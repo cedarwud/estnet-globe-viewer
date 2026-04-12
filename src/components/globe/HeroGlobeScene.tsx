@@ -8,7 +8,7 @@ import type {
   ServiceSelectionTruth,
   WorldGeometryTruth,
 } from '../../truth/contracts';
-import type { EarthTextureSet } from '../../imagery/provider';
+import type { HomeGlobePayload } from '../../homeGlobe/homeGlobePayload';
 import { buildHeroFramingPose, type FramingMode, type FramingPose } from './corridorFraming';
 import { GLOBE_RADIUS, HeroGlobe, type GlobeLocalInspectCue } from './HeroGlobe';
 import { HeroGlobeSkyDome } from './HeroGlobeSkyDome';
@@ -19,7 +19,7 @@ export interface HeroGlobeFramingRequest {
 }
 
 interface HeroGlobeSceneProps {
-  earthTextures: EarthTextureSet | null;
+  homeGlobePayload: HomeGlobePayload;
   framingRequest: HeroGlobeFramingRequest;
   localInspectCue: GlobeLocalInspectCue | null;
   worldGeometry: WorldGeometryTruth;
@@ -48,7 +48,7 @@ function wrapAngularDelta(angle: number) {
 }
 
 function SceneContents({
-  earthTextures,
+  homeGlobePayload,
   framingRequest,
   initialPose,
   localInspectCue,
@@ -56,6 +56,7 @@ function SceneContents({
   serviceAvailability,
   serviceSelection,
 }: SceneContentsProps) {
+  const earthTextures = homeGlobePayload.earthBaseline;
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const transitionTargetRef = useRef<Vector3 | null>(null);
   const rotationInertiaRef = useRef({
@@ -252,7 +253,7 @@ function SceneContents({
 }
 
 export function HeroGlobeScene({
-  earthTextures,
+  homeGlobePayload,
   framingRequest,
   localInspectCue,
   worldGeometry,
@@ -283,7 +284,7 @@ export function HeroGlobeScene({
       <fog attach="fog" args={['#0b1a2c', 6.1, 14.3]} />
 
       <SceneContents
-        earthTextures={earthTextures}
+        homeGlobePayload={homeGlobePayload}
         framingRequest={framingRequest}
         initialPose={initialPose}
         localInspectCue={localInspectCue}
