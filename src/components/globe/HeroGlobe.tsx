@@ -7,6 +7,7 @@ import type {
 } from '../../truth/contracts';
 import type { Vector3 } from 'three';
 import type { EarthTextureSet } from '../../imagery/provider';
+import type { HomeGlobeSharedFocusDetail } from '../../homeGlobe/homeGlobePayload';
 import {
   EarthAtmosphereShell,
   EarthCloudShell,
@@ -18,9 +19,11 @@ import { EndpointAnchor } from './EndpointAnchor';
 import { GlobeGraticule } from './GlobeGraticule';
 import { SatelliteMarker, SatelliteMarkerFallback } from './SatelliteMarker';
 import { ServiceCorridorOverlay } from './ServiceCorridorOverlay';
+import { SharedFocusRegionOverlay } from './SharedFocusRegionOverlay';
 
 interface HeroGlobeProps {
   earthTextures: EarthTextureSet | null;
+  sharedFocusDetail: HomeGlobeSharedFocusDetail | null;
   localInspectCue: GlobeLocalInspectCue | null;
   sunDirection: Vector3;
   worldGeometry: WorldGeometryTruth;
@@ -49,6 +52,7 @@ export interface GlobeLocalInspectCue {
 
 export function HeroGlobe({
   earthTextures,
+  sharedFocusDetail,
   localInspectCue,
   sunDirection,
   worldGeometry,
@@ -114,6 +118,13 @@ export function HeroGlobe({
       />
 
       <GlobeGraticule radius={GLOBE_RADIUS + 0.004} />
+
+      {sharedFocusDetail ? (
+        <SharedFocusRegionOverlay
+          focusDetail={sharedFocusDetail}
+          globeRadius={GLOBE_RADIUS}
+        />
+      ) : null}
 
       {worldGeometry.endpoints.map((endpoint) => (
         <EndpointAnchor

@@ -14,7 +14,7 @@ import {
   buildHomeGlobeLocalInspectCue,
   GroundContextPreview,
 } from './homeGlobe/homeGlobeLocalEntry';
-import { resolveHomeGlobePayload } from './homeGlobe/homeGlobePayload';
+import { buildSharedFocusDetailFromOfflinePack, resolveHomeGlobePayload } from './homeGlobe/homeGlobePayload';
 import {
   endpointAlphaLocalContextPack,
   getOfflineLocalContextPack,
@@ -284,7 +284,6 @@ export function App() {
     homeGlobeImagery.fallbackProvider
   );
   const earthTextures = earthTextureState.textureSet;
-  const homeGlobePayload = useMemo(() => resolveHomeGlobePayload(earthTextures), [earthTextures]);
   const capabilityRows = capabilityEntries(truthSnapshot.capabilityProfile);
   const endpointLabels = new Map(truthSnapshot.worldGeometry.endpoints.map((endpoint) => [endpoint.id, endpoint.label]));
   const satelliteLabels = new Map(truthSnapshot.worldGeometry.satellites.map((satellite) => [satellite.id, satellite.label]));
@@ -327,6 +326,21 @@ export function App() {
         activeEndpointIds,
       }),
     [activeEndpointIds, viewerRoute]
+  );
+  const sharedFocusDetail = useMemo(() => {
+    const pack = localEntryState.pack;
+    if (!pack) return null;
+    return buildSharedFocusDetailFromOfflinePack({
+      centerLatDeg: pack.center.latitudeDeg,
+      centerLonDeg: pack.center.longitudeDeg,
+      halfExtentM: pack.halfExtentM,
+      regionLabel: pack.regionLabel,
+      packId: pack.id,
+    });
+  }, [localEntryState.pack]);
+  const homeGlobePayload = useMemo(
+    () => resolveHomeGlobePayload(earthTextures, sharedFocusDetail),
+    [earthTextures, sharedFocusDetail]
   );
   const primaryServiceSiteAnchor = useMemo(
     () => (localEntryState.pack ? getPrimaryServiceSiteAnchor(localEntryState.pack) : null),
@@ -865,13 +879,42 @@ export function App() {
                   <dt>Layer 2 — Shared focus detail</dt>
                   <dd>{homeGlobePayload.sharedFocusDetail ? homeGlobePayload.sharedFocusDetail.detailKind : 'not-yet-resolved'}</dd>
                 </div>
+                {homeGlobePayload.sharedFocusDetail ? (
+                  <>
+                    <div className="status-facts__row">
+                      <dt>Focus region</dt>
+                      <dd>{homeGlobePayload.sharedFocusDetail.regionLabel}</dd>
+                    </div>
+                    <div className="status-facts__row">
+                      <dt>Focus center</dt>
+                      <dd>
+                        {homeGlobePayload.sharedFocusDetail.center.latDeg.toFixed(3)}°N,{' '}
+                        {homeGlobePayload.sharedFocusDetail.center.lonDeg.toFixed(4)}°E
+                      </dd>
+                    </div>
+                    <div className="status-facts__row">
+                      <dt>Focus extent</dt>
+                      <dd>
+                        {(homeGlobePayload.sharedFocusDetail.extent.halfWidthM * 2 / 1000).toFixed(1)} km ×{' '}
+                        {(homeGlobePayload.sharedFocusDetail.extent.halfHeightM * 2 / 1000).toFixed(1)} km
+                      </dd>
+                    </div>
+                    <div className="status-facts__row">
+                      <dt>Focus source</dt>
+                      <dd>{homeGlobePayload.sharedFocusDetail.sourceId}</dd>
+                    </div>
+                  </>
+                ) : null}
                 <div className="status-facts__row">
                   <dt>Layer 3 — API-only enhancement</dt>
                   <dd>reserved</dd>
                 </div>
               </dl>
               <p className="drawer-copy">
-                EarthTextureSet remains the Layer 1 baseline seam. Layer 2 and Layer 3 are separate contracts that will be resolved in later rounds.
+                {homeGlobePayload.sharedFocusDetail
+                  ? `Layer 2 is now resolved from ${homeGlobePayload.sharedFocusDetail.sourceId}. The bounded focus-detail region shares the same inspect grammar in both offline and API modes. Layer 3 remains reserved for a later bounded decision.`
+                  : 'EarthTextureSet remains the Layer 1 baseline seam. Layer 2 and Layer 3 are separate contracts that will be resolved in later rounds.'
+                }
               </p>
             </section>
 

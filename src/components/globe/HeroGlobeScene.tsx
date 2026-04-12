@@ -57,6 +57,10 @@ function SceneContents({
   serviceSelection,
 }: SceneContentsProps) {
   const earthTextures = homeGlobePayload.earthBaseline;
+  const sharedFocusDetail = homeGlobePayload.sharedFocusDetail;
+  // When shared focus detail is resolved, allow modestly closer inspection.
+  // The tighter bound is tied to real data, not arbitrary camera drift.
+  const minDistance = sharedFocusDetail ? 2.45 : 2.7;
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const transitionTargetRef = useRef<Vector3 | null>(null);
   const rotationInertiaRef = useRef({
@@ -221,7 +225,7 @@ function SceneContents({
         target={[0, 0, 0]}
         // Step 3 adds explicit Home / Fit Corridor presets instead of generic pan.
         // Keep the interaction globe-centered and bounded to corridor inspection.
-        minDistance={2.8}
+        minDistance={minDistance}
         maxDistance={18.5}
         zoomSpeed={0.85}
         rotateSpeed={0.62}
@@ -229,7 +233,7 @@ function SceneContents({
         maxPolarAngle={Math.PI - 0.5}
       />
 
-      <ambientLight intensity={0.08} />
+      <ambientLight intensity={0.06} />
       <directionalLight
         position={initialLightPosition}
         intensity={1.9}
@@ -242,6 +246,7 @@ function SceneContents({
 
       <HeroGlobe
         earthTextures={earthTextures}
+        sharedFocusDetail={sharedFocusDetail}
         localInspectCue={localInspectCue}
         sunDirection={sunDirection}
         worldGeometry={worldGeometry}
@@ -281,7 +286,7 @@ export function HeroGlobeScene({
       }}
     >
       <color attach="background" args={['#03101b']} />
-      <fog attach="fog" args={['#0b1a2c', 6.1, 14.3]} />
+      <fog attach="fog" args={['#0b1a2c', 5.8, 14.0]} />
 
       <SceneContents
         homeGlobePayload={homeGlobePayload}

@@ -215,11 +215,96 @@ export const googleSatelliteHomeEarthAppearanceProfile: EarthAppearanceProfile =
   },
 };
 
+export const offlineBalancedEarthAppearanceProfileV4: EarthAppearanceProfile = {
+  ...offlineBalancedEarthAppearanceProfileV3,
+  id: 'offline-balanced-v4',
+  label: 'Offline Balanced Earth v4',
+  surfaceSegments: 96,
+  textureAnisotropyCap: 10,
+  dayNight: {
+    twilightWidth: 0.12,
+    nightFloor: 0.025,
+    nightIntensity: 0.55,
+    twilightBoost: 0.035,
+  },
+  surfaceGrading: {
+    dayContrast: 1.08,
+    daySaturation: 1.06,
+    dayLift: 0.038,
+    landWarmth: 0.05,
+    oceanTintStrength: 0.35,
+    nightSaturation: 0.65,
+    twilightBlueMix: 0.14,
+  },
+  ocean: {
+    maskThreshold: 0.03,
+    maskSoftness: 0.13,
+    specularStrength: 0.36,
+    specularSharpness: 52,
+    fresnelStrength: 0.22,
+    cloudOcclusionStrength: 0.48,
+  },
+  clouds: {
+    ...offlineBalancedEarthAppearanceProfileV3.clouds,
+    opacity: 0.22,
+    dayBoost: 1.0,
+    nightFloor: 0.003,
+  },
+  atmosphere: {
+    ...offlineBalancedEarthAppearanceProfileV3.atmosphere,
+    intensity: 0.28,
+  },
+};
+
+export const googleSatelliteHomeEarthAppearanceProfileV2: EarthAppearanceProfile = {
+  ...offlineBalancedEarthAppearanceProfileV4,
+  id: 'google-satellite-home-v2',
+  label: 'Google Satellite Home v2',
+  textureQuality: 'runtime-google-satellite-composite',
+  dayNight: {
+    twilightWidth: 0.10,
+    nightFloor: 0.018,
+    nightIntensity: 0.45,
+    twilightBoost: 0.028,
+  },
+  surfaceGrading: {
+    dayContrast: 1.06,
+    daySaturation: 1.07,
+    dayLift: 0.046,
+    landWarmth: 0.04,
+    oceanTintStrength: 0.38,
+    nightSaturation: 0.6,
+    twilightBlueMix: 0.12,
+  },
+  ocean: {
+    maskThreshold: 0.025,
+    maskSoftness: 0.16,
+    specularStrength: 0.38,
+    specularSharpness: 44,
+    fresnelStrength: 0.24,
+    cloudOcclusionStrength: 0.42,
+  },
+  clouds: {
+    ...offlineBalancedEarthAppearanceProfileV4.clouds,
+    opacity: 0.06,
+    dayBoost: 0.95,
+    nightFloor: 0.002,
+  },
+  atmosphere: {
+    ...offlineBalancedEarthAppearanceProfileV4.atmosphere,
+    intensity: 0.25,
+    dayColor: '#92ccff',
+    twilightColor: '#e0f0ff',
+  },
+};
+
 const EARTH_APPEARANCE_PROFILES: Record<EarthAppearanceProfileId, EarthAppearanceProfile> = {
   'offline-balanced-v1': offlineBalancedEarthAppearanceProfile,
   'offline-balanced-v2': offlineBalancedEarthAppearanceProfileV2,
   'offline-balanced-v3': offlineBalancedEarthAppearanceProfileV3,
+  'offline-balanced-v4': offlineBalancedEarthAppearanceProfileV4,
   'google-satellite-home-v1': googleSatelliteHomeEarthAppearanceProfile,
+  'google-satellite-home-v2': googleSatelliteHomeEarthAppearanceProfileV2,
 };
 
 export function resolveEarthAppearanceProfile(

@@ -319,7 +319,7 @@ export function createGoogleMapTilesSatelliteImageryProvider(
         nightAssetId: offlineContinuityTextureSet?.nightAssetId ?? null,
         cloudTextureUrl: offlineContinuityTextureSet?.cloudTextureUrl ?? null,
         cloudAssetId: offlineContinuityTextureSet?.cloudAssetId ?? null,
-        appearanceProfileId: 'google-satellite-home-v1',
+        appearanceProfileId: 'google-satellite-home-v2',
         textureQuality: 'runtime-google-satellite-composite',
         governanceDocPath:
           'internal/estnet-globe-viewer/devlogs/2026-04-09-home-globe-google-map-tiles-api.md',

@@ -11,9 +11,9 @@ export const offlineEarthImageryProvider = createStaticImageryProvider({
     nightAssetId: 'earth-night-nasa-black-marble-2016-4096x2048-webp',
     cloudTextureUrl: '/assets/earth/earth-clouds-nasa-blue-marble-2002-4096x2048.webp',
     cloudAssetId: 'earth-clouds-nasa-blue-marble-2002-4096x2048-webp',
-    appearanceProfileId: 'offline-balanced-v3',
+    appearanceProfileId: 'offline-balanced-v4',
     textureQuality: 'runtime-4k-webp',
     governanceDocPath: 'docs/assets/earth-assets.md',
-    note: 'Commit 3 keeps the approved NASA day/night/cloud WebP derivatives, adds restrained ocean/specular and a controlled Earth grading pass, and stays inside the same repo-safe imagery seam. No new runtime asset intake, bloom, weather animation, provider expansion, or KTX2 path is introduced here.',
+    note: 'Round 2 shared baseline lift: same approved NASA day/night/cloud WebP derivatives, upgraded appearance profile with proper day/night terminator, visible city lights on the dark hemisphere, limb darkening, higher surface segments (96) and anisotropy (10), richer color grading and ocean specular. No new assets, no API-only behavior, no focus-detail region.',
   },
 });

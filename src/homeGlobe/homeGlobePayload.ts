@@ -58,21 +58,54 @@ export interface HomeGlobePayload {
 }
 
 // ---------------------------------------------------------------------------
+// Shared focus-detail builder
+// ---------------------------------------------------------------------------
+
+/**
+ * Builds a HomeGlobeSharedFocusDetail from an offline AOI pack's geographic
+ * parameters. This is the first real Layer 2 implementation — offline-first,
+ * shared across modes.
+ *
+ * The builder accepts primitives so homeGlobe/ does not depend on
+ * localContext/ types directly.
+ */
+export function buildSharedFocusDetailFromOfflinePack(params: {
+  centerLatDeg: number;
+  centerLonDeg: number;
+  halfExtentM: number;
+  regionLabel: string;
+  packId: string;
+}): HomeGlobeSharedFocusDetail {
+  return {
+    center: { latDeg: params.centerLatDeg, lonDeg: params.centerLonDeg },
+    extent: {
+      halfWidthM: params.halfExtentM,
+      halfHeightM: params.halfExtentM,
+    },
+    detailKind: 'offline-asset',
+    regionLabel: params.regionLabel,
+    sourceId: `offline-aoi:${params.packId}`,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Payload resolver
 // ---------------------------------------------------------------------------
 
 /**
- * Builds the current HomeGlobePayload from the resolved Earth texture state.
+ * Builds the current HomeGlobePayload from the resolved Earth texture state
+ * and an optional shared focus-detail region.
  *
- * In this round sharedFocusDetail is always null — the contract boundary
- * exists but no focus-detail data is resolved yet. Round 3 will provide
- * the first real offline-first implementation.
+ * Round 3 provides the first real offline-first sharedFocusDetail via
+ * buildSharedFocusDetailFromOfflinePack(). API mode consumes the same
+ * contract and product shape.
  */
 export function resolveHomeGlobePayload(
   earthTextures: EarthTextureSet | null,
+  sharedFocusDetail?: HomeGlobeSharedFocusDetail | null,
 ): HomeGlobePayload {
   return {
     earthBaseline: earthTextures,
-    sharedFocusDetail: null,
+    sharedFocusDetail: sharedFocusDetail ?? null,
   };
 }

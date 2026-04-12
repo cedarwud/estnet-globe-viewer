@@ -115,10 +115,10 @@ void main() {
   vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
   float viewFacing = clamp(dot(viewDirection, normal), 0.0, 1.0);
   float lightDot = dot(normal, lightDirection);
-  float dayFactor = clamp(lightDot, 0.0, 1.0);
-  float nightLimbMask = 1.0 - smoothstep(0.0, 0.02, viewFacing);
-  float twilight = (1.0 - smoothstep(0.0, twilightWidth * 1.35, abs(lightDot))) * nightLimbMask;
-  float presentationLight = clamp(max(dayFactor, 1.02 * viewFacing + 0.2), 0.0, 1.0);
+
+  float dayFactor = smoothstep(-twilightWidth, twilightWidth, lightDot);
+  float twilight = smoothstep(0.0, twilightWidth * 1.4, twilightWidth - abs(lightDot));
+  float limbDarken = mix(0.88, 1.0, pow(viewFacing, 0.35));
 
   vec3 dayColor = texture2D(dayMap, vUv).rgb;
   vec3 nightColor = texture2D(nightMap, vUv).rgb;
@@ -138,22 +138,21 @@ void main() {
   gradedDay = clamp(gradedDay + vec3(dayLift), 0.0, 1.0);
 
   vec3 gradedNight = applySaturation(nightColor, nightSaturation);
-  gradedNight *= vec3(1.0, 0.98, 0.93);
+  gradedNight *= vec3(1.0, 0.95, 0.85);
 
-  vec3 litDay = gradedDay * mix(1.06, 1.16, pow(presentationLight, 0.54));
+  vec3 litDay = gradedDay * (1.02 + 0.14 * dayFactor) * limbDarken;
   litDay = mix(
     litDay,
     litDay * vec3(0.995, 1.025, 1.07) + vec3(0.0, 0.008, 0.02),
-    oceanMask * (0.055 + presentationLight * 0.03)
+    oceanMask * (0.055 + dayFactor * 0.03)
   );
-  litDay = clamp(pow(litDay, vec3(0.93)), 0.0, 1.0);
-  vec3 nightReadable = gradedDay * (0.985 + nightFloor * 0.025 + twilight * 0.009);
-  nightReadable +=
-    gradedNight * nightLimbMask * (nightIntensity * 0.003 + twilight * twilightBoost * 0.0035);
 
-  vec3 color = litDay;
-  color += nightReadable * nightLimbMask * 0.0035;
-  color = clamp(color + vec3(0.01, 0.012, 0.015) * (0.28 + 0.52 * viewFacing), 0.0, 1.0);
+  vec3 nightBase = gradedDay * nightFloor;
+  vec3 nightLights = gradedNight * nightIntensity * limbDarken;
+  vec3 nightSurface = nightBase + nightLights;
+
+  vec3 color = mix(nightSurface, litDay, dayFactor);
+  color += vec3(0.008, 0.01, 0.014) * viewFacing * dayFactor * 0.5;
 
   vec3 halfVector = normalize(lightDirection + viewDirection);
   float specular = pow(max(dot(normal, halfVector), 0.0), oceanSpecularSharpness);
@@ -165,8 +164,9 @@ void main() {
   color += vec3(0.88, 0.95, 1.0) * oceanHighlight;
 
   color += vec3(0.012, 0.025, 0.05) * twilight * twilightBlueMix;
+  color += vec3(0.006, 0.01, 0.018) * twilight * twilightBoost;
 
-  gl_FragColor = vec4(color, 1.0);
+  gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }
