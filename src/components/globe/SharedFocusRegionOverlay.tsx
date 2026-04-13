@@ -33,13 +33,13 @@ export function SharedFocusRegionOverlay({
     globeRadius,
     0.008
   );
-  const regionColor = new Color('#5ebbde');
-  const regionEmissive = new Color('#5ebbde').multiplyScalar(0.5);
+  const regionColor = new Color('#67c0df');
+  const regionEmissive = new Color('#67c0df').multiplyScalar(0.45);
 
   useFrame(({ clock }) => {
     const material = outerPulseRef.current?.material;
     if (material && !Array.isArray(material) && 'opacity' in material) {
-      const breathe = 0.18 + Math.sin(clock.getElapsedTime() * 0.7) * 0.07;
+      const breathe = 0.14 + Math.sin(clock.getElapsedTime() * 0.8) * 0.05;
       material.opacity = breathe;
     }
   });
@@ -49,11 +49,11 @@ export function SharedFocusRegionOverlay({
       {/* Inner boundary ring — steady, marks the core focus region */}
       <Billboard position={position} follow>
         <mesh>
-          <ringGeometry args={[0.19, 0.215, 64]} />
+          <ringGeometry args={[0.182, 0.208, 64]} />
           <meshBasicMaterial
             color={regionColor}
             transparent
-            opacity={0.34}
+            opacity={0.26}
             depthWrite={false}
           />
         </mesh>
@@ -62,11 +62,11 @@ export function SharedFocusRegionOverlay({
       {/* Middle extent ring — slightly larger, visible secondary */}
       <Billboard position={position} follow>
         <mesh>
-          <ringGeometry args={[0.26, 0.28, 64]} />
+          <ringGeometry args={[0.252, 0.272, 64]} />
           <meshBasicMaterial
             color={regionColor}
             transparent
-            opacity={0.18}
+            opacity={0.14}
             depthWrite={false}
           />
         </mesh>
@@ -75,11 +75,11 @@ export function SharedFocusRegionOverlay({
       {/* Outer breathing ring — pulse to indicate live detail */}
       <Billboard position={position} follow>
         <mesh ref={outerPulseRef}>
-          <ringGeometry args={[0.33, 0.35, 64]} />
+          <ringGeometry args={[0.314, 0.336, 64]} />
           <meshBasicMaterial
             color={regionColor}
             transparent
-            opacity={0.18}
+            opacity={0.14}
             depthWrite={false}
           />
         </mesh>
@@ -88,11 +88,11 @@ export function SharedFocusRegionOverlay({
       {/* Filled disc behind the rings — visible region highlight */}
       <Billboard position={position} follow>
         <mesh>
-          <circleGeometry args={[0.19, 64]} />
+          <circleGeometry args={[0.182, 64]} />
           <meshBasicMaterial
             color={regionColor}
             transparent
-            opacity={0.08}
+            opacity={0.07}
             depthWrite={false}
           />
         </mesh>
@@ -100,14 +100,14 @@ export function SharedFocusRegionOverlay({
 
       {/* Center marker — larger, clearly distinct from endpoint anchor */}
       <mesh position={position}>
-        <sphereGeometry args={[0.024, 24, 24]} />
+        <sphereGeometry args={[0.023, 24, 24]} />
         <meshStandardMaterial
           color={regionColor}
           emissive={regionEmissive}
-          emissiveIntensity={1.2}
+          emissiveIntensity={1.0}
           roughness={0.25}
           transparent
-          opacity={0.8}
+          opacity={0.74}
         />
       </mesh>
 

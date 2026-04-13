@@ -14,6 +14,6 @@ export const offlineEarthImageryProvider = createStaticImageryProvider({
     appearanceProfileId: 'offline-balanced-v5',
     textureQuality: 'runtime-4k-webp',
     governanceDocPath: 'docs/assets/earth-assets.md',
-    note: 'Round 2 shared baseline lift: same approved NASA day/night/cloud WebP derivatives, upgraded appearance profile with proper day/night terminator, visible city lights on the dark hemisphere, limb darkening, higher surface segments (96) and anisotropy (10), richer color grading and ocean specular. No new assets, no API-only behavior, no focus-detail region.',
+    note: 'Shared home-globe mostly-daylit baseline: same approved NASA day/night/cloud WebP derivatives, reviewer-first light anchoring, subtle far-limb night continuity, higher surface segments (96) and anisotropy (10), richer color grading and ocean specular. No new assets, no API-only behavior, no local-mode substitution.',
   },
 });

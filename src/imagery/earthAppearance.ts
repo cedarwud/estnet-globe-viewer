@@ -299,64 +299,57 @@ export const googleSatelliteHomeEarthAppearanceProfileV2: EarthAppearanceProfile
 };
 
 /**
- * V5 offline profile — Round V1 shared visible uplift.
+ * V5 offline profile — Round D shared regression correction.
  *
  * Changes versus V4:
- * - dayContrast 1.08 → 1.12: stronger tonal separation on day side
- * - daySaturation 1.06 → 1.12: land greens and desert tans read richer
- * - dayLift 0.038 → 0.052: shadow regions no longer sink into dark gray
- * - landWarmth 0.05 → 0.07: warmer continental hue, away from "flat photo" feel
- * - oceanTintStrength 0.35 → 0.42: oceans read bluer, not gray-green
- * - specularStrength 0.36 → 0.42: ocean glint more visible from home distance
- * - specularSharpness 52 → 62: tighter highlight, reads as water surface
- * - fresnelStrength 0.22 → 0.28: stronger limb brightening on ocean
- * - cloud opacity 0.22 → 0.30: clouds present enough to read as atmosphere
- * - cloud dayBoost 1.0 → 1.05: brighter cloud surfaces on day side
- * - atmosphere intensity 0.28 → 0.34: visible planetary rim from home distance
+ * - keeps the mostly-daylit readable hemisphere
+ * - removes the washed-out offline haze introduced by over-lifting the shared profile
+ * - keeps the brighter day side without turning the home globe into a milky overlay
  */
 export const offlineBalancedEarthAppearanceProfileV5: EarthAppearanceProfile = {
   ...offlineBalancedEarthAppearanceProfileV4,
   id: 'offline-balanced-v5',
   label: 'Offline Balanced Earth v5',
   dayNight: {
-    twilightWidth: 0.12,
-    nightFloor: 0.022,
-    nightIntensity: 0.55,
-    twilightBoost: 0.04,
+    twilightWidth: 0.085,
+    nightFloor: 0.028,
+    nightIntensity: 0.1,
+    twilightBoost: 0.03,
   },
   surfaceGrading: {
-    dayContrast: 1.12,
-    daySaturation: 1.12,
-    dayLift: 0.052,
-    landWarmth: 0.07,
-    oceanTintStrength: 0.42,
-    nightSaturation: 0.65,
-    twilightBlueMix: 0.16,
+    dayContrast: 1.13,
+    daySaturation: 1.14,
+    dayLift: 0.055,
+    landWarmth: 0.074,
+    oceanTintStrength: 0.4,
+    nightSaturation: 0.5,
+    twilightBlueMix: 0.1,
   },
   ocean: {
     maskThreshold: 0.03,
     maskSoftness: 0.13,
-    specularStrength: 0.42,
+    specularStrength: 0.3,
     specularSharpness: 62,
-    fresnelStrength: 0.28,
-    cloudOcclusionStrength: 0.48,
+    fresnelStrength: 0.18,
+    cloudOcclusionStrength: 0.36,
   },
   clouds: {
     ...offlineBalancedEarthAppearanceProfileV4.clouds,
-    opacity: 0.30,
-    dayBoost: 1.05,
-    nightFloor: 0.004,
+    opacity: 0,
+    dayBoost: 1.04,
+    nightFloor: 0.002,
   },
   atmosphere: {
     ...offlineBalancedEarthAppearanceProfileV4.atmosphere,
-    intensity: 0.34,
+    intensity: 0.22,
     dayColor: '#8ec7ff',
   },
 };
 
 /**
- * V3 Google satellite profile — Round V1 shared visible uplift.
- * Matches the V5 offline direction so both modes present same product meaning.
+ * V3 Google satellite profile — Round D shared regression correction.
+ * It preserves the same mostly-daylit read while moving the ocean highlight
+ * away from a camera-centered spotlight.
  */
 export const googleSatelliteHomeEarthAppearanceProfileV3: EarthAppearanceProfile = {
   ...offlineBalancedEarthAppearanceProfileV5,
@@ -364,37 +357,37 @@ export const googleSatelliteHomeEarthAppearanceProfileV3: EarthAppearanceProfile
   label: 'Google Satellite Home v3',
   textureQuality: 'runtime-google-satellite-composite',
   dayNight: {
-    twilightWidth: 0.10,
-    nightFloor: 0.016,
-    nightIntensity: 0.45,
-    twilightBoost: 0.032,
+    twilightWidth: 0.09,
+    nightFloor: 0.04,
+    nightIntensity: 0.14,
+    twilightBoost: 0.038,
   },
   surfaceGrading: {
-    dayContrast: 1.10,
+    dayContrast: 1.08,
     daySaturation: 1.12,
-    dayLift: 0.054,
+    dayLift: 0.045,
     landWarmth: 0.05,
-    oceanTintStrength: 0.44,
-    nightSaturation: 0.6,
-    twilightBlueMix: 0.14,
+    oceanTintStrength: 0.42,
+    nightSaturation: 0.58,
+    twilightBlueMix: 0.13,
   },
   ocean: {
     maskThreshold: 0.025,
     maskSoftness: 0.16,
-    specularStrength: 0.44,
-    specularSharpness: 56,
-    fresnelStrength: 0.30,
-    cloudOcclusionStrength: 0.42,
+    specularStrength: 0.28,
+    specularSharpness: 64,
+    fresnelStrength: 0.18,
+    cloudOcclusionStrength: 0.32,
   },
   clouds: {
     ...offlineBalancedEarthAppearanceProfileV5.clouds,
-    opacity: 0.10,
-    dayBoost: 1.0,
-    nightFloor: 0.002,
+    opacity: 0.08,
+    dayBoost: 0.96,
+    nightFloor: 0.003,
   },
   atmosphere: {
     ...offlineBalancedEarthAppearanceProfileV5.atmosphere,
-    intensity: 0.30,
+    intensity: 0.27,
     dayColor: '#92ccff',
     twilightColor: '#e0f0ff',
   },

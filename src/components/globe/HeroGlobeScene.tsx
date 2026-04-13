@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
-import { Vector3 } from 'three';
+import { Vector3, type DirectionalLight as ThreeDirectionalLight } from 'three';
 import type {
   ServiceAvailabilityTruth,
   ServiceSelectionTruth,
@@ -32,6 +32,10 @@ interface SceneContentsProps extends HeroGlobeSceneProps {
 }
 
 const HERO_LIGHT_DISTANCE = 10.5;
+const HERO_PRESENTATION_LIGHT_ANCHOR_BLEND = 0.12;
+const HERO_PRESENTATION_LIGHT_SIDE_OFFSET = 0.42;
+const HERO_PRESENTATION_LIGHT_UP_OFFSET = 0.16;
+const HERO_PRESENTATION_LIGHT_RESPONSE_PER_SECOND = 8.5;
 const HERO_ROTATION_INERTIA_DECAY_PER_SECOND = 2.15;
 const HERO_ROTATION_INERTIA_MIN_SPEED = 0.018;
 const HERO_ROTATION_INERTIA_MAX_SPEED = 1.45;
@@ -74,15 +78,21 @@ function SceneContents({
     lastPolar: 0,
     lastTimestampMs: 0,
   });
+  const directionalLightRef = useRef<ThreeDirectionalLight | null>(null);
   const { camera } = useThree();
-  const sunDirection = useMemo(
+  const sunAnchorDirection = useMemo(
     () => new Vector3(...initialPose.sunDirection).normalize(),
     [initialPose]
   );
-  const initialLightPosition = useMemo(
-    () => sunDirection.clone().multiplyScalar(HERO_LIGHT_DISTANCE).toArray() as [number, number, number],
-    [sunDirection]
+  const sunDirection = useMemo(
+    () => sunAnchorDirection.clone(),
+    [sunAnchorDirection]
   );
+  const targetSunDirection = useMemo(() => new Vector3(), []);
+  const cameraDirection = useMemo(() => new Vector3(), []);
+  const cameraForward = useMemo(() => new Vector3(), []);
+  const presentationRight = useMemo(() => new Vector3(), []);
+  const presentationUp = useMemo(() => new Vector3(), []);
 
   useEffect(() => {
     const pose = buildHeroFramingPose({
@@ -208,6 +218,31 @@ function SceneContents({
       controls.update();
     }
 
+    // Home-globe lighting is presentation-first rather than astronomy-first:
+    // keep the viewer-facing hemisphere daylit as the camera orbits, while
+    // retaining a small anchor to the original corridor-aware framing.
+    cameraDirection.copy(camera.position).normalize();
+    cameraForward.copy(cameraDirection).negate();
+    presentationRight.crossVectors(cameraForward, camera.up);
+    if (presentationRight.lengthSq() < 1e-5) {
+      presentationRight.set(1, 0, 0);
+    } else {
+      presentationRight.normalize();
+    }
+    presentationUp.copy(camera.up).normalize();
+    targetSunDirection
+      .copy(cameraDirection)
+      .addScaledVector(presentationRight, HERO_PRESENTATION_LIGHT_SIDE_OFFSET)
+      .addScaledVector(presentationUp, HERO_PRESENTATION_LIGHT_UP_OFFSET)
+      .lerp(sunAnchorDirection, HERO_PRESENTATION_LIGHT_ANCHOR_BLEND)
+      .normalize();
+    sunDirection
+      .lerp(
+        targetSunDirection,
+        1 - Math.exp(-HERO_PRESENTATION_LIGHT_RESPONSE_PER_SECOND * deltaSeconds)
+      )
+      .normalize();
+    directionalLightRef.current?.position.copy(sunDirection).multiplyScalar(HERO_LIGHT_DISTANCE);
   });
 
   return (
@@ -238,7 +273,8 @@ function SceneContents({
 
       <ambientLight intensity={0.09} />
       <directionalLight
-        position={initialLightPosition}
+        ref={directionalLightRef}
+        position={sunDirection.clone().multiplyScalar(HERO_LIGHT_DISTANCE).toArray() as [number, number, number]}
         intensity={2.2}
         color="#fff6e2"
       />
@@ -289,7 +325,7 @@ export function HeroGlobeScene({
       }}
     >
       <color attach="background" args={['#03101b']} />
-      <fog attach="fog" args={['#0b1a2c', 5.4, 13.0]} />
+      <fog attach="fog" args={['#08131f', 8.8, 21]} />
 
       <SceneContents
         homeGlobePayload={homeGlobePayload}

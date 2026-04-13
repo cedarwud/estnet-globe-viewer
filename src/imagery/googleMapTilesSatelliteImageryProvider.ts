@@ -326,7 +326,7 @@ export function createGoogleMapTilesSatelliteImageryProvider(
         note:
           `Home globe day texture is a runtime equirectangular composite of Google Map Tiles API satellite tiles ` +
           `(zoom ${zoom}, ${session.tileWidth}px tiles, ${session.imageFormat}, ${language}/${region}). ` +
-          'The Google day map retains the approved offline night lights and restrained cloud shell so the home globe keeps the richer Earth depth cues instead of flattening into a day-only material. ' +
+          'The Google day map retains subtle far-limb night continuity and the restrained cloud shell so the home globe keeps depth cues without reopening a visible black night hemisphere. ' +
           'This enhanced path is opt-in, home-globe only, and falls back to the approved offline Earth baseline when unconfigured or when session or tile requests fail. ' +
           'It does not claim AOI/local API coverage or deep-zoom parity.',
       } satisfies EarthTextureSet;
